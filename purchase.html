@@ -976,19 +976,17 @@
   </style>
 </head>
 <body>
- <div class="header">
-    <button onclick="goBackHome()" class="back-btn" title="Back to Home">
-        ← Back
-    </button>
-    <h1>📦 Purchase Entry Form</h1>
-</div>
+ <div class="container" id="appContainer">
+    <div id="appContent">
+        <div style="position: relative; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <button onclick="goBackHome()" class="back-btn" title="Back to Home">
+                ← Back
+            </button>
+            <span class="gear" id="gearBtn" title="Customize form">⚙️</span>
+        </div>
 
-    <h1>
-      <span id="appTitle">Purchase Orders</span>   
-      <span class="gear" id="gearBtn" title="Customize form">⚙️</span>
-    </h1>
+        <div class="custom-mode-badge">Customize mode</div>
 
-    <div class="custom-mode-badge">Customize mode</div>
 
     <!-- Customize panel (hidden by default) -->
     <div id="customPanel" role="dialog" aria-modal="true" aria-label="Customize form">
