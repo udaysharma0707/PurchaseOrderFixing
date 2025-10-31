@@ -978,19 +978,18 @@
 <body>
 <div class="container" id="appContainer">
     <div id="appContent">
-        <div class="header">
+        <div style="position: relative; display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <button onclick="goBackHome()" class="back-btn" title="Back to Home">
                 ← Back
             </button>
-            <h1>
-                <span id="appTitle">Tile </span>
-                <span class="gear" id="gearBtn" title="Customize form"></span>
-            </h1>
-            <div class="status-indicator">
-                Status: <span id="status">online</span>
-            </div>
+            <div style="flex: 1;"></div>
+            <span class="gear" id="gearBtn" title="Customize form" style="font-size: 24px; cursor: pointer;"></span>
+        </div>
+        <div class="status-indicator" style="text-align: center; margin-bottom: 10px;">
+            Status: <span id="status">online</span>
         </div>
         <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/1YyjZjRbePZ4fL40hKgJloSLJMzWZgW-6fFIvc-A7ELQ/edit" target="_blank" rel="noopener" aria-label="Open Google sheet">Google sheet</a>
+
 
     <div class="custom-mode-badge">Customize mode</div>
 
@@ -5181,6 +5180,7 @@ if (typeof addSubBtn !== 'undefined' && addSubBtn) {
 
 </body>
 </html>
+
 
 
 
