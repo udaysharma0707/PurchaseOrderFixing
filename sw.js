@@ -1,86 +1,108 @@
-// Service Worker for Tile Inventory App - Offline Support
 
-const CACHE_NAME = 'tile-inventory-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/app.js',
-  '/js/storage.js',
-  '/js/products.js',
-  '/js/sales.js',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js',
-  'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css'
+// sw.js - improved cache versioning, update-on-reload, network-first for dynamic calls
+const CACHE_VERSION = 'v2'; // bump this string whenever you change assets
+const CACHE_NAME = 'car-entry-cache-' + CACHE_VERSION;
+const STATIC_ASSETS = [
+  '/',                 // ensure correct path on GitHub Pages
+  '/purchase.html',
+  '/app.js',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/sw.js'
 ];
 
-// Install Service Worker
-self.addEventListener('install', function(event) {
-  console.log('Service Worker: Installing...');
-  
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(function(cache) {
-        console.log('Service Worker: Caching files');
-        return cache.addAll(urlsToCache);
-      })
-      .then(function() {
-        console.log('Service Worker: Installed successfully');
-        return self.skipWaiting();
-      })
-  );
-});
 
-// Activate Service Worker
-self.addEventListener('activate', function(event) {
-  console.log('Service Worker: Activating...');
-  
+// INSTALL: cache core assets
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames.map(function(cacheName) {
-          if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    }).then(function() {
-      console.log('Service Worker: Activated successfully');
-      return self.clients.claim();
+    caches.open(CACHE_NAME).then(cache => {
+      // attempt to add all static assets; ignore failures for missing files
+      return cache.addAll(STATIC_ASSETS.map(p => new Request(p, {cache: "reload"})))
+        .catch(err => {
+          // partial caching ok; still activate
+          return Promise.resolve();
+        });
+    }).then(() => {
+      // activate new SW immediately
+      return self.skipWaiting();
     })
   );
 });
 
-// Fetch - Network First, then Cache
-self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    fetch(event.request)
-      .then(function(response) {
-        // If valid response, clone it and update cache
-        if (response && response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then(function(cache) {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return response;
-      })
-      .catch(function() {
-        // If network fails, try cache
-        return caches.match(event.request).then(function(response) {
-          if (response) {
-            return response;
-          }
-          // If not in cache, return offline page or placeholder
-          return new Response('Offline - Please check your connection', {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: new Headers({
-              'Content-Type': 'text/plain'
-            })
-          });
-        });
-      })
+// ACTIVATE: remove old caches and claim clients
+self.addEventListener('activate', event => {
+  event.waitUntil(
+    caches.keys().then(keys => {
+      return Promise.all(keys.map(key => {
+        if (key !== CACHE_NAME) return caches.delete(key);
+        return Promise.resolve();
+      }));
+    }).then(() => self.clients.claim())
   );
 });
+
+// FETCH: strategy:
+// - For navigation (document) and core assets -> try network first (so updates are fetched), fallback to cache
+// - For other GET requests -> cache-first then network fallback
+self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
+
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // treat dynamic endpoints (your Apps Script exec) as network-first (don't serve stale cached responses)
+  const isExternalAPI = url.hostname.indexOf('script.google.com') !== -1;
+
+  if (req.mode === 'navigate' || req.headers.get('accept').includes('text/html')) {
+    // navigation request - network first
+    event.respondWith(
+      fetch(req).then(resp => {
+        // update cache with fresh index.html for offline
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(req, resp.clone()).catch(()=>{});
+        });
+        return resp.clone();
+      }).catch(() => {
+        return caches.match('/index.html').then(cached => cached || caches.match(req));
+      })
+    );
+    return;
+  }
+
+  if (isExternalAPI) {
+    // network-first for server calls (no caching of responses)
+    event.respondWith(
+      fetch(req).catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // static assets and other GETs: cache-first
+  event.respondWith(
+    caches.match(req).then(cached => {
+      if (cached) return cached;
+      return fetch(req).then(networkResp => {
+        // cache the fetched resource for next time (but ignore opaque failures)
+        if (networkResp && networkResp.status === 200) {
+          caches.open(CACHE_NAME).then(cache => cache.put(req, networkResp.clone()).catch(()=>{}));
+        }
+        return networkResp.clone();
+      }).catch(() => {
+        // fallback to index.html for spa navigation or nothing
+        return caches.match('/index.html');
+      });
+    })
+  );
+});
+
+// Listen for SKIP_WAITING message from client (allows an update button to force new SW activation)
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+
+
+
