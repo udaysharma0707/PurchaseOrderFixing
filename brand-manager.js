@@ -425,84 +425,165 @@ async function loadExistingBrands(sourceModal) {
     const container = document.getElementById('brandsListContainer');
     if (!container) return;
     
-    container.innerHTML = '<div style="text-align:center;color:#999;">Loading...</div>';
+    container.innerHTML = '<div style="text-align:center;color:#999;">⏳ Loading brands...</div>';
     
-    const url = typeof ENDPOINT !== 'undefined' && ENDPOINT.includes('script.google.com')    ? `${ENDPOINT}?action=getBrands`   : `${ENDPOINT}?action=getBrands`;  const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch');
+    // ✅ Build URL with detailed logging
+    const fullUrl = `${ENDPOINT}?action=getBrands`;
+    console.log('🔍 DEBUG INFO:');
+    console.log('  - ENDPOINT:', ENDPOINT);
+    console.log('  - Full URL:', fullUrl);
+    console.log('  - Timestamp:', new Date().toLocaleTimeString());
     
-    const data = await response.json();
-    if (!data.success || !data.brands) {
-      throw new Error(data.error || 'Invalid response');
+    // Show loading info in modal
+    container.innerHTML = `
+      <div style="padding:15px;background:#f0f0f0;border-radius:4px;margin-bottom:10px;">
+        <div style="font-size:12px;color:#666;margin-bottom:8px;">
+          <strong>🔍 Debug Info:</strong><br>
+          URL: <code style="background:#fff;padding:4px;border-radius:2px;">${fullUrl}</code>
+        </div>
+      </div>
+      <div style="text-align:center;color:#999;">Loading...</div>
+    `;
+    
+    const response = await fetch(fullUrl);
+    console.log('📡 Response status:', response.status, response.statusText);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ HTTP Error Response:', errorText);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}\nResponse: ${errorText.substring(0, 200)}`);
+    }
+    
+    let data;
+    try {
+      data = await response.json();
+      console.log('✅ Parsed JSON:', data);
+    } catch (jsonErr) {
+      const textContent = await response.text();
+      console.error('❌ Failed to parse JSON:', jsonErr);
+      console.error('Response text:', textContent);
+      throw new Error(`Invalid JSON response: ${textContent.substring(0, 200)}`);
+    }
+    
+    // Check response structure
+    if (!data) {
+      throw new Error('Response is null or undefined');
+    }
+    
+    if (!data.success) {
+      const errorMsg = data.error || data.message || 'Unknown error';
+      console.error('❌ Backend error:', errorMsg);
+      throw new Error(`Backend Error: ${errorMsg}`);
+    }
+    
+    if (!data.brands) {
+      console.warn('⚠️ No brands property in response. Data:', data);
+      throw new Error('Response missing "brands" array. Received: ' + JSON.stringify(data));
     }
     
     const brands = data.brands;
+    console.log('✅ Loaded brands count:', brands.length);
+    
     cachedBrands = brands;
     brandCacheExpiry = Date.now() + CACHE_DURATION;
     
     if (brands.length === 0) {
-      container.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">No brands yet</div>';
+      container.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">📭 No brands yet. Add one above!</div>';
       return;
     }
     
     let html = '';
-    brands.forEach(brand => {
-      html += `
-        <div style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          padding:12px;
-          border:1px solid #eee;
-          border-radius:4px;
-          margin-bottom:8px;
-          background:#f9f9f9;
-        ">
-          <span style="font-weight:500;">${escapeHtml(brand)}</span>
-          <div style="display:flex;gap:8px;">
-            <button 
-              onclick="editBrandName('${brand.replace(/'/g, "\\'")}')" 
-              style="
-                padding:6px 10px;
-                background:#FF9800;
-                color:#fff;
-                border:none;
-                border-radius:4px;
-                cursor:pointer;
-                font-size:12px;
-              "
-            >
-              ✏️ Edit
-            </button>
-            <button 
-              onclick="deleteBrandName('${brand.replace(/'/g, "\\'")}')" 
-              style="
-                padding:6px 10px;
-                background:#f44336;
-                color:#fff;
-                border:none;
-                border-radius:4px;
-                cursor:pointer;
-                font-size:12px;
-              "
-            >
-              🗑️ Delete
-            </button>
+    brands.forEach((brand, index) => {
+      try {
+        html += `
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:12px;
+            border:1px solid #eee;
+            border-radius:4px;
+            margin-bottom:8px;
+            background:#f9f9f9;
+          ">
+            <span style="font-weight:500;">${escapeHtml(brand)}</span>
+            <div style="display:flex;gap:8px;">
+              <button 
+                onclick="editBrandName('${brand.replace(/'/g, "\\'")}')" 
+                style="
+                  padding:6px 10px;
+                  background:#FF9800;
+                  color:#fff;
+                  border:none;
+                  border-radius:4px;
+                  cursor:pointer;
+                  font-size:12px;
+                "
+              >
+                ✏️ Edit
+              </button>
+              <button 
+                onclick="deleteBrandName('${brand.replace(/'/g, "\\'")}')" 
+                style="
+                  padding:6px 10px;
+                  background:#f44336;
+                  color:#fff;
+                  border:none;
+                  border-radius:4px;
+                  cursor:pointer;
+                  font-size:12px;
+                "
+              >
+                🗑️ Delete
+              </button>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      } catch (brandErr) {
+        console.error('❌ Error rendering brand at index ' + index + ':', brand, brandErr);
+      }
     });
     
     container.innerHTML = html;
+    console.log('✅ Brands rendered successfully');
     
   } catch (error) {
-    console.error('❌ Error loading brands:', error);
-    document.getElementById('brandsListContainer').innerHTML = `
-      <div style="color:#d32f2f;text-align:center;">
-        ❌ ${error.message}
-      </div>
-    `;
+    console.error('❌ ERROR LOADING BRANDS:', error);
+    console.error('  - Error message:', error.message);
+    console.error('  - Error stack:', error.stack);
+    
+    const container = document.getElementById('brandsListContainer');
+    if (container) {
+      container.innerHTML = `
+        <div style="
+          color:#d32f2f;
+          background:#ffebee;
+          border:1px solid #ef5350;
+          border-radius:4px;
+          padding:15px;
+          text-align:left;
+          font-family:monospace;
+          font-size:12px;
+        ">
+          <div style="font-weight:bold;margin-bottom:8px;">❌ ERROR LOADING BRANDS</div>
+          <div style="margin-bottom:8px;color:#c62828;">
+            <strong>Message:</strong><br>
+            ${escapeHtml(error.message)}
+          </div>
+          <div style="background:#fff;padding:8px;border-radius:2px;margin-bottom:8px;max-height:100px;overflow-y:auto;color:#666;">
+            <strong>Details:</strong><br>
+            ENDPOINT: <code>${ENDPOINT}</code><br>
+            URL: <code>${ENDPOINT}?action=getBrands</code>
+          </div>
+          <div style="color:#666;font-size:11px;">
+            💡 Check browser console (F12) for more details
+          </div>
+        </div>
+      `;
+    }
   }
 }
+
 
 /**
  * Add new brand
@@ -679,5 +760,6 @@ document.addEventListener('click', function(event) {
     hideBrandDropdownGroup();
   }
 });
+
 
 
