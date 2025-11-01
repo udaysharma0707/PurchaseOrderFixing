@@ -12,7 +12,7 @@ if (typeof ENDPOINT === 'undefined') {
   ENDPOINT = path + '/index.html'; // Fallback - will use fetch directly
   
   // Better approach: use relative path to your Google Apps Script
-  ENDPOINT = 'https://script.google.com/macros/s/AKfycbxE_7-q-V3erJ1Cr3byU6X_ABgJddWrt8A7MrdYb3XSvTywY5MTK1tvktukHbtHtuY0/exec';
+  ENDPOINT = 'https://script.google.com/macros/s/AKfycbynh0pSzDaX3_xJTZXR9_g_SSQmPAlEthITon6uIFWFXctB5ZV3zAiaYv-W2bWalQ99/exec';
 }
 // Global state
 let cachedBrands = [];
@@ -760,6 +760,7 @@ document.addEventListener('click', function(event) {
     hideBrandDropdownGroup();
   }
 });
+
 
 
 
