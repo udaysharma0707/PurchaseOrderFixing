@@ -1840,7 +1840,7 @@ body.modal-open {
   </style>
 
  <script src="customers.js"></script>
-  
+  <script src="brand-manager.js"></script>
   
 </head>
 <body>
@@ -3224,16 +3224,61 @@ body.modal-open {
         </div>
         
         <div class="row">
-          <div class="col-6 mb-3">
-            <label class="form-label">Brand</label>
-            <input type="text" id="photoProductBrand" class="form-control" placeholder="Optional">
-          </div>
-          <div class="col-6 mb-3">
-            <label class="form-label">Size</label>
-            <input type="text" id="photoProductSize" class="form-control" placeholder="e.g., 2x2">
-          </div>
+  <div class="col-6 mb-3">
+    <label class="form-label">Brand</label>
+    <div class="brand-dropdown-wrapper-photo" style="position: relative;">
+      <div class="brand-input-group-photo" style="display: flex; gap: 8px;">
+        <input 
+          type="text" 
+          id="photoProductBrand" 
+          class="form-control brand-input-photo" 
+          placeholder="Select or type brand..."
+          autocomplete="off"
+          oninput="filterBrandDropdownPhoto()"
+          onfocus="showBrandDropdownPhoto()"
+        />
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          style="padding: 8px 12px; width: 40px;"
+          title="Manage Brands"
+          onclick="openManageBrandsModalPhoto()"
+        >
+          ⚙️
+        </button>
+      </div>
+      
+      <!-- Brand Dropdown List -->
+      <div 
+        id="brandDropdownListPhoto" 
+        class="brand-dropdown-list-photo" 
+        style="
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          max-height: 250px;
+          overflow-y: auto;
+          z-index: 1050;
+          display: none;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        "
+      >
+        <div style="padding: 12px; text-align: center; color: #999;">
+          <span id="brandLoadingTextPhoto">Loading brands...</span>
         </div>
-        
+      </div>
+    </div>
+  </div>
+  <div class="col-6 mb-3">
+    <label class="form-label">Size</label>
+    <input type="text" id="photoProductSize" class="form-control" placeholder="e.g., 2x2">
+  </div>
+</div>
+
         <div class="row">
           <div class="col-6 mb-3">
             <label class="form-label">Current Stock</label>
@@ -3286,8 +3331,8 @@ body.modal-open {
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhQ9yDDCJ9owrKHxUFvmPl81g0giNHB4P0ajLtlkykLnyCXBTpVPOKKKzVbRYHXO_S/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhQ9yDDCJ9owrKHxUFvmPl81g0giNHB4P0ajLtlkykLnyCXBTpVPOKKKzVbRYHXO_S/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJmkYcnyBwB_Cfef2zBTdv0p4jS2uRQVhqvpRWkCfQPVQINQLlAD2CZitnJKgzDy9Q/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJmkYcnyBwB_Cfef2zBTdv0p4jS2uRQVhqvpRWkCfQPVQINQLlAD2CZitnJKgzDy9Q/exec'
   let cachedProducts = [];
   let cachedSales = [];
 
@@ -7729,8 +7774,54 @@ function openCreateGroupModal() {
           <label style="display:block;font-weight:600;margin:16px 0 6px">Description</label>
           <textarea id="groupDescription" rows="3" placeholder="Optional" style="width:100%;padding:12px;font-size:16px;border:1px solid #ddd;border-radius:8px"></textarea>
 
-          <label style="display:block;font-weight:600;margin:16px 0 6px">Manufacturer/Brand</label>
-          <input id="groupManufacturer" placeholder="e.g., Somany" style="width:100%;padding:12px;font-size:16px;border:1px solid #ddd;border-radius:8px">
+       <label style="display:block;font-weight:600;margin:16px 0 6px">Manufacturer/Brand</label>
+<div class="brand-dropdown-wrapper-group" style="position: relative;">
+  <div class="brand-input-group-group" style="display: flex; gap: 8px;">
+    <input 
+      id="groupManufacturer" 
+      class="form-control brand-input-group" 
+      placeholder="Select or type brand..."
+      autocomplete="off"
+      oninput="filterBrandDropdownGroup()"
+      onfocus="showBrandDropdownGroup()"
+      style="flex:1;padding:12px;font-size:16px;border:1px solid #ddd;border-radius:8px"
+    />
+    <button 
+      type="button" 
+      class="btn btn-outline-secondary" 
+      style="padding:8px 12px;width:40px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer"
+      title="Manage Brands"
+      onclick="openManageBrandsModalGroup()"
+    >
+      ⚙️
+    </button>
+  </div>
+  
+  <!-- Brand Dropdown List -->
+  <div 
+    id="brandDropdownListGroup" 
+    class="brand-dropdown-list-group" 
+    style="
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      max-height: 250px;
+      overflow-y: auto;
+      z-index: 1050;
+      display: none;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    "
+  >
+    <div style="padding: 12px; text-align: center; color: #999;">
+      <span id="brandLoadingTextGroup">Loading brands...</span>
+    </div>
+  </div>
+</div>
+
 
           <label style="display:block;font-weight:600;margin:16px 0 6px">Category</label>
           <select id="groupCategory" style="width:100%;padding:12px;font-size:16px;border:1px solid #ddd;border-radius:8px">
@@ -9652,6 +9743,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
