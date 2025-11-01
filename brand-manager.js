@@ -4,7 +4,16 @@
  * Complete dropdown + modal management
  * ==========================================
  */
-
+// ✅ FIX: Define ENDPOINT if not already defined
+if (typeof ENDPOINT === 'undefined') {
+  // Get current domain and script path
+  const currentUrl = window.location.href;
+  const path = currentUrl.split('/').slice(0, -1).join('/');
+  ENDPOINT = path + '/index.html'; // Fallback - will use fetch directly
+  
+  // Better approach: use relative path to your Google Apps Script
+  ENDPOINT = 'https://script.google.com/macros/s/AKfycbzJmkYcnyBwB_Cfef2zBTdv0p4jS2uRQVhqvpRWkCfQPVQINQLlAD2CZitnJKgzDy9Q/exec';
+}
 // Global state
 let cachedBrands = [];
 let brandCacheExpiry = 0;
@@ -29,7 +38,7 @@ async function loadAndShowBrandDropdown(modalType = 'regular') {
     }
     
     // Fetch from server
-    const response = await fetch(`${ENDPOINT}?action=getBrands`);
+    const url = typeof ENDPOINT !== 'undefined' && ENDPOINT.includes('script.google.com')    ? `${ENDPOINT}?action=getBrands`   : `${ENDPOINT}?action=getBrands`;  const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch brands');
     
     const data = await response.json();
@@ -294,10 +303,15 @@ function selectBrandGroup(brandName) {
 /**
  * Open Manage Brands Modal
  */
-function openManageBrandsModal() {
+function openManageBrandsModal(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
   console.log('🔧 Opening Manage Brands Modal');
   openManageBrandsModalHelper('regular');
 }
+
 
 function openManageBrandsModalPhoto() {
   console.log('🔧 Opening Manage Brands Modal (photo)');
@@ -413,7 +427,7 @@ async function loadExistingBrands(sourceModal) {
     
     container.innerHTML = '<div style="text-align:center;color:#999;">Loading...</div>';
     
-    const response = await fetch(`${ENDPOINT}?action=getBrands`);
+    const url = typeof ENDPOINT !== 'undefined' && ENDPOINT.includes('script.google.com')    ? `${ENDPOINT}?action=getBrands`   : `${ENDPOINT}?action=getBrands`;  const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch');
     
     const data = await response.json();
@@ -665,3 +679,4 @@ document.addEventListener('click', function(event) {
     hideBrandDropdownGroup();
   }
 });
+
