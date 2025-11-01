@@ -2648,7 +2648,61 @@ body.modal-open {
           <div class="col-md-8"><label class="form-label">Product Name *</label><input id="productName" class="form-control" required/></div>
           <div class="col-md-4"><label class="form-label">Category *</label><select id="category" class="form-select" required><option value="">Select</option><option value="Tiles">Tiles</option><option value="Sanitaryware">Sanitaryware</option><option value="Accessories">Accessories</option></select></div>
         </div>
-        <div class="row mb-3">
+      <div class="row mb-3">
+  <div class="col-md-6">
+    <label class="form-label">Brand</label>
+    <div style="position: relative;">
+      <div style="display: flex; gap: 8px;">
+        <input 
+          id="brand" 
+          class="form-control" 
+          placeholder="Select or type brand..."
+          autocomplete="off"
+          oninput="filterBrandDropdown()"
+          onfocus="showBrandDropdown()"
+          style="flex: 1;"
+        />
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          style="padding: 8px 12px; width: 45px;"
+          title="Manage Brands"
+          onclick="openManageBrandsModal()"
+        >
+          ⚙️
+        </button>
+      </div>
+      
+      <div 
+        id="brandDropdownList" 
+        style="
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          max-height: 250px;
+          overflow-y: auto;
+          z-index: 1000;
+          display: none;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          margin-top: 4px;
+        "
+      >
+        <div style="padding: 12px; text-align: center; color: #999;">
+          Loading brands...
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label">Size</label>
+    <input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/>
+  </div>
+</div>
+
           <div class="col-md-6"><label class="form-label">Brand</label><input id="brand" class="form-control"/></div>
           <div class="col-md-6"><label class="form-label">Size</label><input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/></div>
         </div>
@@ -9743,6 +9797,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
