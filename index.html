@@ -9797,6 +9797,49 @@ function navigateToPurchaseOrders() {
   </div>
 </div>
 
+<!-- Add Brands Modal -->
+<div class="modal fade" id="addBrandsModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">➕ Add New Brands</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Instructions -->
+        <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+          Enter brand names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each brand:
+        </p>
+        
+        <!-- Input Field -->
+        <input id="brandInput" type="text" class="form-control" placeholder="e.g., Somany"
+          onkeydown="handleBrandInputKeydown(event)">
+        
+        <!-- Preview Section -->
+        <div style="margin-top: 20px;">
+          <p style="font-weight: bold; margin-bottom: 10px; font-size: 14px;" id="previewCount">
+            📝 Brands to Save (0):
+          </p>
+          <div id="brandPreviewList" style="
+            background: #f8f9fa; border: 1px solid #e0e0e0;
+            border-radius: 5px; max-height: 200px; overflow-y: auto;
+            min-height: 60px; padding: 10px;
+          ">
+            <div style="padding: 10px; color: #999; text-align: center; font-size: 14px;">
+              No brands added yet
+            </div>
+          </div>
+        </div>
+        
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveAllBrands()">💾 Save All</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
     
@@ -9805,6 +9848,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
