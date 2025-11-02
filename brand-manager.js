@@ -968,6 +968,191 @@ document.addEventListener('click', function(event) {
 });
 
 
+// ==========================================
+// 🏷️ BRAND AUTOCOMPLETE - GROUP FORM
+// ==========================================
+
+/**
+ * When user focuses on group brand field - show top 5 brands
+ */
+function onGroupBrandFieldFocus() {
+  console.log('📌 Group brand field focused');
+  
+  fetch(ENDPOINT + '?action=getLatestBrands&count=5')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.brands) {
+        console.log('✅ Loaded top 5 brands for group');
+        showGroupBrandDropdown(data.brands);
+      }
+    })
+    .catch(error => console.error('❌ Error:', error));
+}
+
+/**
+ * When user types in group brand field - filter brands
+ */
+function onGroupBrandFieldInput() {
+  const input = document.getElementById('groupManufacturer');
+  const value = input.value.trim();
+  
+  if (!value) {
+    onGroupBrandFieldFocus();
+    return;
+  }
+  
+  fetch(ENDPOINT + '?action=searchBrands&searchTerm=' + encodeURIComponent(value))
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.brands) {
+        if (data.brands.length === 0) {
+          showSaveGroupBrandIcon();
+          hideGroupBrandDropdown();
+        } else {
+          showGroupBrandDropdown(data.brands);
+          hideSaveGroupBrandIcon();
+        }
+      }
+    })
+    .catch(error => console.error('❌ Error:', error));
+}
+
+/**
+ * Handle keyboard events in group brand field
+ */
+function onGroupBrandFieldKeydown(event) {
+  if (event.key === 'Escape') {
+    hideGroupBrandDropdown();
+  }
+  if (event.key === 'Enter') {
+    hideGroupBrandDropdown();
+  }
+}
+
+/**
+ * Display group brand dropdown
+ */
+function showGroupBrandDropdown(brands) {
+  const dropdown = document.getElementById('groupBrandAutocompleteDropdown');
+  if (!brands || brands.length === 0) {
+    hideGroupBrandDropdown();
+    return;
+  }
+  
+  let html = '';
+  brands.forEach(brand => {
+    html += `
+      <div 
+        onclick="selectGroupBrand('${brand.replace(/'/g, "\\'")}')"
+        style="
+          padding: 12px 15px;
+          border-bottom: 1px solid #f0f0f0;
+          cursor: pointer;
+          transition: background 0.2s;
+        "
+        onmouseover="this.style.backgroundColor = '#f5f5f5';"
+        onmouseout="this.style.backgroundColor = 'transparent';"
+      >
+        • ${brand}
+      </div>
+    `;
+  });
+  
+  dropdown.innerHTML = html;
+  dropdown.style.display = 'block';
+}
+
+/**
+ * Hide group brand dropdown
+ */
+function hideGroupBrandDropdown() {
+  const dropdown = document.getElementById('groupBrandAutocompleteDropdown');
+  if (dropdown) {
+    dropdown.style.display = 'none';
+  }
+}
+
+/**
+ * Select brand from group dropdown
+ */
+function selectGroupBrand(brandName) {
+  console.log('✅ Selected group brand:', brandName);
+  document.getElementById('groupManufacturer').value = brandName;
+  hideGroupBrandDropdown();
+  hideSaveGroupBrandIcon();
+}
+
+/**
+ * Show save group brand icon
+ */
+function showSaveGroupBrandIcon() {
+  const icon = document.getElementById('saveGroupBrandIcon');
+  if (icon) icon.style.display = 'block';
+}
+
+/**
+ * Hide save group brand icon
+ */
+function hideSaveGroupBrandIcon() {
+  const icon = document.getElementById('saveGroupBrandIcon');
+  if (icon) icon.style.display = 'none';
+}
+
+/**
+ * Save new brand from group form
+ */
+function saveNewBrandFromGroupForm() {
+  console.log('💾 Saving new brand from group form');
+  
+  const input = document.getElementById('groupManufacturer');
+  const brandName = input.value.trim();
+  
+  if (!brandName) return;
+  
+  const saveBtn = document.getElementById('saveGroupBrandIcon');
+  if (saveBtn) saveBtn.disabled = true;
+  
+  fetch(ENDPOINT + '?action=addBrand&brandName=' + encodeURIComponent(brandName))
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log('✅ New group brand saved');
+        hideSaveGroupBrandIcon();
+        
+        if (saveBtn) {
+          const originalText = saveBtn.textContent;
+          saveBtn.textContent = '✅ Saved!';
+          setTimeout(() => {
+            saveBtn.textContent = originalText;
+            saveBtn.disabled = false;
+          }, 1500);
+        }
+      } else {
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error:', error);
+      if (saveBtn) saveBtn.disabled = false;
+    });
+}
+
+/**
+ * Auto-hide group brand dropdown on outside click
+ */
+document.addEventListener('click', function(event) {
+  const groupDropdown = document.getElementById('groupBrandAutocompleteDropdown');
+  const groupInput = document.getElementById('groupManufacturer');
+  const saveGroupIcon = document.getElementById('saveGroupBrandIcon');
+  
+  if (groupDropdown && groupInput) {
+    if (!groupDropdown.contains(event.target) && 
+        event.target !== groupInput && 
+        event.target !== saveGroupIcon) {
+      hideGroupBrandDropdown();
+    }
+  }
+});
 
 
 
