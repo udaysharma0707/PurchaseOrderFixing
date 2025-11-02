@@ -1,208 +1,219 @@
 /**
  * ==========================================
- * BRANDS MANAGEMENT - PHASE 2 (SIMPLIFIED)
- * Simple: Create & Delete Only
+ * BRANDS MANAGEMENT MODULE
  * File: brand-manager.js
  * ==========================================
  */
 
 // ===== GLOBAL VARIABLES =====
-let brandsCache = [];
+
 let pendingBrands = [];
 
 /**
  * ==========================================
- * SECTION 1: NAVIGATION
+ * SECTION 1: NAVIGATION FUNCTIONS
  * ==========================================
  */
 
 function navigateToBrands() {
   console.log('🏷️ Navigating to Brands');
   
-  // Hide navbar
+  currentPage = 'brands';
+  
+  // === STEP 1: Get page elements ===
+  const mainApp = document.getElementById('mainApp');
+  const allProductsPage = document.getElementById('allProductsPage');
+  const productGroupsPage = document.getElementById('productGroupsPage');
+  const customersPage = document.getElementById('customersPage');
+  const brandsPage = document.getElementById('brandsPage');
+  const groupDetailPage = document.getElementById('groupDetailPage');
+  
+  // === STEP 2: Hide all other pages ===
+  if (mainApp) {
+    mainApp.style.display = 'none';
+    mainApp.classList.remove('active');
+  }
+  
+  if (allProductsPage) {
+    allProductsPage.classList.remove('active');
+    allProductsPage.style.display = 'none';
+  }
+  
+  if (productGroupsPage) {
+    productGroupsPage.classList.remove('active');
+    productGroupsPage.style.display = 'none';
+  }
+  
+  if (customersPage) {
+    customersPage.classList.remove('active');
+    customersPage.style.display = 'none';
+  }
+  
+  if (groupDetailPage) {
+    groupDetailPage.classList.remove('active');
+    groupDetailPage.style.display = 'none';
+  }
+  
+  // === STEP 3: Show brands page ===
+  if (brandsPage) {
+    brandsPage.classList.add('active');
+    brandsPage.style.display = 'block';
+    console.log('✅ Brands page displayed');
+  } else {
+    console.error('❌ brandsPage element not found!');
+    return;
+  }
+  
+  // === STEP 4: Hide the blue navbar ===
   const navbar = document.querySelector('.navbar.navbar-dark.bg-primary');
   if (navbar) {
     navbar.style.display = 'none';
   }
   
-  // Show brands page
-  const brandsPage = document.getElementById('brandsPage');
-  if (brandsPage) {
-    brandsPage.style.display = 'block';
+  // === STEP 5: Load brands from backend ===
+  if (typeof loadBrands === 'function') {
+    loadBrands();
+    console.log('✅ Brands data loaded');
+  } else {
+    console.warn('⚠️ loadBrands function not found');
   }
   
-  // Close sidebar
+  // === STEP 6: Close sidebar and scroll ===
   if (typeof closeSidebar === 'function') {
     closeSidebar();
   }
   
-  // Render page
-  renderBrandsPage();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 /**
  * ==========================================
- * SECTION 2: RENDER BRANDS PAGE
+ * SECTION 2: DATA LOADING FUNCTIONS
  * ==========================================
  */
 
-function renderBrandsPage() {
-  console.log('🎨 Rendering Brands Page');
-  
-  const brandsPageContent = document.getElementById('brandsPageContent');
-  
-  if (!brandsPageContent) {
-    console.error('❌ brandsPageContent not found');
-    return;
-  }
-  
-  // Build page HTML
-  const pageHTML = `
-    <div style="padding: 0; width: 100%; min-height: 100vh; background: #f8f9fa;">
-      
-      <!-- HEADER: Back Button + Title + Add Brands Button -->
-      <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        
-        <!-- Back Button -->
-        <button onclick="goBackHome()" style="
-          background: none; border: none; font-size: 24px; cursor: pointer;
-          color: #007bff; padding: 5px 10px;
-        ">← Back</button>
-        
-        <!-- Title -->
-        <h2 style="margin: 0; flex: 1; text-align: center; font-size: 20px;">🏷️ Brands</h2>
-        
-        <!-- Add Brands Button -->
-        <button onclick="openAddBrandModal()" style="
-          background: #28a745; color: white; border: none; padding: 8px 16px;
-          border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;
-        ">+ Add</button>
-      </div>
-      
-      <!-- BRANDS LIST -->
-      <div style="padding: 20px; max-width: 600px; margin: 0 auto;">
-        <div id="brandsList" style="
-          background: white; border-radius: 8px; padding: 15px;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        ">
-          <p style="text-align: center; color: #999;">Loading brands...</p>
-        </div>
-      </div>
-      
-    </div>
-  `;
-  
-  brandsPageContent.innerHTML = pageHTML;
-  
-  // Load and display brands
-  loadBrandsFromBackend();
-}
-
-/**
- * ==========================================
- * SECTION 3: LOAD BRANDS FROM BACKEND
- * ==========================================
- */
-
-function loadBrandsFromBackend() {
-  console.log('📡 Fetching brands from backend...');
-  
-  fetch(SCRIPT_URL, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'getBrands' })
-  })
-  .then(response => response.json())
-  .then(data => {
-    console.log('Response:', data);
+// Load Brands from Backend
+async function loadBrands() {
+  try {
+    console.log('📡 Fetching brands from server...');
     
+    // Fetch data (no auth needed - bypassed in doPost)
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getBrands' })
+    });
+    
+    const data = await response.json();
+    
+    // Check response
     if (data.success && data.brands) {
       brandsCache = data.brands;
       console.log('✅ Loaded', data.brands.length, 'brands');
-      displayBrandsList(data.brands);
+      
+      // Render brands list
+      renderBrandsList();
     } else {
-      console.warn('⚠️ No brands found or error');
-      displayBrandsList([]);
+      throw new Error(data.error || 'Failed to load brands');
     }
-  })
-  .catch(error => {
-    console.error('❌ Error fetching brands:', error);
-    displayBrandsList([]);
-  });
+    
+  } catch (error) {
+    console.error('❌ Error loading brands:', error);
+    
+    // Show error message
+    const container = document.getElementById('brandsListContainer');
+    if (container) {
+      container.innerHTML = `
+        <div style="text-align:center; padding:40px; color:#dc3545;">
+          <i class="bi bi-exclamation-circle" style="font-size:48px;"></i>
+          <h4 style="margin-top:20px;">Error Loading Brands</h4>
+          <p>${error.message}</p>
+          <button class="btn btn-primary mt-3" onclick="loadBrands()">
+            <i class="bi bi-arrow-clockwise"></i> Retry
+          </button>
+        </div>
+      `;
+    }
+  }
 }
 
 /**
  * ==========================================
- * SECTION 4: DISPLAY BRANDS LIST
+ * SECTION 3: RENDERING FUNCTIONS
  * ==========================================
  */
-/**
- * SECTION 4: DISPLAY BRANDS LIST
- */
 
-function displayBrandsList(brands) {
-  const brandsList = document.getElementById('brandsList');
+// Render Brands List
+function renderBrandsList() {
+  console.log('🎨 Rendering brands list...');
   
-  if (!brandsList) {
-    console.error('❌ brandsList element not found');
+  const container = document.getElementById('brandsListContainer');
+  const emptyState = document.getElementById('brandsEmptyState');
+  
+  if (!container) {
+    console.error('❌ brandsListContainer not found!');
     return;
   }
   
   // Check if no brands
-  if (!brands || brands.length === 0) {
-    brandsList.innerHTML = `
-      <p style="text-align: center; color: #999; padding: 30px;">
-        📭 No brands yet. Click "+ Add" to create one!
-      </p>
-    `;
+  if (!brandsCache || brandsCache.length === 0) {
+    container.innerHTML = '';
+    if (emptyState) {
+      emptyState.style.display = 'block';
+    }
+    console.log('No brands to display');
     return;
   }
   
-  // Build list
-  let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+  // Hide empty state
+  if (emptyState) {
+    emptyState.style.display = 'none';
+  }
   
-  brands.forEach((brand, index) => {
+  // Build HTML
+  let html = '<div style="padding:20px; max-width:1200px; margin:0 auto;">';
+  
+  brandsCache.forEach(brand => {
+    // Create brand card
     html += `
-      <li style="
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 12px; border-bottom: 1px solid #f0f0f0;
-        transition: background 0.2s;
-      " onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='transparent'">
-        
-        <span style="font-size: 14px; color: #333;">
-          <strong>${(index + 1)}.</strong> ${escapeHtml(brand)}
-        </span>
-        
-        <button onclick="deleteBrandConfirm('${escapeHtml(brand)}')" style="
-          background: #dc3545; color: white; border: none;
-          padding: 5px 10px; border-radius: 3px; cursor: pointer;
-          font-size: 12px; font-weight: bold;
-        ">🗑️ Delete</button>
-      </li>
+      <div class="card mb-3 shadow-sm" style="cursor:pointer; transition:transform 0.2s;" 
+           onmouseover="this.style.transform='scale(1.02)'" 
+           onmouseout="this.style.transform='scale(1)'">
+        <div class="card-body">
+          <div style="display:flex; justify-content:space-between; align-items:start;">
+            <div style="flex:1;">
+              <h5 class="mb-2">
+                🏷️ ${escapeHtml(brand)}
+              </h5>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn btn-sm btn-danger" 
+                      onclick="confirmDeleteBrand('${escapeHtml(brand)}')"
+                      title="Delete Brand">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     `;
   });
   
-  html += '</ul>';
+  html += '</div>';
   
-  // ✅ Add total count
-  html += `
-    <div style="padding: 10px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e0e0e0; margin-top: 10px;">
-      Total: <strong>${brands.length}</strong> brand(s)
-    </div>
-  `;
-  
-  brandsList.innerHTML = html;
-  console.log('✅ Brands list displayed:', brands.length, 'brands');
+  // Render to page
+  container.innerHTML = html;
+  console.log(`✅ Rendered ${brandsCache.length} brands`);
 }
-
 
 /**
  * ==========================================
- * SECTION 5: OPEN ADD BRANDS MODAL
+ * SECTION 4: MODAL FUNCTIONS
  * ==========================================
  */
 
+// Open Add Brands Modal
 function openAddBrandModal() {
-  console.log('📋 Opening Add Brands Modal');
+  console.log('➕ Opening Add Brands modal');
   
   pendingBrands = [];
   
@@ -222,7 +233,7 @@ function openAddBrandModal() {
 
 /**
  * ==========================================
- * SECTION 6: HANDLE BRAND INPUT
+ * SECTION 5: HANDLE BRAND INPUT
  * ==========================================
  */
 
@@ -253,7 +264,7 @@ function handleBrandInputKeydown(event) {
 
 /**
  * ==========================================
- * SECTION 7: UPDATE BRAND PREVIEW
+ * SECTION 6: UPDATE BRAND PREVIEW
  * ==========================================
  */
 
@@ -270,7 +281,7 @@ function updateBrandPreviewList() {
   
   if (pendingBrands.length === 0) {
     previewList.innerHTML = `
-      <div style="padding: 10px; color: #999; text-align: center; font-size: 14px;">
+      <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
         No brands added yet
       </div>
     `;
@@ -313,7 +324,7 @@ function removePendingBrand(brand) {
 
 /**
  * ==========================================
- * SECTION 8: SAVE ALL BRANDS
+ * SECTION 7: SAVE ALL BRANDS
  * ==========================================
  */
 
@@ -385,17 +396,17 @@ function showSaveResult(saved, failed, failedBrands) {
     alert(message);
   }
   
-  // Reload brands list
-  loadBrandsFromBackend();
+  // ✅ Reload brands list
+  loadBrands();
 }
 
 /**
  * ==========================================
- * SECTION 9: DELETE BRAND
+ * SECTION 8: DELETE BRAND
  * ==========================================
  */
 
-function deleteBrandConfirm(brand) {
+function confirmDeleteBrand(brand) {
   const confirmed = confirm(`🗑️ Delete "${brand}"?\n\nThis cannot be undone.`);
   
   if (confirmed) {
@@ -418,7 +429,7 @@ function deleteBrand(brand) {
     if (data.success) {
       console.log('✅ Brand deleted:', brand);
       alert('✅ Brand deleted successfully!');
-      loadBrandsFromBackend();
+      loadBrands();
     } else {
       console.warn('⚠️ Delete failed:', data.error);
       alert('❌ Failed to delete brand: ' + data.error);
@@ -432,7 +443,7 @@ function deleteBrand(brand) {
 
 /**
  * ==========================================
- * SECTION 10: HELPER FUNCTIONS
+ * SECTION 9: HELPER FUNCTIONS
  * ==========================================
  */
 
@@ -468,7 +479,4 @@ function escapeHtml(text) {
   return String(text).replace(/[&<>"']/g, m => map[m]);
 }
 
-console.log('✅ Brand Manager Module Loaded - PHASE 2');
-
-
-
+console.log('✅ Brand Manager Module Loaded');
