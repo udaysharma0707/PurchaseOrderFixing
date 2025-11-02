@@ -1897,6 +1897,15 @@ body.modal-open {
     <i class="bi bi-sliders"></i>
     <span>Inventory Adjustments</span>
   </div>
+
+<!-- In your existing sidebar navigation -->
+<div class="sidebar-item" onclick="navigateToBrands()" style="cursor: pointer; padding: 12px 15px; display: flex; align-items: center; gap: 10px;">
+  <span style="font-size: 18px;">🏷️</span>
+  <span>Brands</span>
+</div>
+
+
+  
   
   <!-- SALES Section -->
   <div class="sidebar-section-title">SALES</div>
@@ -9112,7 +9121,10 @@ async function createProductGroup(groupData) {
 
     
 
-// Navigate back to Home - FIXED
+/**
+ * Navigate back to Home - COMPLETE
+ * Hides all pages and shows main dashboard
+ */
 function navigateToHome() {
   console.log('🏠 Navigating to Home');
   
@@ -9121,7 +9133,8 @@ function navigateToHome() {
   const mainApp = document.getElementById('mainApp');
   const allProductsPage = document.getElementById('allProductsPage');
   const productGroupsPage = document.getElementById('productGroupsPage');
-  const customersPage = document.getElementById('customersPage');  // ✅ ADD THIS
+  const customersPage = document.getElementById('customersPage');
+  const brandsPage = document.getElementById('brandsPage'); // ✅ ADD THIS
   const groupDetailPage = document.getElementById('groupDetailPage');
   
   // Show main app
@@ -9138,10 +9151,15 @@ function navigateToHome() {
     productGroupsPage.style.display = 'none';
   }
   
-  // ✅✅✅ ADD THIS BLOCK FOR CUSTOMERS PAGE ✅✅✅
   if (customersPage) {
     customersPage.classList.remove('active');
     customersPage.style.display = 'none';
+  }
+  
+  // ✅ ADD THIS BLOCK FOR BRANDS PAGE
+  if (brandsPage) {
+    brandsPage.classList.remove('active');
+    brandsPage.style.display = 'none';
   }
   
   if (groupDetailPage) {
@@ -9158,6 +9176,7 @@ function navigateToHome() {
   
   console.log('✅ Home displayed');
 }
+
 // ==========================================
 // NEW NAVIGATION WRAPPER - PHASE 1
 // ==========================================
@@ -9186,6 +9205,11 @@ function navigateToHome() {
  * Ensures all pages are properly hidden before showing target page
  * @param {string} page - Page name ('dashboard', 'allProducts', 'customers', 'productGroups')
  */
+/**
+ * Centralized navigation function - COMPLETE with page hiding
+ * Ensures all pages are properly hidden before showing target page
+ * @param {string} page - Page name ('dashboard', 'allProducts', 'customers', 'productGroups', 'brands')
+ */
 function navigateTo(page) {
   console.log('🔷 navigateTo called with:', page);
   
@@ -9197,6 +9221,8 @@ function navigateTo(page) {
     navigateToCustomers();
   } else if (page === 'productGroups') {
     navigateToProductGroups();
+  } else if (page === 'brands') {
+    navigateToBrands();
   } else if (page === 'invoices') {
     // Navigate to invoices page (no credential check needed)
     console.log('📄 Navigating to invoices page...');
@@ -9339,6 +9365,63 @@ function navigateToPurchaseOrders() {
   window.location.href = 'purchase.html';
 }
 
+/**
+ * Navigate to Brands Management page
+ * Follows centralized navigation pattern
+ */
+function navigateToBrands() {
+  console.log('🏷️ Navigating to Brands page');
+  
+  currentPage = 'brands';
+  
+  const mainApp = document.getElementById('mainApp');
+  const allProductsPage = document.getElementById('allProductsPage');
+  const customersPage = document.getElementById('customersPage');
+  const productGroupsPageContainer = document.getElementById('productGroupsPageContainer');
+  const brandsPage = document.getElementById('brandsPage');
+  const groupDetailPage = document.getElementById('groupDetailPage');
+  
+  // Hide all pages
+  if (mainApp) {
+    mainApp.classList.remove('active');
+    mainApp.style.display = 'none';
+  }
+  
+  if (allProductsPage) {
+    allProductsPage.classList.remove('active');
+    allProductsPage.style.display = 'none';
+  }
+  
+  if (customersPage) {
+    customersPage.classList.remove('active');
+    customersPage.style.display = 'none';
+  }
+  
+  if (productGroupsPageContainer) {
+    productGroupsPageContainer.classList.remove('active');
+    productGroupsPageContainer.style.display = 'none';
+  }
+  
+  if (groupDetailPage) {
+    groupDetailPage.classList.remove('active');
+    groupDetailPage.style.display = 'none';
+  }
+  
+  // Show brands page
+  if (brandsPage) {
+    brandsPage.classList.add('active');
+    brandsPage.style.display = 'block';
+  }
+  
+  // Hide navbar
+  const navbar = document.querySelector('.navbar');
+  if (navbar) navbar.style.display = 'none';
+  
+  // Load brands data
+  loadBrandsPage();
+  
+  console.log('✅ Brands page displayed');
+}
 
 
 
@@ -9644,6 +9727,79 @@ function navigateToPurchaseOrders() {
   </div>
 </div>
 
+<!-- 🏷️ BRANDS MANAGEMENT PAGE -->
+<div id="brandsPage" style="display: none; padding: 20px; max-width: 1200px; margin: 0 auto;">
+  <!-- Header -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
+    <!-- Back Button -->
+    <button onclick="navigateToHome()" style="padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+      ← Back
+    </button>
+    
+    <!-- Title -->
+    <h2 style="margin: 0; flex: 1; text-align: center; color: #333; min-width: 200px;">🏷️ Brands Management</h2>
+    
+    <!-- Add Brands Button -->
+    <button onclick="openAddBrandsModal()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 8px;">
+      ➕ Add Brands
+    </button>
+  </div>
+  
+  <!-- Brands List -->
+  <div id="brandsList" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; min-height: 300px;">
+    <!-- Loading State -->
+    <div id="brandsLoadingState" style="text-align: center; padding: 40px 20px; color: #999;">
+      <p style="font-size: 18px;">Loading brands...</p>
+    </div>
+    
+    <!-- Brands List Content -->
+    <div id="brandsListContent" style="display: none; flex-direction: column; gap: 10px;">
+      <!-- Brands will be loaded here dynamically -->
+    </div>
+    
+    <!-- Empty State -->
+    <div id="emptyBrandsState" style="text-align: center; padding: 40px 20px; color: #999; display: none;">
+      <p style="font-size: 18px; margin: 10px 0;">📦 No brands yet</p>
+      <p style="margin: 10px 0;">Click "➕ Add Brands" button to add new brands</p>
+    </div>
+  </div>
+</div>
+
+<!-- 🏷️ ADD BRANDS MODAL -->
+<div id="addBrandsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+  <div style="background: white; border-radius: 8px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;">
+    <!-- Modal Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h3 style="margin: 0;">➕ Add New Brands</h3>
+      <button onclick="closeAddBrandsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999; width: 30px; height: 30px;">✕</button>
+    </div>
+    
+    <!-- Instructions -->
+    <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
+      Enter brand names (press <strong>Enter</strong> or type <strong>comma</strong> to add multiple brands)
+    </p>
+    
+    <!-- Input Field -->
+    <input type="text" id="brandInput" placeholder="Enter brand name..." style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; margin-bottom: 15px;" onkeydown="handleBrandInputKey(event)" />
+    
+    <!-- Preview Section -->
+    <div style="margin-bottom: 20px;">
+      <p style="margin: 0 0 10px 0; font-weight: bold; color: #333;">Preview:</p>
+      <div id="brandPreviewList" style="background: #f5f5f5; border-radius: 4px; padding: 15px; min-height: 80px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+        <p id="brandPreviewEmpty" style="margin: 0; color: #999; font-size: 14px;">No brands added yet</p>
+      </div>
+    </div>
+    
+    <!-- Status Message -->
+    <div id="brandModalStatus" style="padding: 10px; border-radius: 4px; margin-bottom: 15px; display: none;"></div>
+    
+    <!-- Modal Buttons -->
+    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button onclick="closeAddBrandsModal()" style="padding: 10px 20px; background: #f0f0f0; color: #333; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
+      <button id="saveAllBrandsBtn" onclick="saveAllBrands()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save All</button>
+    </div>
+  </div>
+</div>
 
 
     
@@ -9652,6 +9808,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
