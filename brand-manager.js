@@ -180,7 +180,7 @@ function displayBrandsList(brands) {
 
 /**
  * ==========================================
- * SECTION 5: ADD BRANDS MODAL
+ * SECTION 5: OPEN ADD BRANDS MODAL
  * ==========================================
  */
 
@@ -189,120 +189,18 @@ function openAddBrandsModal() {
   
   pendingBrands = [];
   
-  // Create modal if it doesn't exist
-  if (!document.getElementById('addBrandsModal')) {
-    createAddBrandsModal();
-  }
-  
   // Reset form
   document.getElementById('brandInput').value = '';
   updateBrandPreviewList();
   
-  // Show modal
-  const modal = document.getElementById('addBrandsModal');
-  modal.style.display = 'flex';
+  // Show modal using Bootstrap
+  const modal = new bootstrap.Modal(document.getElementById('addBrandsModal'));
+  modal.show();
   
   // Focus input
   setTimeout(() => {
     document.getElementById('brandInput').focus();
   }, 100);
-}
-
-function createAddBrandsModal() {
-  const modalHTML = `
-    <div id="addBrandsModal" style="
-      display: none; position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-      z-index: 2000; justify-content: center; align-items: center;
-    " onclick="closeAddBrandsModalOverlay(event)">
-      
-      <div style="
-        background: white; border-radius: 8px; padding: 30px;
-        width: 90%; max-width: 450px; max-height: 80vh; overflow-y: auto;
-        box-shadow: 0 5px 25px rgba(0,0,0,0.2);
-      " onclick="event.stopPropagation()">
-        
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
-          <h4 style="margin: 0; color: #333; font-weight: bold;">➕ Add New Brands</h4>
-          <button onclick="closeAddBrandsModal()" style="
-            background: none; border: none; font-size: 24px; cursor: pointer; color: #999;
-            padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
-          ">✕</button>
-        </div>
-        
-        <!-- Instructions -->
-        <p style="color: #666; margin-bottom: 15px; font-size: 14px; line-height: 1.5;">
-          Enter brand names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each brand name to add multiple brands:
-        </p>
-        
-        <!-- Input Field -->
-        <input id="brandInput" type="text" placeholder="e.g., Somany"
-          style="
-            width: 100%; padding: 12px; border: 2px solid #e0e0e0;
-            border-radius: 5px; margin-bottom: 20px; font-size: 14px;
-            box-sizing: border-box; transition: border-color 0.3s;
-          "
-          onfocus="this.style.borderColor='#007bff'"
-          onblur="this.style.borderColor='#e0e0e0'"
-          onkeydown="handleBrandInputKeydown(event)"
-        />
-        
-        <!-- Preview Section -->
-        <div style="margin-bottom: 20px;">
-          <p style="font-weight: bold; margin-bottom: 10px; font-size: 14px; color: #333;" id="previewCount">
-            📝 Brands to Save (0):
-          </p>
-          <div id="brandPreviewList" style="
-            list-style: none; padding: 0; margin: 0;
-            background: #f8f9fa; border: 1px solid #e0e0e0;
-            border-radius: 5px; max-height: 200px; overflow-y: auto;
-            min-height: 40px;
-          ">
-            <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
-              No brands added yet
-            </div>
-          </div>
-        </div>
-        
-        <!-- Buttons -->
-        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
-          <button onclick="closeAddBrandsModal()" style="
-            background: #e9ecef; color: #333; border: none;
-            padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;
-            font-size: 14px; transition: background 0.2s;
-          " onmouseover="this.style.background='#dee2e6'" onmouseout="this.style.background='#e9ecef'">
-            Cancel
-          </button>
-          
-          <button onclick="saveAllBrands()" style="
-            background: #007bff; color: white; border: none;
-            padding: 10px 25px; border-radius: 5px; cursor: pointer; font-weight: bold;
-            font-size: 14px; transition: background 0.2s;
-          " onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">
-            💾 Save All
-          </button>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
-}
-
-function closeAddBrandsModalOverlay(event) {
-  if (event.target.id === 'addBrandsModal') {
-    closeAddBrandsModal();
-  }
-}
-
-function closeAddBrandsModal() {
-  const modal = document.getElementById('addBrandsModal');
-  if (modal) {
-    modal.style.display = 'none';
-  }
-  pendingBrands = [];
-  console.log('❌ Modal closed');
 }
 
 /**
@@ -355,7 +253,7 @@ function updateBrandPreviewList() {
   
   if (pendingBrands.length === 0) {
     previewList.innerHTML = `
-      <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
+      <div style="padding: 10px; color: #999; text-align: center; font-size: 14px;">
         No brands added yet
       </div>
     `;
@@ -367,21 +265,21 @@ function updateBrandPreviewList() {
     html += `
       <div style="
         display: flex; justify-content: space-between; align-items: center;
-        padding: 12px 15px; border-bottom: 1px solid #e0e0e0;
+        padding: 8px 10px; border-bottom: 1px solid #e0e0e0;
         background: white; transition: background 0.2s;
       " onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='white'">
         
-        <span style="font-size: 14px; color: #333; flex: 1;">
+        <span style="font-size: 13px; color: #333; flex: 1;">
           <strong style="color: #007bff;">${index + 1}.</strong> 
           <span>${escapeHtml(brand)}</span>
         </span>
         
         <button onclick="removePendingBrand('${escapeHtml(brand)}')" style="
           background: #dc3545; color: white; border: none; 
-          padding: 5px 10px; border-radius: 3px; cursor: pointer;
-          font-size: 12px; font-weight: bold; transition: background 0.2s;
+          padding: 4px 8px; border-radius: 3px; cursor: pointer;
+          font-size: 11px; font-weight: bold; transition: background 0.2s;
         " onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
-          ✕ Remove
+          ✕
         </button>
       </div>
     `;
@@ -454,7 +352,11 @@ function saveAllBrands() {
 }
 
 function showSaveResult(saved, failed, failedBrands) {
-  closeAddBrandsModal();
+  // Close modal
+  const modal = bootstrap.Modal.getInstance(document.getElementById('addBrandsModal'));
+  if (modal) {
+    modal.hide();
+  }
   
   if (failed === 0) {
     alert(`✅ Success!\n\n${saved} brand(s) saved successfully!`);
