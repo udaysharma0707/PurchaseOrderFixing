@@ -744,22 +744,229 @@ function escapeHtml(text) {
 }
 
 // ==========================================
-// AUTO-HIDE DROPDOWNS ON OUTSIDE CLICK
+// 🔍 BRAND AUTOCOMPLETE - EDIT FORM
+// ==========================================
+
+/**
+ * When user focuses on brand field - show top 5 brands
+ */
+function onBrandFieldFocus() {
+  console.log('📌 Brand field focused');
+  
+  // Load top 5 brands
+  fetch(ENDPOINT + '?action=getLatestBrands&count=5')
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.brands) {
+        console.log('✅ Loaded top 5 brands:', data.brands);
+        showBrandDropdown(data.brands);
+      }
+    })
+    .catch(error => console.error('❌ Error loading brands:', error));
+}
+
+/**
+ * When user types in brand field - filter brands
+ */
+function onBrandFieldInput() {
+  const input = document.getElementById('productBrand');
+  const value = input.value.trim();
+  
+  console.log('📝 Brand field input:', value);
+  
+  // If empty, show top 5
+  if (!value) {
+    onBrandFieldFocus();
+    return;
+  }
+  
+  // Search for matching brands
+  fetch(ENDPOINT + '?action=searchBrands&searchTerm=' + encodeURIComponent(value))
+    .then(response => response.json())
+    .then(data => {
+      if (data.success && data.brands) {
+        console.log('✅ Found brands:', data.brands);
+        
+        if (data.brands.length === 0) {
+          // No matches - show save new brand button
+          showSaveNewBrandIcon();
+          hideBrandDropdown();
+        } else {
+          // Show filtered brands
+          showBrandDropdown(data.brands);
+          hideSaveNewBrandIcon();
+        }
+      }
+    })
+    .catch(error => console.error('❌ Error searching brands:', error));
+}
+
+/**
+ * Handle keyboard events in brand field
+ */
+function onBrandFieldKeydown(event) {
+  const dropdown = document.getElementById('brandAutocompleteDropdown');
+  
+  // Close dropdown on Escape
+  if (event.key === 'Escape') {
+    hideBrandDropdown();
+  }
+  
+  // Close dropdown on Enter (select already filled value)
+  if (event.key === 'Enter') {
+    hideBrandDropdown();
+  }
+}
+
+/**
+ * Display brand dropdown with suggestions
+ */
+function showBrandDropdown(brands) {
+  const dropdown = document.getElementById('brandAutocompleteDropdown');
+  
+  if (!brands || brands.length === 0) {
+    hideBrandDropdown();
+    return;
+  }
+  
+  // Build dropdown HTML
+  let html = '';
+  brands.forEach(brand => {
+    html += `
+      <div 
+        onclick="selectBrand('${brand.replace(/'/g, "\\'")}')"
+        style="
+          padding: 12px 15px;
+          border-bottom: 1px solid #f0f0f0;
+          cursor: pointer;
+          transition: background 0.2s;
+        "
+        onmouseover="this.style.backgroundColor = '#f5f5f5';"
+        onmouseout="this.style.backgroundColor = 'transparent';"
+      >
+        • ${brand}
+      </div>
+    `;
+  });
+  
+  dropdown.innerHTML = html;
+  dropdown.style.display = 'block';
+  
+  console.log(`✅ Showing ${brands.length} brands in dropdown`);
+}
+
+/**
+ * Hide brand dropdown
+ */
+function hideBrandDropdown() {
+  const dropdown = document.getElementById('brandAutocompleteDropdown');
+  if (dropdown) {
+    dropdown.style.display = 'none';
+  }
+}
+
+/**
+ * Select brand from dropdown
+ */
+function selectBrand(brandName) {
+  console.log('✅ Selected brand:', brandName);
+  
+  const input = document.getElementById('productBrand');
+  input.value = brandName;
+  
+  // Hide dropdown and save icon
+  hideBrandDropdown();
+  hideSaveNewBrandIcon();
+}
+
+/**
+ * Show save new brand icon
+ */
+function showSaveNewBrandIcon() {
+  const icon = document.getElementById('saveBrandIcon');
+  if (icon) {
+    icon.style.display = 'block';
+  }
+}
+
+/**
+ * Hide save new brand icon
+ */
+function hideSaveNewBrandIcon() {
+  const icon = document.getElementById('saveBrandIcon');
+  if (icon) {
+    icon.style.display = 'none';
+  }
+}
+
+/**
+ * Save new brand from edit form
+ */
+function saveNewBrandFromEditForm() {
+  console.log('💾 Saving new brand from edit form');
+  
+  const input = document.getElementById('productBrand');
+  const brandName = input.value.trim();
+  
+  if (!brandName) {
+    console.warn('⚠️ Brand name empty');
+    return;
+  }
+  
+  // Disable button
+  const saveBtn = document.getElementById('saveBrandIcon');
+  if (saveBtn) saveBtn.disabled = true;
+  
+  // Save to backend
+  fetch(ENDPOINT + '?action=addBrand&brandName=' + encodeURIComponent(brandName))
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        console.log('✅ New brand saved:', brandName);
+        hideSaveNewBrandIcon();
+        
+        // Show success briefly
+        const originalText = saveBtn.textContent;
+        if (saveBtn) {
+          saveBtn.textContent = '✅ Saved!';
+          saveBtn.style.background = '#4CAF50';
+          
+          setTimeout(() => {
+            saveBtn.textContent = originalText;
+            saveBtn.style.background = '#4CAF50';
+            saveBtn.disabled = false;
+          }, 1500);
+        }
+      } else {
+        console.error('❌ Failed to save brand:', data.error);
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error saving brand:', error);
+      if (saveBtn) saveBtn.disabled = false;
+    });
+}
+
+// ==========================================
+// AUTO-HIDE BRAND AUTOCOMPLETE DROPDOWN ON OUTSIDE CLICK
 // ==========================================
 
 document.addEventListener('click', function(event) {
-  const brandInputs = ['brand', 'photoProductBrand', 'groupManufacturer'];
+  const brandAutocompleteDropdown = document.getElementById('brandAutocompleteDropdown');
+  const productBrand = document.getElementById('productBrand');
+  const saveBrandIcon = document.getElementById('saveBrandIcon');
   
-  const isClickInsideDropdown = event.target.closest('.brand-dropdown-wrapper') ||
-                                event.target.closest('.brand-dropdown-wrapper-photo') ||
-                                event.target.closest('.brand-dropdown-wrapper-group');
-  
-  if (!isClickInsideDropdown) {
-    hideBrandDropdown();
-    hideBrandDropdownPhoto();
-    hideBrandDropdownGroup();
+  // Check if click is outside dropdown, input, and save button
+  if (brandAutocompleteDropdown && productBrand) {
+    if (!brandAutocompleteDropdown.contains(event.target) && 
+        event.target !== productBrand && 
+        event.target !== saveBrandIcon) {
+      hideBrandDropdown();
+    }
   }
 });
+
 
 
 
