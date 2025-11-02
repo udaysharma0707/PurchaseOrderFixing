@@ -2648,33 +2648,149 @@ body.modal-open {
 
 
   <!-- Add/Edit Product Modal (image removed) -->
-  <div class="modal fade" id="productModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
-    <div class="modal-header bg-primary text-white"><h5 id="modalTitle" class="modal-title">Add New Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-    <div class="modal-body">
-      <form id="productForm">
-        <input type="hidden" id="productId">
-        <div class="row mb-3">
-          <div class="col-md-8"><label class="form-label">Product Name *</label><input id="productName" class="form-control" required/></div>
-          <div class="col-md-4"><label class="form-label">Category *</label><select id="category" class="form-select" required><option value="">Select</option><option value="Tiles">Tiles</option><option value="Sanitaryware">Sanitaryware</option><option value="Accessories">Accessories</option></select></div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-6"><label class="form-label">Brand</label><input id="brand" class="form-control"/></div>
-          <div class="col-md-6"><label class="form-label">Size</label><input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/></div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-4"><label class="form-label">Unit Type *</label><select id="unitType" class="form-select" required><option value="Box">Box</option><option value="Piece">Piece</option><option value="SFT">Square Feet</option></select></div>
-          <div class="col-md-4"><label class="form-label">Pieces per Box</label><input id="piecesPerBox" class="form-control" type="number" value="1"/></div>
-          <div class="col-md-4"><label class="form-label">SFT per Box</label><input id="sftPerBox" class="form-control" type="number" step="0.01"/></div>
-        </div>
-        <div class="row mb-3">
-          <div class="col-md-4"><label class="form-label">Price per Unit *</label><input id="price" class="form-control" type="number" step="0.01" required/></div>
-          <div class="col-md-4"><label class="form-label">Current Stock *</label><input id="stock" class="form-control" type="number" required/></div>
-          <div class="col-md-4"><label class="form-label">Minimum Stock</label><input id="minStock" class="form-control" type="number" value="5"/></div>
-        </div>
-      </form>
+  <!-- Add/Edit Product Modal (with brand autocomplete) -->
+<div class="modal fade" id="productModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 id="modalTitle" class="modal-title">Add New Product</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      
+      <div class="modal-body">
+        <form id="productForm">
+          <input type="hidden" id="productId">
+          
+          <div class="row mb-3">
+            <div class="col-md-8">
+              <label class="form-label">Product Name *</label>
+              <input id="productName" class="form-control" required/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Category *</label>
+              <select id="category" class="form-select" required>
+                <option value="">Select</option>
+                <option value="Tiles">Tiles</option>
+                <option value="Sanitaryware">Sanitaryware</option>
+                <option value="Accessories">Accessories</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <!-- 🏷️ BRAND FIELD WITH AUTOCOMPLETE -->
+            <div class="col-md-6" style="position: relative;">
+              <label class="form-label">Brand</label>
+              <div style="position: relative;">
+                <input 
+                  type="text" 
+                  id="productBrand" 
+                  placeholder="Select or type brand..." 
+                  class="form-control"
+                  onfocus="onBrandFieldFocus()"
+                  oninput="onBrandFieldInput()"
+                  onkeydown="onBrandFieldKeydown(event)"
+                />
+                
+                <!-- Save New Brand Icon -->
+                <button 
+                  id="saveBrandIcon" 
+                  type="button"
+                  onclick="saveNewBrandFromEditForm()" 
+                  style="
+                    position: absolute;
+                    right: 10px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: #4CAF50;
+                    color: white;
+                    border: none;
+                    padding: 6px 10px;
+                    border-radius: 3px;
+                    cursor: pointer;
+                    font-size: 12px;
+                    display: none;
+                  "
+                  title="Save this brand"
+                >
+                  💾 Save
+                </button>
+              </div>
+              
+              <!-- Brand Autocomplete Dropdown -->
+              <div 
+                id="brandAutocompleteDropdown" 
+                style="
+                  position: absolute;
+                  top: 100%;
+                  left: 0;
+                  right: 0;
+                  background: white;
+                  border: 1px solid #ddd;
+                  border-top: none;
+                  border-radius: 0 0 4px 4px;
+                  max-height: 200px;
+                  overflow-y: auto;
+                  z-index: 1000;
+                  display: none;
+                  margin-top: -1px;
+                  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                "
+              >
+                <!-- Brands will be loaded here dynamically -->
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <label class="form-label">Size</label>
+              <input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Unit Type *</label>
+              <select id="unitType" class="form-select" required>
+                <option value="Box">Box</option>
+                <option value="Piece">Piece</option>
+                <option value="SFT">Square Feet</option>
+              </select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Pieces per Box</label>
+              <input id="piecesPerBox" class="form-control" type="number" value="1"/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">SFT per Box</label>
+              <input id="sftPerBox" class="form-control" type="number" step="0.01"/>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label class="form-label">Price per Unit *</label>
+              <input id="price" class="form-control" type="number" step="0.01" required/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Current Stock *</label>
+              <input id="stock" class="form-control" type="number" required/>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Minimum Stock</label>
+              <input id="minStock" class="form-control" type="number" value="5"/>
+            </div>
+          </div>
+        </form>
+      </div>
+      
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
+      </div>
     </div>
-    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" onclick="saveProduct()">Save Product</button></div>
-  </div></div></div>
+  </div>
+</div>
+
 
   <!-- SALES MODAL (grid) - top buttons removed, kept within body below grid -->
   <div class="modal fade" id="salesModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
@@ -4335,36 +4451,54 @@ async function deleteProductFromSheet(id) {
 
 
 
-  /***********************
-   * Product CRUD UI
-   ***********************/
-  let editingProductId = null;
-  function showAddProduct(){ editingProductId=null; document.getElementById('modalTitle').textContent='Add New Product'; document.getElementById('productForm').reset(); document.getElementById('productId').value=''; new bootstrap.Modal(document.getElementById('productModal')).show(); }
-  function editProduct(id){
-    const p = (cachedProducts||[]).find(x=>x.id===id);
-    if(!p){ alert('ÃƒÂ¢Ã‚ÂÃ…â€™ Product not found'); return; }
-    editingProductId = id;
-    document.getElementById('modalTitle').textContent='Edit Product';
-    document.getElementById('productId').value = p.id;
-    document.getElementById('productName').value = p.name;
-    document.getElementById('category').value = p.category;
-    document.getElementById('brand').value = p.brand||'';
-    document.getElementById('size').value = p.size||'';
-    document.getElementById('unitType').value = p.unitType;
-    document.getElementById('piecesPerBox').value = p.piecesPerBox||1;
-    document.getElementById('sftPerBox').value = p.sftPerBox||'';
-    document.getElementById('price').value = p.price;
-    document.getElementById('stock').value = p.stock;
-    document.getElementById('minStock').value = p.minStock;
+ /***********************
+ * Product CRUD UI - WITH BRAND AUTOCOMPLETE
+ ***********************/
+ 
+let editingProductId = null;
 
-  // âœ… CRITICAL: Preserve imageUrl when editing
-  // Store it in a hidden field or variable
-  window.editingProductImageUrl = p.imageUrl || '';
-    
-    new bootstrap.Modal(document.getElementById('productModal')).show();
+function showAddProduct() {
+  editingProductId = null;
+  document.getElementById('modalTitle').textContent = 'Add New Product';
+  document.getElementById('productForm').reset();
+  document.getElementById('productId').value = '';
+  
+  // Initialize brand field
+  document.getElementById('productBrand').value = '';
+  window.editingProductImageUrl = '';
+  
+  new bootstrap.Modal(document.getElementById('productModal')).show();
+}
+
+function editProduct(id) {
+  const p = (cachedProducts || []).find(x => x.id === id);
+  if (!p) {
+    alert('❌ Product not found');
+    return;
   }
+  
+  editingProductId = id;
+  document.getElementById('modalTitle').textContent = 'Edit Product';
+  document.getElementById('productId').value = p.id;
+  document.getElementById('productName').value = p.name;
+  document.getElementById('category').value = p.category;
+  document.getElementById('brand').value = p.brand || '';
+  document.getElementById('productBrand').value = p.brand || ''; // ✅ Set brand field
+  document.getElementById('size').value = p.size || '';
+  document.getElementById('unitType').value = p.unitType;
+  document.getElementById('piecesPerBox').value = p.piecesPerBox || 1;
+  document.getElementById('sftPerBox').value = p.sftPerBox || '';
+  document.getElementById('price').value = p.price;
+  document.getElementById('stock').value = p.stock;
+  document.getElementById('minStock').value = p.minStock;
+  
+  // ✅ CRITICAL: Preserve imageUrl when editing
+  window.editingProductImageUrl = p.imageUrl || '';
+  
+  new bootstrap.Modal(document.getElementById('productModal')).show();
+}
 
-  async function saveProduct() {
+async function saveProduct() {
   // ✅ CHECK IF THIS IS A VARIANT EDIT
   const form = document.getElementById('productForm');
   const isVariant = form.dataset.isVariant === 'true';
@@ -4375,10 +4509,10 @@ async function deleteProductFromSheet(id) {
     return;
   }
   
-  // ✅ EXISTING PRODUCT SAVE LOGIC (UNCHANGED)
+  // ✅ EXISTING PRODUCT SAVE LOGIC
   const name = document.getElementById('productName').value.trim();
   const category = document.getElementById('category').value;
-  const brand = document.getElementById('brand').value.trim();
+  const brand = document.getElementById('productBrand').value.trim(); // ✅ Use productBrand field
   const size = document.getElementById('size').value.trim();
   const unitType = document.getElementById('unitType').value;
   const piecesPerBox = parseInt(document.getElementById('piecesPerBox').value) || 1;
@@ -4388,7 +4522,7 @@ async function deleteProductFromSheet(id) {
   const minStock = parseInt(document.getElementById('minStock').value) || 5;
   
   if (!name || !category || isNaN(price) || isNaN(stock) || stock < 0) {
-    alert('Fill required fields');
+    alert('❌ Fill required fields');
     return;
   }
   
@@ -4404,7 +4538,7 @@ async function deleteProductFromSheet(id) {
     price: price,
     stock: stock,
     minStock: minStock,
-    imageUrl: window.editingProductImageUrl || ''  // ✅ PRESERVE IMAGE URL
+    imageUrl: window.editingProductImageUrl || '' // ✅ PRESERVE IMAGE URL
   };
   
   const idx = cachedProducts.findIndex(p => p.id === product.id);
@@ -4421,7 +4555,7 @@ async function deleteProductFromSheet(id) {
   const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
   if (modal) modal.hide();
   
-  showSyncIndicator('Saving product...');
+  showSyncIndicator('💾 Saving product...');
   
   // Background save
   saveProductToSheet(product, !!editingProductId).then(resp => {
@@ -4431,15 +4565,15 @@ async function deleteProductFromSheet(id) {
         if (localIdx !== -1) cachedProducts[localIdx].id = resp.id;
         renderProducts();
       }
-      showSyncIndicator('Saved', 900);
+      showSyncIndicator('✅ Saved', 900);
     }
   }).catch(err => {
     console.error(err);
-    if (previous) {
+    if (previous && idx !== -1) {
       cachedProducts[idx] = previous;
       renderProducts();
     }
-    alert('Save failed - reverted locally.');
+    alert('❌ Save failed - reverted locally.');
   });
   
   // Clear the temporary imageUrl variable
@@ -9820,6 +9954,7 @@ function navigateToBrands() {
 
 </body>
 </html>
+
 
 
 
