@@ -4455,50 +4455,33 @@ async function deleteProductFromSheet(id) {
  * Product CRUD UI - WITH BRAND AUTOCOMPLETE
  ***********************/
  
-let editingProductId = null;
+  let editingProductId = null;
+  function showAddProduct(){ editingProductId=null; document.getElementById('modalTitle').textContent='Add New Product'; document.getElementById('productForm').reset(); document.getElementById('productId').value=''; new bootstrap.Modal(document.getElementById('productModal')).show(); }
+  function editProduct(id){
+    const p = (cachedProducts||[]).find(x=>x.id===id);
+    if(!p){ alert('ÃƒÂ¢Ã‚ÂÃ…â€™ Product not found'); return; }
+    editingProductId = id;
+    document.getElementById('modalTitle').textContent='Edit Product';
+    document.getElementById('productId').value = p.id;
+    document.getElementById('productName').value = p.name;
+    document.getElementById('category').value = p.category;
+    document.getElementById('brand').value = p.brand||'';
+    document.getElementById('size').value = p.size||'';
+    document.getElementById('unitType').value = p.unitType;
+    document.getElementById('piecesPerBox').value = p.piecesPerBox||1;
+    document.getElementById('sftPerBox').value = p.sftPerBox||'';
+    document.getElementById('price').value = p.price;
+    document.getElementById('stock').value = p.stock;
+    document.getElementById('minStock').value = p.minStock;
 
-function showAddProduct() {
-  editingProductId = null;
-  document.getElementById('modalTitle').textContent = 'Add New Product';
-  document.getElementById('productForm').reset();
-  document.getElementById('productId').value = '';
-  
-  // Initialize brand field
-  document.getElementById('productBrand').value = '';
-  window.editingProductImageUrl = '';
-  
-  new bootstrap.Modal(document.getElementById('productModal')).show();
-}
-
-function editProduct(id) {
-  const p = (cachedProducts || []).find(x => x.id === id);
-  if (!p) {
-    alert('❌ Product not found');
-    return;
-  }
-  
-  editingProductId = id;
-  document.getElementById('modalTitle').textContent = 'Edit Product';
-  document.getElementById('productId').value = p.id;
-  document.getElementById('productName').value = p.name;
-  document.getElementById('category').value = p.category;
-  document.getElementById('brand').value = p.brand || '';
-  document.getElementById('productBrand').value = p.brand || ''; // ✅ Set brand field
-  document.getElementById('size').value = p.size || '';
-  document.getElementById('unitType').value = p.unitType;
-  document.getElementById('piecesPerBox').value = p.piecesPerBox || 1;
-  document.getElementById('sftPerBox').value = p.sftPerBox || '';
-  document.getElementById('price').value = p.price;
-  document.getElementById('stock').value = p.stock;
-  document.getElementById('minStock').value = p.minStock;
-  
-  // ✅ CRITICAL: Preserve imageUrl when editing
+  // âœ… CRITICAL: Preserve imageUrl when editing
+  // Store it in a hidden field or variable
   window.editingProductImageUrl = p.imageUrl || '';
-  
-  new bootstrap.Modal(document.getElementById('productModal')).show();
-}
+    
+    new bootstrap.Modal(document.getElementById('productModal')).show();
+  }
 
-async function saveProduct() {
+  async function saveProduct() {
   // ✅ CHECK IF THIS IS A VARIANT EDIT
   const form = document.getElementById('productForm');
   const isVariant = form.dataset.isVariant === 'true';
@@ -4509,10 +4492,10 @@ async function saveProduct() {
     return;
   }
   
-  // ✅ EXISTING PRODUCT SAVE LOGIC
+  // ✅ EXISTING PRODUCT SAVE LOGIC (UNCHANGED)
   const name = document.getElementById('productName').value.trim();
   const category = document.getElementById('category').value;
-  const brand = document.getElementById('productBrand').value.trim(); // ✅ Use productBrand field
+  const brand = document.getElementById('brand').value.trim();
   const size = document.getElementById('size').value.trim();
   const unitType = document.getElementById('unitType').value;
   const piecesPerBox = parseInt(document.getElementById('piecesPerBox').value) || 1;
@@ -4522,7 +4505,7 @@ async function saveProduct() {
   const minStock = parseInt(document.getElementById('minStock').value) || 5;
   
   if (!name || !category || isNaN(price) || isNaN(stock) || stock < 0) {
-    alert('❌ Fill required fields');
+    alert('Fill required fields');
     return;
   }
   
@@ -4538,7 +4521,7 @@ async function saveProduct() {
     price: price,
     stock: stock,
     minStock: minStock,
-    imageUrl: window.editingProductImageUrl || '' // ✅ PRESERVE IMAGE URL
+    imageUrl: window.editingProductImageUrl || ''  // ✅ PRESERVE IMAGE URL
   };
   
   const idx = cachedProducts.findIndex(p => p.id === product.id);
@@ -4555,7 +4538,7 @@ async function saveProduct() {
   const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
   if (modal) modal.hide();
   
-  showSyncIndicator('💾 Saving product...');
+  showSyncIndicator('Saving product...');
   
   // Background save
   saveProductToSheet(product, !!editingProductId).then(resp => {
@@ -4565,20 +4548,21 @@ async function saveProduct() {
         if (localIdx !== -1) cachedProducts[localIdx].id = resp.id;
         renderProducts();
       }
-      showSyncIndicator('✅ Saved', 900);
+      showSyncIndicator('Saved', 900);
     }
   }).catch(err => {
     console.error(err);
-    if (previous && idx !== -1) {
+    if (previous) {
       cachedProducts[idx] = previous;
       renderProducts();
     }
-    alert('❌ Save failed - reverted locally.');
+    alert('Save failed - reverted locally.');
   });
   
   // Clear the temporary imageUrl variable
   window.editingProductImageUrl = '';
 }
+
 
 
 
@@ -9954,6 +9938,7 @@ function navigateToBrands() {
 
 </body>
 </html>
+
 
 
 
