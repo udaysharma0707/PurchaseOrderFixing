@@ -26,6 +26,7 @@ function navigateToCustomers() {
   const allProductsPage = document.getElementById('allProductsPage');
   const productGroupsPage = document.getElementById('productGroupsPage');
   const customersPage = document.getElementById('customersPage');
+  const brandsPage = document.getElementById('brandsPage'); // ✅ ADD THIS
   const groupDetailPage = document.getElementById('groupDetailPage');
   
   // === STEP 2: Hide all other pages ===
@@ -42,6 +43,12 @@ function navigateToCustomers() {
   if (productGroupsPage) {
     productGroupsPage.classList.remove('active');
     productGroupsPage.style.display = 'none';
+  }
+  
+  // ✅ ADD THIS BLOCK
+  if (brandsPage) {
+    brandsPage.classList.remove('active');
+    brandsPage.style.display = 'none';
   }
   
   if (groupDetailPage) {
@@ -80,6 +87,80 @@ function navigateToCustomers() {
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+
+// Navigate to Brands Management Page - NEW
+function navigateToBrands() {
+  console.log('🏷️ Navigating to Brands');
+  
+  currentPage = 'brands';
+  
+  // === STEP 1: Get page elements ===
+  const mainApp = document.getElementById('mainApp');
+  const allProductsPage = document.getElementById('allProductsPage');
+  const productGroupsPage = document.getElementById('productGroupsPage');
+  const customersPage = document.getElementById('customersPage');
+  const brandsPage = document.getElementById('brandsPage');
+  const groupDetailPage = document.getElementById('groupDetailPage');
+  
+  // === STEP 2: Hide all other pages ===
+  if (mainApp) {
+    mainApp.style.display = 'none';
+    mainApp.classList.remove('active');
+  }
+  
+  if (allProductsPage) {
+    allProductsPage.classList.remove('active');
+    allProductsPage.style.display = 'none';
+  }
+  
+  if (productGroupsPage) {
+    productGroupsPage.classList.remove('active');
+    productGroupsPage.style.display = 'none';
+  }
+  
+  if (customersPage) {
+    customersPage.classList.remove('active');
+    customersPage.style.display = 'none';
+  }
+  
+  if (groupDetailPage) {
+    groupDetailPage.classList.remove('active');
+    groupDetailPage.style.display = 'none';
+  }
+  
+  // === STEP 3: Show brands page ===
+  if (brandsPage) {
+    brandsPage.classList.add('active');
+    brandsPage.style.display = 'block';
+    console.log('✅ Brands page displayed');
+  } else {
+    console.error('❌ brandsPage element not found!');
+    return;
+  }
+  
+  // === STEP 4: Hide the blue navbar ===
+  const navbar = document.querySelector('.navbar.navbar-dark.bg-primary');
+  if (navbar) {
+    navbar.style.display = 'none';
+  }
+  
+  // === STEP 5: Load brands from backend ===
+  if (typeof loadBrandsPage === 'function') {
+    loadBrandsPage();
+    console.log('✅ Brands data loaded');
+  } else {
+    console.warn('⚠️ loadBrandsPage function not found');
+  }
+  
+  // === STEP 6: Close sidebar and scroll ===
+  if (typeof closeSidebar === 'function') {
+    closeSidebar();
+  }
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 
 /**
  * ==========================================
@@ -754,5 +835,6 @@ function escapeHtml(text) {
  */
 
 console.log('✅ Customer Management Module Loaded');
+
 
 
