@@ -7175,7 +7175,6 @@ function sidebarAction(action) {
 
 
 // Navigate to All Products page - UPDATED FIX
-// Navigate to All Products page - UPDATED FIX
 function navigateToAllProducts() {
   console.log('📦 Navigating to All Products');
   
@@ -7186,6 +7185,7 @@ function navigateToAllProducts() {
   const allProductsPage = document.getElementById('allProductsPage');
   const productGroupsPage = document.getElementById('productGroupsPage');
   const customersPage = document.getElementById('customersPage');
+  const brandsPage = document.getElementById('brandsPage'); // ✅ ADD THIS
   const groupDetailPage = document.getElementById('groupDetailPage');
   
   // === STEP 2: HIDE ALL other pages ===
@@ -7202,6 +7202,12 @@ function navigateToAllProducts() {
   if (customersPage) {
     customersPage.style.display = 'none';
     customersPage.classList.remove('active');
+  }
+  
+  // ✅ ADD THIS BLOCK
+  if (brandsPage) {
+    brandsPage.style.display = 'none';
+    brandsPage.classList.remove('active');
   }
   
   if (groupDetailPage) {
@@ -7262,11 +7268,6 @@ function navigateToAllProducts() {
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-
-
-
-
-
 
 
 
@@ -9343,6 +9344,16 @@ window.addEventListener('DOMContentLoaded', () => {
           console.error('❌ navigateToCustomers function not found');
         }
         break;
+      
+      // ✅ ADD BRANDS CASE
+      case 'brands':
+        console.log('📍 Routing: Invoices → Brands');
+        if (typeof navigateToBrands === 'function') {
+          navigateToBrands();
+        } else {
+          console.error('❌ navigateToBrands function not found');
+        }
+        break;
         
       default:
         console.warn('⚠️ Unknown page parameter:', page);
@@ -9355,6 +9366,7 @@ window.addEventListener('DOMContentLoaded', () => {
     
   }, 800);
 });
+
 
 // Navigate to Purchase Orders page
 function navigateToPurchaseOrders() {
@@ -9425,7 +9437,7 @@ function navigateToBrands() {
 
 
 
-
+<script src="brand-manager.js"></script>
 
     
 
@@ -9808,6 +9820,7 @@ function navigateToBrands() {
 
 </body>
 </html>
+
 
 
 
