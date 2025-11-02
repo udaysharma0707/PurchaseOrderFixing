@@ -9003,7 +9003,7 @@ function navigateToBrands() {
   const productGroupsPage = document.getElementById('productGroupsPage');
   const customersPage = document.getElementById('customersPage');
   const groupDetailPage = document.getElementById('groupDetailPage');
-  const brandsPage = document.getElementById('brandsPage');  // ✅ NEW
+  const brandsPage = document.getElementById('brandsPage');
   
   // === STEP 2: Hide all other pages ===
   if (mainApp) {
@@ -9029,9 +9029,11 @@ function navigateToBrands() {
   
   // === STEP 3: Show brands page ===
   if (brandsPage) {
-    brandsPage.style.display = 'block';
+    brandsPage.style.display = 'block';  // ✅ MAKE SURE THIS LINE EXISTS
     brandsPage.classList.add('active');
     console.log('✅ Brands page displayed');
+  } else {
+    console.error('❌ brandsPage element not found!');
   }
   
   // === STEP 4: Hide the blue navbar ===
@@ -9044,6 +9046,8 @@ function navigateToBrands() {
   if (typeof renderBrandsPage === 'function') {
     renderBrandsPage();
     console.log('✅ Brands page rendered');
+  } else {
+    console.error('❌ renderBrandsPage function not found');
   }
   
   // === STEP 6: Close sidebar and scroll ===
@@ -9765,6 +9769,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
