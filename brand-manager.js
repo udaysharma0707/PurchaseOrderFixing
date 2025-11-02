@@ -107,7 +107,7 @@ function renderBrandsPage() {
 function loadBrandsFromBackend() {
   console.log('📡 Fetching brands from backend...');
   
-  fetch(scriptURL, {
+  fetch(SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify({ action: 'getBrands' })
   })
@@ -315,7 +315,7 @@ function saveAllBrands() {
   // Save each brand
   pendingBrands.forEach((brand, index) => {
     setTimeout(() => {
-      fetch(scriptURL, {
+      fetch(SCRIPT_URL, {
         method: 'POST',
         body: JSON.stringify({ 
           action: 'addBrand',
@@ -389,7 +389,7 @@ function deleteBrandConfirm(brand) {
 function deleteBrand(brand) {
   console.log('🗑️ Deleting brand:', brand);
   
-  fetch(scriptURL, {
+  fetch(SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify({ 
       action: 'deleteBrand',
@@ -452,4 +452,5 @@ function escapeHtml(text) {
 }
 
 console.log('✅ Brand Manager Module Loaded - PHASE 2');
+
 
