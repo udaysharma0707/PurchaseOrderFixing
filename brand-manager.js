@@ -1,6 +1,6 @@
 /**
  * ==========================================
- * BRAND MANAGEMENT MODULE
+ * BRAND MANAGEMENT MODULEE
  * File: brand-manager.js
  * ==========================================
  */
@@ -659,3 +659,4 @@ function escapeHtml(text) {
  */
 
 console.log('✅ Brand Management Module Loaded');
+
