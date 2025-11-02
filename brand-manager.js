@@ -73,7 +73,7 @@ function renderBrandsPage() {
         <h2 style="margin: 0; flex: 1; text-align: center; font-size: 20px;">🏷️ Brands</h2>
         
         <!-- Add Brands Button -->
-        <button onclick="openAddBrandsModal()" style="
+        <button onclick="openAddBrandModal()" style="
           background: #28a745; color: white; border: none; padding: 8px 16px;
           border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;
         ">+ Add</button>
@@ -184,7 +184,7 @@ function displayBrandsList(brands) {
  * ==========================================
  */
 
-function openAddBrandsModal() {
+function openAddBrandModal() {
   console.log('📋 Opening Add Brands Modal');
   
   pendingBrands = [];
@@ -452,3 +452,4 @@ function escapeHtml(text) {
 }
 
 console.log('✅ Brand Manager Module Loaded - PHASE 2');
+
