@@ -2364,10 +2364,44 @@ body.modal-open {
   </div>
 </div>
 
-  <!-- Brands Management Page -->
-<div id="brandsPage" style="display: none;">
-  <div id="brandsPageContent">
-    <!-- Content rendered by brand-manager.js -->
+  <!-- ✅✅✅ BRANDS PAGE ✅✅✅ -->
+<div class="page-view" id="brandsPage">
+  <!-- Header -->
+  <div class="page-header">
+    <button class="back-btn" onclick="navigateTo('dashboard')">
+      <i class="bi bi-arrow-left"></i> Back
+    </button>
+    <h3>Brands</h3>
+    <button class="btn btn-success" onclick="openAddBrandModal()">
+      <i class="bi bi-plus-lg"></i> Add
+    </button>
+  </div>
+  
+  <!-- Search Box -->
+  <div class="container-fluid" style="padding: 20px;">
+    <input 
+      type="text" 
+      class="form-control mb-3" 
+      id="searchBrandsInput" 
+      placeholder="🔍 Search brands..." 
+      onkeyup="filterBrands(this.value)"
+      style="max-width: 600px; margin: 0 auto;"
+    >
+    
+    <!-- Brands List Container -->
+    <div id="brandsListContainer">
+      <!-- Brand cards will be rendered here by JavaScript -->
+    </div>
+    
+    <!-- Empty State -->
+    <div id="brandsEmptyState" style="display:none; text-align:center; padding:60px 20px;">
+      <i class="bi bi-tags" style="font-size:64px; color:#ccc;"></i>
+      <h4 style="margin-top:20px;">No Brands Yet</h4>
+      <p>Add your first brand to get started</p>
+      <button class="btn btn-primary mt-3" onclick="openAddBrandModal()">
+        <i class="bi bi-plus-lg"></i> Add First Brand
+      </button>
+    </div>
   </div>
 </div>
 
@@ -9763,6 +9797,87 @@ function navigateToPurchaseOrders() {
   </div>
 </div>
 
+<!-- Brand Add/Edit Modal -->
+<div class="modal fade" id="brandModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title" id="brandFormTitle">Add Brand</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="brandId">
+        
+        <div class="mb-3">
+          <label class="form-label">Brand Name *</label>
+          <input type="text" class="form-control" id="brandName" placeholder="e.g., Somany, Johnson">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Manufacturer ID</label>
+          <input type="text" class="form-control" id="manufacturerId" placeholder="e.g., MFG-001">
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Description</label>
+          <textarea class="form-control" id="brandDescription" rows="3" placeholder="Brand description..."></textarea>
+        </div>
+        
+        <div class="mb-3">
+          <label class="form-label">Country</label>
+          <input type="text" class="form-control" id="brandCountry" placeholder="e.g., India, USA">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveBrand()">Save Brand</button>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Brand Detail Modal -->
+<div class="modal fade" id="brandDetailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="detailBrandName">Brand Details</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3">
+          <li class="nav-item">
+            <button class="nav-link active brand-tab-btn" onclick="showBrandTab('info')">Info</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link brand-tab-btn" onclick="showBrandTab('products')">Products</button>
+          </li>
+        </ul>
+        
+        <!-- Info Tab -->
+        <div id="brandInfoTab">
+          <p><strong>Manufacturer ID:</strong> <span id="detailManufacturerId"></span></p>
+          <p><strong>Description:</strong> <span id="detailBrandDescription"></span></p>
+          <p><strong>Country:</strong> <span id="detailBrandCountry"></span></p>
+          <p><strong>Products:</strong> <span id="detailProductCount" class="badge bg-primary"></span></p>
+          <p><strong>Created:</strong> <span id="detailCreatedDate"></span></p>
+        </div>
+        
+        <!-- Products Tab -->
+        <div id="brandProductsTab" style="display:none;">
+          <div id="brandProductsList">
+            <!-- Products will be loaded here -->
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-primary" onclick="openEditBrandModal(currentBrandId)">Edit Brand</button>
+        <button type="button" class="btn btn-danger" onclick="confirmDeleteBrand(currentBrandId, document.getElementById('detailBrandName').textContent)">Delete Brand</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
     
@@ -9771,6 +9886,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
