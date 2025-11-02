@@ -14,6 +14,93 @@ let cachedBrands = [];
 let brandCacheExpiry = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
+
+
+
+/**
+ * Navigate to Brands Page
+ */
+function navigateToBrands() {
+  console.log('🏷️ Navigating to Brands page');
+  
+  // Hide all pages
+  const mainApp = document.getElementById('mainApp');
+  const allProductsPage = document.getElementById('allProductsPage');
+  const customersPage = document.getElementById('customersPage');
+  const productGroupsPageContainer = document.getElementById('productGroupsPageContainer');
+  const brandsPage = document.getElementById('brandsPage');
+  
+  if (mainApp) mainApp.style.display = 'none';
+  if (allProductsPage) allProductsPage.style.display = 'none';
+  if (customersPage) customersPage.style.display = 'none';
+  if (productGroupsPageContainer) productGroupsPageContainer.style.display = 'none';
+  
+  // Show brands page
+  if (brandsPage) {
+    brandsPage.style.display = 'block';
+    loadBrandsPage();
+  }
+}
+
+/**
+ * Load Brands Page
+ */
+function loadBrandsPage() {
+  console.log('📋 Loading brands page');
+  
+  const loadingEl = document.getElementById('brandsLoadingState');
+  const contentEl = document.getElementById('brandsListContent');
+  const emptyEl = document.getElementById('emptyBrandsState');
+  
+  if (loadingEl) loadingEl.style.display = 'block';
+  if (contentEl) contentEl.style.display = 'none';
+  if (emptyEl) emptyEl.style.display = 'none';
+  
+  // Fetch brands
+  fetch(ENDPOINT + '?action=getBrands')
+    .then(response => response.json())
+    .then(data => {
+      if (loadingEl) loadingEl.style.display = 'none';
+      
+      if (data.success && data.brands && data.brands.length > 0) {
+        renderBrandsPageList(data.brands);
+      } else {
+        if (emptyEl) emptyEl.style.display = 'block';
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error:', error);
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'block';
+    });
+}
+
+/**
+ * Render Brands List on Page
+ */
+function renderBrandsPageList(brands) {
+  const contentEl = document.getElementById('brandsListContent');
+  if (!contentEl) return;
+  
+  contentEl.innerHTML = '';
+  contentEl.style.display = 'flex';
+  
+  brands.forEach((brand, index) => {
+    const item = document.createElement('div');
+    item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 4px; border: 1px solid #e0e0e0; margin-bottom: 8px;';
+    
+    item.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+        <span style="font-weight: bold; color: white; min-width: 30px; background: #2196F3; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">${index + 1}</span>
+        <span style="font-size: 16px; color: #333;">${brand}</span>
+      </div>
+    `;
+    
+    contentEl.appendChild(item);
+  });
+}
+
+
 // ==========================================
 // 🔍 LOAD & SHOW BRAND DROPDOWN
 // ==========================================
@@ -911,3 +998,4 @@ document.addEventListener('click', function(event) {
 // ==========================================
 // ✅ END OF FILE
 // ==========================================
+
