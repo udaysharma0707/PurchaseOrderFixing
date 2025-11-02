@@ -9497,25 +9497,45 @@ function navigateToPurchaseOrders() {
 /**
  * Navigate to Brands Page
  */
+/**
+ * Navigate to Brands Page - SAFE VERSION
+ */
 function navigateToBrands() {
   console.log('🏷️ Navigating to Brands page');
   
-  // Hide all pages
-  const mainApp = document.getElementById('mainApp');
-  const allProductsPage = document.getElementById('allProductsPage');
-  const customersPage = document.getElementById('customersPage');
-  const productGroupsPageContainer = document.getElementById('productGroupsPageContainer');
-  const brandsPage = document.getElementById('brandsPage');
+  // Hide pages that exist
+  const elementsToHide = [
+    'mainApp',
+    'allProductsPage',
+    'customersPage',
+    'productGroupsPageContainer',
+    'groupDetailPage'
+  ];
   
-  if (mainApp) mainApp.style.display = 'none';
-  if (allProductsPage) allProductsPage.style.display = 'none';
-  if (customersPage) customersPage.style.display = 'none';
-  if (productGroupsPageContainer) productGroupsPageContainer.style.display = 'none';
+  elementsToHide.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.display = 'none';
+      el.classList.remove('active');
+    }
+  });
+  
+  // Hide navbar
+  const navbar = document.querySelector('.navbar');
+  if (navbar) navbar.style.display = 'none';
   
   // Show brands page
+  const brandsPage = document.getElementById('brandsPage');
   if (brandsPage) {
     brandsPage.style.display = 'block';
+    brandsPage.style.visibility = 'visible';
+    brandsPage.style.opacity = '1';
+    brandsPage.classList.add('active');
+    
+    // Load brands
     loadBrandsPage();
+  } else {
+    console.error('❌ Brands page HTML not found!');
   }
 }
 
@@ -9963,6 +9983,7 @@ function renderBrandsPageList(brands) {
 
 </body>
 </html>
+
 
 
 
