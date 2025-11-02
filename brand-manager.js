@@ -1,662 +1,552 @@
 /**
  * ==========================================
- * BRAND MANAGEMENT MODULEE
+ * BRANDS MANAGEMENT - PHASE 2 (SIMPLIFIED)
+ * Simple: Create & Delete Only
  * File: brand-manager.js
  * ==========================================
  */
 
 // ===== GLOBAL VARIABLES =====
-let cachedBrands = [];
-let currentBrandId = null;
+let brandsCache = [];
+let pendingBrands = [];
 
 /**
  * ==========================================
- * SECTION 1: NAVIGATION FUNCTIONS
+ * SECTION 1: NAVIGATION
  * ==========================================
  */
 
-// Navigate to Brands Page
 function navigateToBrands() {
   console.log('🏷️ Navigating to Brands');
   
-  currentPage = 'brands';
-  
-  // === STEP 1: Get page elements ===
-  const mainApp = document.getElementById('mainApp');
-  const allProductsPage = document.getElementById('allProductsPage');
-  const productGroupsPage = document.getElementById('productGroupsPage');
-  const customersPage = document.getElementById('customersPage');
-  const brandsPage = document.getElementById('brandsPage');
-  const groupDetailPage = document.getElementById('groupDetailPage');
-  
-  // === STEP 2: Hide all other pages ===
-  if (mainApp) {
-    mainApp.style.display = 'none';
-    mainApp.classList.remove('active');
-  }
-  
-  if (allProductsPage) {
-    allProductsPage.classList.remove('active');
-    allProductsPage.style.display = 'none';
-  }
-  
-  if (productGroupsPage) {
-    productGroupsPage.classList.remove('active');
-    productGroupsPage.style.display = 'none';
-  }
-  
-  if (customersPage) {
-    customersPage.classList.remove('active');
-    customersPage.style.display = 'none';
-  }
-  
-  if (groupDetailPage) {
-    groupDetailPage.classList.remove('active');
-    groupDetailPage.style.display = 'none';
-  }
-  
-  // === STEP 3: Show brands page ===
-  if (brandsPage) {
-    brandsPage.classList.add('active');
-    brandsPage.style.display = 'block';
-    console.log('✅ Brands page displayed');
-  } else {
-    console.error('❌ brandsPage element not found!');
-    return;
-  }
-  
-  // === STEP 4: Hide the blue navbar ===
+  // Hide navbar
   const navbar = document.querySelector('.navbar.navbar-dark.bg-primary');
   if (navbar) {
     navbar.style.display = 'none';
   }
   
-  // === STEP 5: Load brands from backend ===
-  if (typeof loadBrands === 'function') {
-    loadBrands();
-    console.log('✅ Brands data loaded');
-  } else {
-    console.warn('⚠️ loadBrands function not found');
+  // Show brands page
+  const brandsPage = document.getElementById('brandsPage');
+  if (brandsPage) {
+    brandsPage.style.display = 'block';
   }
   
-  // === STEP 6: Close sidebar and scroll ===
+  // Close sidebar
   if (typeof closeSidebar === 'function') {
     closeSidebar();
   }
   
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Render page
+  renderBrandsPage();
 }
 
 /**
  * ==========================================
- * SECTION 2: DATA LOADING FUNCTIONS
+ * SECTION 2: RENDER BRANDS PAGE
  * ==========================================
  */
 
-// Load Brands from Backend
-async function loadBrands() {
-  try {
-    console.log('📡 Fetching brands from server...');
-    
-    // Build URL with authentication
-    const url = `${GOOGLE_SCRIPT_URL}?action=getBrands&email=${encodeURIComponent(userEmail)}&hash=${encodeURIComponent(userHash)}&t=${Date.now()}`;
-    
-    // Fetch data
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    // Check response
-    if (data.success && data.brands) {
-      cachedBrands = data.brands;
-      console.log('✅ Loaded', data.brands.length, 'brands');
+function renderBrandsPage() {
+  console.log('🎨 Rendering Brands Page');
+  
+  const brandsPageContent = document.getElementById('brandsPageContent');
+  
+  if (!brandsPageContent) {
+    console.error('❌ brandsPageContent not found');
+    return;
+  }
+  
+  // Build page HTML
+  const pageHTML = `
+    <div style="padding: 0; width: 100%; min-height: 100vh; background: #f8f9fa;">
       
-      // Render brands list
-      renderBrandsList();
+      <!-- HEADER: Back Button + Title + Add Brands Button -->
+      <div style="background: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e0e0e0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        
+        <!-- Back Button -->
+        <button onclick="goBackHome()" style="
+          background: none; border: none; font-size: 24px; cursor: pointer;
+          color: #007bff; padding: 5px 10px;
+        ">← Back</button>
+        
+        <!-- Title -->
+        <h2 style="margin: 0; flex: 1; text-align: center; font-size: 20px;">🏷️ Brands</h2>
+        
+        <!-- Add Brands Button -->
+        <button onclick="openAddBrandsModal()" style="
+          background: #28a745; color: white; border: none; padding: 8px 16px;
+          border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 14px;
+        ">+ Add</button>
+      </div>
+      
+      <!-- BRANDS LIST -->
+      <div style="padding: 20px; max-width: 600px; margin: 0 auto;">
+        <div id="brandsList" style="
+          background: white; border-radius: 8px; padding: 15px;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        ">
+          <p style="text-align: center; color: #999;">Loading brands...</p>
+        </div>
+      </div>
+      
+    </div>
+  `;
+  
+  brandsPageContent.innerHTML = pageHTML;
+  
+  // Load and display brands
+  loadBrandsFromBackend();
+}
+
+/**
+ * ==========================================
+ * SECTION 3: LOAD BRANDS FROM BACKEND
+ * ==========================================
+ */
+
+function loadBrandsFromBackend() {
+  console.log('📡 Fetching brands from backend...');
+  
+  fetch(scriptURL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'getBrands' })
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log('Response:', data);
+    
+    if (data.success && data.brands) {
+      brandsCache = data.brands;
+      console.log('✅ Loaded', data.brands.length, 'brands');
+      displayBrandsList(data.brands);
     } else {
-      throw new Error(data.error || 'Failed to load brands');
+      console.warn('⚠️ No brands found or error');
+      displayBrandsList([]);
     }
-    
-  } catch (error) {
-    console.error('❌ Error loading brands:', error);
-    
-    // Show error message
-    const container = document.getElementById('brandsListContainer');
-    if (container) {
-      container.innerHTML = `
-        <div style="text-align:center; padding:40px; color:#dc3545;">
-          <i class="bi bi-exclamation-circle" style="font-size:48px;"></i>
-          <h4 style="margin-top:20px;">Error Loading Brands</h4>
-          <p>${error.message}</p>
-          <button class="btn btn-primary mt-3" onclick="loadBrands()">
-            <i class="bi bi-arrow-clockwise"></i> Retry
+  })
+  .catch(error => {
+    console.error('❌ Error fetching brands:', error);
+    displayBrandsList([]);
+  });
+}
+
+/**
+ * ==========================================
+ * SECTION 4: DISPLAY BRANDS LIST
+ * ==========================================
+ */
+
+function displayBrandsList(brands) {
+  const brandsList = document.getElementById('brandsList');
+  
+  if (!brandsList) return;
+  
+  if (!brands || brands.length === 0) {
+    brandsList.innerHTML = `
+      <p style="text-align: center; color: #999; padding: 30px;">
+        📭 No brands yet. Click "+ Add" to create one!
+      </p>
+    `;
+    return;
+  }
+  
+  let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
+  
+  brands.forEach((brand, index) => {
+    html += `
+      <li style="
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px; border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+      " onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='transparent'">
+        
+        <span style="font-size: 14px; color: #333;">
+          <strong>${(index + 1)}.</strong> ${escapeHtml(brand)}
+        </span>
+        
+        <button onclick="deleteBrandConfirm('${escapeHtml(brand)}')" style="
+          background: #dc3545; color: white; border: none;
+          padding: 5px 10px; border-radius: 3px; cursor: pointer;
+          font-size: 12px; font-weight: bold;
+        ">🗑️ Delete</button>
+      </li>
+    `;
+  });
+  
+  html += '</ul>';
+  brandsList.innerHTML = html;
+  console.log('✅ Brands list displayed');
+}
+
+/**
+ * ==========================================
+ * SECTION 5: ADD BRANDS MODAL
+ * ==========================================
+ */
+
+function openAddBrandsModal() {
+  console.log('📋 Opening Add Brands Modal');
+  
+  pendingBrands = [];
+  
+  // Create modal if it doesn't exist
+  if (!document.getElementById('addBrandsModal')) {
+    createAddBrandsModal();
+  }
+  
+  // Reset form
+  document.getElementById('brandInput').value = '';
+  updateBrandPreviewList();
+  
+  // Show modal
+  const modal = document.getElementById('addBrandsModal');
+  modal.style.display = 'flex';
+  
+  // Focus input
+  setTimeout(() => {
+    document.getElementById('brandInput').focus();
+  }, 100);
+}
+
+function createAddBrandsModal() {
+  const modalHTML = `
+    <div id="addBrandsModal" style="
+      display: none; position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%; background: rgba(0,0,0,0.5);
+      z-index: 2000; justify-content: center; align-items: center;
+    " onclick="closeAddBrandsModalOverlay(event)">
+      
+      <div style="
+        background: white; border-radius: 8px; padding: 30px;
+        width: 90%; max-width: 450px; max-height: 80vh; overflow-y: auto;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+      " onclick="event.stopPropagation()">
+        
+        <!-- Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
+          <h4 style="margin: 0; color: #333; font-weight: bold;">➕ Add New Brands</h4>
+          <button onclick="closeAddBrandsModal()" style="
+            background: none; border: none; font-size: 24px; cursor: pointer; color: #999;
+            padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;
+          ">✕</button>
+        </div>
+        
+        <!-- Instructions -->
+        <p style="color: #666; margin-bottom: 15px; font-size: 14px; line-height: 1.5;">
+          Enter brand names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each brand name to add multiple brands:
+        </p>
+        
+        <!-- Input Field -->
+        <input id="brandInput" type="text" placeholder="e.g., Somany"
+          style="
+            width: 100%; padding: 12px; border: 2px solid #e0e0e0;
+            border-radius: 5px; margin-bottom: 20px; font-size: 14px;
+            box-sizing: border-box; transition: border-color 0.3s;
+          "
+          onfocus="this.style.borderColor='#007bff'"
+          onblur="this.style.borderColor='#e0e0e0'"
+          onkeydown="handleBrandInputKeydown(event)"
+        />
+        
+        <!-- Preview Section -->
+        <div style="margin-bottom: 20px;">
+          <p style="font-weight: bold; margin-bottom: 10px; font-size: 14px; color: #333;" id="previewCount">
+            📝 Brands to Save (0):
+          </p>
+          <div id="brandPreviewList" style="
+            list-style: none; padding: 0; margin: 0;
+            background: #f8f9fa; border: 1px solid #e0e0e0;
+            border-radius: 5px; max-height: 200px; overflow-y: auto;
+            min-height: 40px;
+          ">
+            <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
+              No brands added yet
+            </div>
+          </div>
+        </div>
+        
+        <!-- Buttons -->
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
+          <button onclick="closeAddBrandsModal()" style="
+            background: #e9ecef; color: #333; border: none;
+            padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;
+            font-size: 14px; transition: background 0.2s;
+          " onmouseover="this.style.background='#dee2e6'" onmouseout="this.style.background='#e9ecef'">
+            Cancel
+          </button>
+          
+          <button onclick="saveAllBrands()" style="
+            background: #007bff; color: white; border: none;
+            padding: 10px 25px; border-radius: 5px; cursor: pointer; font-weight: bold;
+            font-size: 14px; transition: background 0.2s;
+          " onmouseover="this.style.background='#0056b3'" onmouseout="this.style.background='#007bff'">
+            💾 Save All
           </button>
         </div>
-      `;
-    }
+      </div>
+    </div>
+  `;
+  
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+}
+
+function closeAddBrandsModalOverlay(event) {
+  if (event.target.id === 'addBrandsModal') {
+    closeAddBrandsModal();
   }
+}
+
+function closeAddBrandsModal() {
+  const modal = document.getElementById('addBrandsModal');
+  if (modal) {
+    modal.style.display = 'none';
+  }
+  pendingBrands = [];
+  console.log('❌ Modal closed');
 }
 
 /**
  * ==========================================
- * SECTION 3: RENDERING FUNCTIONS
+ * SECTION 6: HANDLE BRAND INPUT
  * ==========================================
  */
 
-// Render Brands List
-function renderBrandsList() {
-  console.log('🎨 Rendering brands list...');
+function handleBrandInputKeydown(event) {
+  const input = document.getElementById('brandInput');
+  const value = input.value.trim();
   
-  const container = document.getElementById('brandsListContainer');
-  const emptyState = document.getElementById('brandsEmptyState');
-  
-  if (!container) {
-    console.error('brandsListContainer not found!');
-    return;
-  }
-  
-  // Check if no brands
-  if (!cachedBrands || cachedBrands.length === 0) {
-    container.innerHTML = '';
-    if (emptyState) {
-      emptyState.style.display = 'block';
-    }
-    console.log('No brands to display');
-    return;
-  }
-  
-  // Hide empty state
-  if (emptyState) {
-    emptyState.style.display = 'none';
-  }
-  
-  // Build HTML
-  let html = '<div style="padding:20px; max-width:1200px; margin:0 auto;">';
-  
-  cachedBrands.forEach(brand => {
-    // Get brand info
-    const productCount = brand.productCount || 0;
-    const brandName = brand.brandName || 'Unknown';
-    const manufacturerId = brand.manufacturerId || 'N/A';
+  // Enter or Comma key
+  if (event.key === 'Enter' || event.key === ',') {
+    event.preventDefault();
     
-    // Create brand card
-    html += `
-      <div class="card mb-3 shadow-sm" style="cursor:pointer; transition:transform 0.2s;" 
-           onmouseover="this.style.transform='scale(1.02)'" 
-           onmouseout="this.style.transform='scale(1)'"
-           onclick="showBrandDetails('${brand.brandId}')">
-        <div class="card-body">
-          <div style="display:flex; justify-content:space-between; align-items:start;">
-            <div style="flex:1;">
-              <h5 class="mb-2">
-                🏷️ ${escapeHtml(brandName)}
-              </h5>
-              <p class="text-muted mb-2" style="font-size:14px;">
-                <i class="bi bi-factory"></i> Manufacturer ID: ${escapeHtml(manufacturerId)}
-                &nbsp;&nbsp;|&nbsp;&nbsp;
-                <i class="bi bi-boxes"></i> Products: ${productCount}
-              </p>
-              <small class="text-muted">Created: ${new Date(brand.createdDate).toLocaleDateString('en-IN')}</small>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <button class="btn btn-sm btn-primary" 
-                      onclick="event.stopPropagation(); openEditBrandModal('${brand.brandId}')"
-                      title="Edit Brand">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" 
-                      onclick="event.stopPropagation(); confirmDeleteBrand('${brand.brandId}', '${escapeHtml(brandName)}')"
-                      title="Delete Brand">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  
-  html += '</div>';
-  
-  // Render to page
-  container.innerHTML = html;
-  console.log(`✅ Rendered ${cachedBrands.length} brands`);
-}
-
-// Filter Brands (Search)
-function filterBrands(searchText) {
-  const text = searchText.toLowerCase().trim();
-  
-  if (!text) {
-    renderBrandsList();
-    return;
-  }
-  
-  // Filter brands
-  const filtered = cachedBrands.filter(b => {
-    return b.brandName.toLowerCase().includes(text) ||
-           (b.manufacturerId && b.manufacturerId.includes(text));
-  });
-  
-  // Render filtered list
-  const container = document.getElementById('brandsListContainer');
-  
-  if (filtered.length === 0) {
-    container.innerHTML = `
-      <div style="text-align:center; padding:40px; color:#999;">
-        <i class="bi bi-search" style="font-size:48px;"></i>
-        <h4 style="margin-top:20px;">No brands found</h4>
-        <p>Try a different search term</p>
-      </div>
-    `;
-    return;
-  }
-  
-  // Render filtered results
-  let html = '<div style="padding:20px; max-width:1200px; margin:0 auto;">';
-  
-  filtered.forEach(brand => {
-    const productCount = brand.productCount || 0;
-    const brandName = brand.brandName || 'Unknown';
-    const manufacturerId = brand.manufacturerId || 'N/A';
-    
-    html += `
-      <div class="card mb-3" style="cursor:pointer;" onclick="showBrandDetails('${brand.brandId}')">
-        <div class="card-body">
-          <div style="display:flex; justify-content:space-between; align-items:start;">
-            <div style="flex:1;">
-              <h5 class="mb-2">🏷️ ${escapeHtml(brandName)}</h5>
-              <p class="text-muted mb-2" style="font-size:14px;">
-                <i class="bi bi-factory"></i> Manufacturer ID: ${escapeHtml(manufacturerId)}
-                &nbsp;&nbsp;|&nbsp;&nbsp;
-                <i class="bi bi-boxes"></i> Products: ${productCount}
-              </p>
-              <small class="text-muted">Created: ${new Date(brand.createdDate).toLocaleDateString('en-IN')}</small>
-            </div>
-            <div style="display:flex; gap:8px;">
-              <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); openEditBrandModal('${brand.brandId}')">
-                <i class="bi bi-pencil"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); confirmDeleteBrand('${brand.brandId}', '${escapeHtml(brandName)}')">
-                <i class="bi bi-trash"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  });
-  
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-/**
- * ==========================================
- * SECTION 4: MODAL FUNCTIONS
- * ==========================================
- */
-
-// Open Add Brand Modal
-function openAddBrandModal() {
-  console.log('➕ Opening Add Brand modal');
-  
-  // Reset current brand ID
-  currentBrandId = null;
-  
-  // Set modal title
-  document.getElementById('brandFormTitle').textContent = 'Add Brand';
-  
-  // Clear all form fields
-  document.getElementById('brandId').value = '';
-  document.getElementById('brandName').value = '';
-  document.getElementById('manufacturerId').value = '';
-  document.getElementById('brandDescription').value = '';
-  document.getElementById('brandCountry').value = '';
-  
-  // Show modal
-  const modal = new bootstrap.Modal(document.getElementById('brandModal'));
-  modal.show();
-}
-
-// Open Edit Brand Modal
-function openEditBrandModal(brandId) {
-  console.log('✏️ Opening Edit Brand modal for:', brandId);
-  
-  // Find brand in cache
-  const brand = cachedBrands.find(b => b.brandId === brandId);
-  
-  if (!brand) {
-    console.error('Brand not found:', brandId);
-    alert('Brand not found!');
-    return;
-  }
-  
-  // Set current brand ID
-  currentBrandId = brandId;
-  
-  // Set modal title
-  document.getElementById('brandFormTitle').textContent = 'Edit Brand';
-  
-  // Fill form with brand data
-  document.getElementById('brandId').value = brand.brandId;
-  document.getElementById('brandName').value = brand.brandName;
-  document.getElementById('manufacturerId').value = brand.manufacturerId || '';
-  document.getElementById('brandDescription').value = brand.description || '';
-  document.getElementById('brandCountry').value = brand.country || '';
-  
-  // Show modal
-  const modal = new bootstrap.Modal(document.getElementById('brandModal'));
-  modal.show();
-}
-
-// Save Brand (Add or Update)
-async function saveBrand() {
-  console.log('💾 Saving brand...');
-  
-  // Get form values
-  const brandName = document.getElementById('brandName').value.trim();
-  
-  // Validation
-  if (!brandName) {
-    alert('Brand name is required!');
-    document.getElementById('brandName').focus();
-    return;
-  }
-  
-  // Prepare brand data
-  const brandData = {
-    action: currentBrandId ? 'updateBrand' : 'addBrand',
-    email: userEmail,
-    hash: userHash,
-    brandId: currentBrandId || '',
-    brandName: brandName,
-    manufacturerId: document.getElementById('manufacturerId').value.trim(),
-    description: document.getElementById('brandDescription').value.trim(),
-    country: document.getElementById('brandCountry').value.trim()
-  };
-  
-  try {
-    // Prepare form data
-    const formData = new URLSearchParams();
-    Object.keys(brandData).forEach(key => {
-      formData.append(key, brandData[key] || '');
-    });
-    
-    // Send to backend
-    console.log('Sending brand data to server...');
-    
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      body: formData
-    });
-    
-    const result = await response.json();
-    
-    console.log('Server response:', result);
-    
-    // Check result
-    if (result.success) {
-      console.log('✅ Brand saved successfully!');
+    if (value && value.length > 0) {
+      // Remove comma if typed
+      const brand = value.replace(/,\s*$/, '').trim();
       
-      // Show success message
-      alert(currentBrandId ? 'Brand updated successfully!' : 'Brand added successfully!');
-      
-      // Close modal
-      const modal = bootstrap.Modal.getInstance(document.getElementById('brandModal'));
-      if (modal) {
-        modal.hide();
+      // Add only if not duplicate
+      if (brand && !pendingBrands.includes(brand)) {
+        pendingBrands.push(brand);
+        console.log('✅ Brand added to preview:', brand);
       }
       
-      // Reload brands list
-      await loadBrands();
-      
-    } else {
-      throw new Error(result.error || 'Failed to save brand');
+      // Clear input
+      input.value = '';
+      updateBrandPreviewList();
     }
-    
-  } catch (error) {
-    console.error('❌ Error saving brand:', error);
-    alert('Error saving brand: ' + error.message);
-  }
-}
-
-// Confirm Delete Brand
-function confirmDeleteBrand(brandId, brandName) {
-  console.log('🗑️ Confirm delete:', brandId);
-  
-  // Ask for confirmation
-  const confirmed = confirm(`Delete brand "${brandName}"?\n\nThis action cannot be undone.`);
-  
-  if (confirmed) {
-    deleteBrand(brandId);
-  }
-}
-
-// Delete Brand
-async function deleteBrand(brandId) {
-  console.log('🗑️ Deleting brand:', brandId);
-  
-  try {
-    // Prepare form data
-    const formData = new URLSearchParams();
-    formData.append('action', 'deleteBrand');
-    formData.append('email', userEmail);
-    formData.append('hash', userHash);
-    formData.append('brandId', brandId);
-    
-    // Send to backend
-    const response = await fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      body: formData
-    });
-    
-    const result = await response.json();
-    
-    // Check result
-    if (result.success) {
-      console.log('✅ Brand deleted successfully');
-      
-      // Show success message
-      alert('Brand deleted successfully!');
-      
-      // Reload brands list
-      await loadBrands();
-      
-    } else {
-      throw new Error(result.error || 'Failed to delete brand');
-    }
-    
-  } catch (error) {
-    console.error('❌ Error deleting brand:', error);
-    alert('Error deleting brand: ' + error.message);
   }
 }
 
 /**
  * ==========================================
- * SECTION 5: BRAND DETAIL VIEW
+ * SECTION 7: UPDATE BRAND PREVIEW
  * ==========================================
  */
 
-// Show Brand Details
-function showBrandDetails(brandId) {
-  console.log('👁️ Showing brand details:', brandId);
+function updateBrandPreviewList() {
+  const previewList = document.getElementById('brandPreviewList');
+  const previewCount = document.getElementById('previewCount');
   
-  // Find brand in cache
-  const brand = cachedBrands.find(b => b.brandId === brandId);
+  if (!previewList) return;
   
-  if (!brand) {
-    console.error('Brand not found:', brandId);
-    alert('Brand not found!');
+  // Update count
+  if (previewCount) {
+    previewCount.textContent = `📝 Brands to Save (${pendingBrands.length}):`;
+  }
+  
+  if (pendingBrands.length === 0) {
+    previewList.innerHTML = `
+      <div style="padding: 15px; color: #999; text-align: center; font-size: 14px;">
+        No brands added yet
+      </div>
+    `;
     return;
   }
   
-  // Set current brand ID
-  currentBrandId = brandId;
-  
-  // Fill brand info in modal
-  document.getElementById('detailBrandName').textContent = brand.brandName;
-  document.getElementById('detailManufacturerId').textContent = brand.manufacturerId || 'N/A';
-  document.getElementById('detailBrandDescription').textContent = brand.description || 'No description';
-  document.getElementById('detailBrandCountry').textContent = brand.country || 'Unknown';
-  document.getElementById('detailProductCount').textContent = brand.productCount || 0;
-  document.getElementById('detailCreatedDate').textContent = new Date(brand.createdDate).toLocaleDateString('en-IN');
-  
-  // Show Info tab by default
-  showBrandTab('info');
-  
-  // Show modal
-  const modal = new bootstrap.Modal(document.getElementById('brandDetailModal'));
-  modal.show();
-}
-
-// Show Brand Tab (Info/Products)
-function showBrandTab(tab) {
-  console.log('📑 Switching to tab:', tab);
-  
-  // Hide all tabs
-  document.getElementById('brandInfoTab').style.display = 'none';
-  document.getElementById('brandProductsTab').style.display = 'none';
-  
-  // Remove active class from all tab buttons
-  document.querySelectorAll('.brand-tab-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  
-  // Show selected tab
-  if (tab === 'info') {
-    document.getElementById('brandInfoTab').style.display = 'block';
-    document.querySelector('[onclick*="showBrandTab(\'info\')"]').classList.add('active');
-    
-  } else if (tab === 'products') {
-    document.getElementById('brandProductsTab').style.display = 'block';
-    document.querySelector('[onclick*="showBrandTab(\'products\')"]').classList.add('active');
-    
-    // Load products when tab is opened
-    loadBrandProducts(currentBrandId);
-  }
-}
-
-/**
- * ==========================================
- * SECTION 6: BRAND PRODUCTS
- * ==========================================
- */
-
-// Load Brand Products
-async function loadBrandProducts(brandId) {
-  console.log('📦 Loading products for brand:', brandId);
-  
-  const container = document.getElementById('brandProductsList');
-  
-  // Show loading state
-  container.innerHTML = '<p class="text-center text-muted"><i class="spinner-border spinner-border-sm"></i> Loading products...</p>';
-  
-  try {
-    // Fetch products from backend
-    const url = `${GOOGLE_SCRIPT_URL}?action=getBrandProducts&brandId=${encodeURIComponent(brandId)}&t=${Date.now()}`;
-    
-    const response = await fetch(url);
-    const data = await response.json();
-    
-    // Check response
-    if (!data.success) {
-      throw new Error(data.error || 'Failed to load products');
-    }
-    
-    // Check if no products
-    if (!data.products || data.products.length === 0) {
-      container.innerHTML = `
-        <div style="text-align:center; padding:40px; color:#999;">
-          <i class="bi bi-box-seam" style="font-size:48px;"></i>
-          <h5 style="margin-top:20px;">No Products Yet</h5>
-          <p>This brand doesn't have any products yet</p>
-        </div>
-      `;
-      return;
-    }
-    
-    // Build products table
-    let html = `
-      <div class="table-responsive">
-        <table class="table table-hover">
-          <thead>
-            <tr>
-              <th>Product Name</th>
-              <th>Category</th>
-              <th>Stock</th>
-              <th>Price</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-    
-    // Add each product
-    data.products.forEach(p => {
-      const price = p.price ? `₹${parseFloat(p.price).toFixed(2)}` : 'N/A';
-      const stock = p.stock || 0;
-      
-      html += `
-        <tr>
-          <td>${escapeHtml(p.name)}</td>
-          <td>${escapeHtml(p.category || 'N/A')}</td>
-          <td>
-            <span class="badge ${stock > 10 ? 'bg-success' : stock > 0 ? 'bg-warning' : 'bg-danger'}">
-              ${stock}
-            </span>
-          </td>
-          <td class="text-end"><strong>${price}</strong></td>
-        </tr>
-      `;
-    });
-    
+  let html = '';
+  pendingBrands.forEach((brand, index) => {
     html += `
-          </tbody>
-        </table>
-      </div>
-      <div class="text-muted text-end" style="padding:10px;">
-        <small>Total Products: ${data.products.length}</small>
-      </div>
-    `;
-    
-    container.innerHTML = html;
-    console.log(`✅ Loaded ${data.products.length} products`);
-    
-  } catch (error) {
-    console.error('❌ Error loading products:', error);
-    container.innerHTML = `
-      <div style="text-align:center; padding:40px; color:#dc3545;">
-        <i class="bi bi-exclamation-circle" style="font-size:48px;"></i>
-        <h5 style="margin-top:20px;">Error Loading Products</h5>
-        <p>${error.message}</p>
-        <button class="btn btn-sm btn-primary mt-3" onclick="loadBrandProducts('${brandId}')">
-          <i class="bi bi-arrow-clockwise"></i> Retry
+      <div style="
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 15px; border-bottom: 1px solid #e0e0e0;
+        background: white; transition: background 0.2s;
+      " onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='white'">
+        
+        <span style="font-size: 14px; color: #333; flex: 1;">
+          <strong style="color: #007bff;">${index + 1}.</strong> 
+          <span>${escapeHtml(brand)}</span>
+        </span>
+        
+        <button onclick="removePendingBrand('${escapeHtml(brand)}')" style="
+          background: #dc3545; color: white; border: none; 
+          padding: 5px 10px; border-radius: 3px; cursor: pointer;
+          font-size: 12px; font-weight: bold; transition: background 0.2s;
+        " onmouseover="this.style.background='#c82333'" onmouseout="this.style.background='#dc3545'">
+          ✕ Remove
         </button>
       </div>
     `;
+  });
+  
+  previewList.innerHTML = html;
+}
+
+function removePendingBrand(brand) {
+  pendingBrands = pendingBrands.filter(b => b !== brand);
+  updateBrandPreviewList();
+  console.log('🗑️ Removed from preview:', brand);
+}
+
+/**
+ * ==========================================
+ * SECTION 8: SAVE ALL BRANDS
+ * ==========================================
+ */
+
+function saveAllBrands() {
+  if (pendingBrands.length === 0) {
+    alert('⚠️ Please add at least one brand');
+    return;
+  }
+  
+  console.log('💾 Saving', pendingBrands.length, 'brands...');
+  
+  let saved = 0;
+  let failed = 0;
+  let failedBrands = [];
+  
+  // Save each brand
+  pendingBrands.forEach((brand, index) => {
+    setTimeout(() => {
+      fetch(scriptURL, {
+        method: 'POST',
+        body: JSON.stringify({ 
+          action: 'addBrand',
+          brandName: brand
+        })
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          saved++;
+          console.log('✅ Saved:', brand);
+        } else {
+          failed++;
+          failedBrands.push(brand);
+          console.warn('⚠️ Failed:', brand, data.error);
+        }
+        
+        // All done
+        if (saved + failed === pendingBrands.length) {
+          showSaveResult(saved, failed, failedBrands);
+        }
+      })
+      .catch(error => {
+        failed++;
+        failedBrands.push(brand);
+        console.error('❌ Error:', brand, error);
+        
+        if (saved + failed === pendingBrands.length) {
+          showSaveResult(saved, failed, failedBrands);
+        }
+      });
+    }, index * 200); // Stagger requests
+  });
+}
+
+function showSaveResult(saved, failed, failedBrands) {
+  closeAddBrandsModal();
+  
+  if (failed === 0) {
+    alert(`✅ Success!\n\n${saved} brand(s) saved successfully!`);
+  } else {
+    let message = `✅ Saved: ${saved}\n❌ Failed: ${failed}`;
+    if (failedBrands.length > 0) {
+      message += `\n\nFailed brands:\n${failedBrands.join(', ')}`;
+    }
+    alert(message);
+  }
+  
+  // Reload brands list
+  loadBrandsFromBackend();
+}
+
+/**
+ * ==========================================
+ * SECTION 9: DELETE BRAND
+ * ==========================================
+ */
+
+function deleteBrandConfirm(brand) {
+  const confirmed = confirm(`🗑️ Delete "${brand}"?\n\nThis cannot be undone.`);
+  
+  if (confirmed) {
+    deleteBrand(brand);
   }
 }
 
-/**
- * ==========================================
- * SECTION 7: HELPER FUNCTIONS
- * ==========================================
- */
-
-// Escape HTML (prevent XSS attacks)
-function escapeHtml(text) {
-  if (!text) return '';
+function deleteBrand(brand) {
+  console.log('🗑️ Deleting brand:', brand);
   
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
+  fetch(scriptURL, {
+    method: 'POST',
+    body: JSON.stringify({ 
+      action: 'deleteBrand',
+      brandName: brand
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('✅ Brand deleted:', brand);
+      alert('✅ Brand deleted successfully!');
+      loadBrandsFromBackend();
+    } else {
+      console.warn('⚠️ Delete failed:', data.error);
+      alert('❌ Failed to delete brand: ' + data.error);
+    }
+  })
+  .catch(error => {
+    console.error('❌ Error deleting brand:', error);
+    alert('❌ Error deleting brand');
+  });
 }
 
 /**
  * ==========================================
- * END OF BRAND MANAGEMENT MODULE
+ * SECTION 10: HELPER FUNCTIONS
  * ==========================================
  */
 
-console.log('✅ Brand Management Module Loaded');
+function goBackHome() {
+  console.log('🏠 Going back to home');
+  
+  // Show navbar
+  const navbar = document.querySelector('.navbar');
+  if (navbar) {
+    navbar.style.display = 'flex';
+  }
+  
+  // Hide brands page
+  const brandsPage = document.getElementById('brandsPage');
+  if (brandsPage) {
+    brandsPage.style.display = 'none';
+  }
+  
+  // Call navigate to home
+  if (typeof navigateToHome === 'function') {
+    navigateToHome();
+  }
+}
 
+function escapeHtml(text) {
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+console.log('✅ Brand Manager Module Loaded - PHASE 2');
