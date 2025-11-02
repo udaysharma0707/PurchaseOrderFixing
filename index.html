@@ -9003,6 +9003,9 @@ function viewProductDetails(productId) {
 /**
  * Navigate to Brands Page
  */
+/**
+ * Navigate to Brands Page
+ */
 function navigateToBrands() {
   console.log('🏷️ Navigating to Brands');
   
@@ -9021,30 +9024,35 @@ function navigateToBrands() {
     mainApp.style.display = 'none';
     mainApp.classList.remove('active');
   }
+  
   if (allProductsPage) {
-    allProductsPage.style.display = 'none';
     allProductsPage.classList.remove('active');
+    allProductsPage.style.display = 'none';
   }
+  
   if (productGroupsPage) {
-    productGroupsPage.style.display = 'none';
     productGroupsPage.classList.remove('active');
+    productGroupsPage.style.display = 'none';
   }
+  
   if (customersPage) {
-    customersPage.style.display = 'none';
     customersPage.classList.remove('active');
+    customersPage.style.display = 'none';
   }
+  
   if (groupDetailPage) {
-    groupDetailPage.style.display = 'none';
     groupDetailPage.classList.remove('active');
+    groupDetailPage.style.display = 'none';
   }
   
   // === STEP 3: Show brands page ===
   if (brandsPage) {
-    brandsPage.style.display = 'block';  // ✅ MAKE SURE THIS LINE EXISTS
     brandsPage.classList.add('active');
+    brandsPage.style.display = 'block';
     console.log('✅ Brands page displayed');
   } else {
     console.error('❌ brandsPage element not found!');
+    return;
   }
   
   // === STEP 4: Hide the blue navbar ===
@@ -9053,18 +9061,19 @@ function navigateToBrands() {
     navbar.style.display = 'none';
   }
   
-  // === STEP 5: Render brands page ===
-  if (typeof renderBrandsPage === 'function') {
-    renderBrandsPage();
-    console.log('✅ Brands page rendered');
+  // === STEP 5: Load brands from backend ===
+  if (typeof loadBrands === 'function') {
+    loadBrands();
+    console.log('✅ Brands data loaded');
   } else {
-    console.error('❌ renderBrandsPage function not found');
+    console.warn('⚠️ loadBrands function not found');
   }
   
   // === STEP 6: Close sidebar and scroll ===
   if (typeof closeSidebar === 'function') {
     closeSidebar();
   }
+  
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -9825,6 +9834,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
