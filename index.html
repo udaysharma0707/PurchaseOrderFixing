@@ -1840,7 +1840,7 @@ body.modal-open {
   </style>
 
  <script src="customers.js"></script>
- <script src="brand-manager.js"></script> 
+  
   
 </head>
 <body>
@@ -1897,15 +1897,6 @@ body.modal-open {
     <i class="bi bi-sliders"></i>
     <span>Inventory Adjustments</span>
   </div>
-
-<!-- In your existing sidebar navigation -->
-<div class="sidebar-item" onclick="navigateToBrands()" style="cursor: pointer; padding: 12px 15px; display: flex; align-items: center; gap: 10px;">
-  <span style="font-size: 18px;">🏷️</span>
-  <span>Brands</span>
-</div>
-
-
-  
   
   <!-- SALES Section -->
   <div class="sidebar-section-title">SALES</div>
@@ -2648,149 +2639,33 @@ body.modal-open {
 
 
   <!-- Add/Edit Product Modal (image removed) -->
-  <!-- Add/Edit Product Modal (with brand autocomplete) -->
-<div class="modal fade" id="productModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-primary text-white">
-        <h5 id="modalTitle" class="modal-title">Add New Product</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      
-      <div class="modal-body">
-        <form id="productForm">
-          <input type="hidden" id="productId">
-          
-          <div class="row mb-3">
-            <div class="col-md-8">
-              <label class="form-label">Product Name *</label>
-              <input id="productName" class="form-control" required/>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Category *</label>
-              <select id="category" class="form-select" required>
-                <option value="">Select</option>
-                <option value="Tiles">Tiles</option>
-                <option value="Sanitaryware">Sanitaryware</option>
-                <option value="Accessories">Accessories</option>
-              </select>
-            </div>
-          </div>
-          
-          <div class="row mb-3">
-            <!-- 🏷️ BRAND FIELD WITH AUTOCOMPLETE -->
-            <div class="col-md-6" style="position: relative;">
-              <label class="form-label">Brand</label>
-              <div style="position: relative;">
-                <input 
-                  type="text" 
-                  id="productBrand" 
-                  placeholder="Select or type brand..." 
-                  class="form-control"
-                  onfocus="onBrandFieldFocus()"
-                  oninput="onBrandFieldInput()"
-                  onkeydown="onBrandFieldKeydown(event)"
-                />
-                
-                <!-- Save New Brand Icon -->
-                <button 
-                  id="saveBrandIcon" 
-                  type="button"
-                  onclick="saveNewBrandFromEditForm()" 
-                  style="
-                    position: absolute;
-                    right: 10px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    background: #4CAF50;
-                    color: white;
-                    border: none;
-                    padding: 6px 10px;
-                    border-radius: 3px;
-                    cursor: pointer;
-                    font-size: 12px;
-                    display: none;
-                  "
-                  title="Save this brand"
-                >
-                  💾 Save
-                </button>
-              </div>
-              
-              <!-- Brand Autocomplete Dropdown -->
-              <div 
-                id="brandAutocompleteDropdown" 
-                style="
-                  position: absolute;
-                  top: 100%;
-                  left: 0;
-                  right: 0;
-                  background: white;
-                  border: 1px solid #ddd;
-                  border-top: none;
-                  border-radius: 0 0 4px 4px;
-                  max-height: 200px;
-                  overflow-y: auto;
-                  z-index: 1000;
-                  display: none;
-                  margin-top: -1px;
-                  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-                "
-              >
-                <!-- Brands will be loaded here dynamically -->
-              </div>
-            </div>
-            
-            <div class="col-md-6">
-              <label class="form-label">Size</label>
-              <input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/>
-            </div>
-          </div>
-          
-          <div class="row mb-3">
-            <div class="col-md-4">
-              <label class="form-label">Unit Type *</label>
-              <select id="unitType" class="form-select" required>
-                <option value="Box">Box</option>
-                <option value="Piece">Piece</option>
-                <option value="SFT">Square Feet</option>
-              </select>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Pieces per Box</label>
-              <input id="piecesPerBox" class="form-control" type="number" value="1"/>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">SFT per Box</label>
-              <input id="sftPerBox" class="form-control" type="number" step="0.01"/>
-            </div>
-          </div>
-          
-          <div class="row mb-3">
-            <div class="col-md-4">
-              <label class="form-label">Price per Unit *</label>
-              <input id="price" class="form-control" type="number" step="0.01" required/>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Current Stock *</label>
-              <input id="stock" class="form-control" type="number" required/>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">Minimum Stock</label>
-              <input id="minStock" class="form-control" type="number" value="5"/>
-            </div>
-          </div>
-        </form>
-      </div>
-      
-      <div class="modal-footer">
-        <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" onclick="saveProduct()">Save Product</button>
-      </div>
+  <div class="modal fade" id="productModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header bg-primary text-white"><h5 id="modalTitle" class="modal-title">Add New Product</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <form id="productForm">
+        <input type="hidden" id="productId">
+        <div class="row mb-3">
+          <div class="col-md-8"><label class="form-label">Product Name *</label><input id="productName" class="form-control" required/></div>
+          <div class="col-md-4"><label class="form-label">Category *</label><select id="category" class="form-select" required><option value="">Select</option><option value="Tiles">Tiles</option><option value="Sanitaryware">Sanitaryware</option><option value="Accessories">Accessories</option></select></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6"><label class="form-label">Brand</label><input id="brand" class="form-control"/></div>
+          <div class="col-md-6"><label class="form-label">Size</label><input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-4"><label class="form-label">Unit Type *</label><select id="unitType" class="form-select" required><option value="Box">Box</option><option value="Piece">Piece</option><option value="SFT">Square Feet</option></select></div>
+          <div class="col-md-4"><label class="form-label">Pieces per Box</label><input id="piecesPerBox" class="form-control" type="number" value="1"/></div>
+          <div class="col-md-4"><label class="form-label">SFT per Box</label><input id="sftPerBox" class="form-control" type="number" step="0.01"/></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-4"><label class="form-label">Price per Unit *</label><input id="price" class="form-control" type="number" step="0.01" required/></div>
+          <div class="col-md-4"><label class="form-label">Current Stock *</label><input id="stock" class="form-control" type="number" required/></div>
+          <div class="col-md-4"><label class="form-label">Minimum Stock</label><input id="minStock" class="form-control" type="number" value="5"/></div>
+        </div>
+      </form>
     </div>
-  </div>
-</div>
-
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" onclick="saveProduct()">Save Product</button></div>
+  </div></div></div>
 
   <!-- SALES MODAL (grid) - top buttons removed, kept within body below grid -->
   <div class="modal fade" id="salesModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
@@ -3411,8 +3286,8 @@ body.modal-open {
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyan38QyBf09UIDhe-X6t6RznbQZ4MRrUrNozrUgRxQ8oniHD9bd6A0t7K8N18F1RcY/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyan38QyBf09UIDhe-X6t6RznbQZ4MRrUrNozrUgRxQ8oniHD9bd6A0t7K8N18F1RcY/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhQ9yDDCJ9owrKHxUFvmPl81g0giNHB4P0ajLtlkykLnyCXBTpVPOKKKzVbRYHXO_S/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhQ9yDDCJ9owrKHxUFvmPl81g0giNHB4P0ajLtlkykLnyCXBTpVPOKKKzVbRYHXO_S/exec'
   let cachedProducts = [];
   let cachedSales = [];
 
@@ -4451,10 +4326,9 @@ async function deleteProductFromSheet(id) {
 
 
 
- /***********************
- * Product CRUD UI - WITH BRAND AUTOCOMPLETE
- ***********************/
- 
+  /***********************
+   * Product CRUD UI
+   ***********************/
   let editingProductId = null;
   function showAddProduct(){ editingProductId=null; document.getElementById('modalTitle').textContent='Add New Product'; document.getElementById('productForm').reset(); document.getElementById('productId').value=''; new bootstrap.Modal(document.getElementById('productModal')).show(); }
   function editProduct(id){
@@ -4562,7 +4436,6 @@ async function deleteProductFromSheet(id) {
   // Clear the temporary imageUrl variable
   window.editingProductImageUrl = '';
 }
-
 
 
 
@@ -7293,6 +7166,7 @@ function sidebarAction(action) {
 
 
 // Navigate to All Products page - UPDATED FIX
+// Navigate to All Products page - UPDATED FIX
 function navigateToAllProducts() {
   console.log('📦 Navigating to All Products');
   
@@ -7303,7 +7177,6 @@ function navigateToAllProducts() {
   const allProductsPage = document.getElementById('allProductsPage');
   const productGroupsPage = document.getElementById('productGroupsPage');
   const customersPage = document.getElementById('customersPage');
-  const brandsPage = document.getElementById('brandsPage'); // ✅ ADD THIS
   const groupDetailPage = document.getElementById('groupDetailPage');
   
   // === STEP 2: HIDE ALL other pages ===
@@ -7320,12 +7193,6 @@ function navigateToAllProducts() {
   if (customersPage) {
     customersPage.style.display = 'none';
     customersPage.classList.remove('active');
-  }
-  
-  // ✅ ADD THIS BLOCK
-  if (brandsPage) {
-    brandsPage.style.display = 'none';
-    brandsPage.classList.remove('active');
   }
   
   if (groupDetailPage) {
@@ -7386,6 +7253,11 @@ function navigateToAllProducts() {
   
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
+
+
+
+
+
 
 
 
@@ -9240,10 +9112,7 @@ async function createProductGroup(groupData) {
 
     
 
-/**
- * Navigate back to Home - COMPLETE
- * Hides all pages and shows main dashboard
- */
+// Navigate back to Home - FIXED
 function navigateToHome() {
   console.log('🏠 Navigating to Home');
   
@@ -9252,8 +9121,7 @@ function navigateToHome() {
   const mainApp = document.getElementById('mainApp');
   const allProductsPage = document.getElementById('allProductsPage');
   const productGroupsPage = document.getElementById('productGroupsPage');
-  const customersPage = document.getElementById('customersPage');
-  const brandsPage = document.getElementById('brandsPage'); // ✅ ADD THIS
+  const customersPage = document.getElementById('customersPage');  // ✅ ADD THIS
   const groupDetailPage = document.getElementById('groupDetailPage');
   
   // Show main app
@@ -9270,15 +9138,10 @@ function navigateToHome() {
     productGroupsPage.style.display = 'none';
   }
   
+  // ✅✅✅ ADD THIS BLOCK FOR CUSTOMERS PAGE ✅✅✅
   if (customersPage) {
     customersPage.classList.remove('active');
     customersPage.style.display = 'none';
-  }
-  
-  // ✅ ADD THIS BLOCK FOR BRANDS PAGE
-  if (brandsPage) {
-    brandsPage.classList.remove('active');
-    brandsPage.style.display = 'none';
   }
   
   if (groupDetailPage) {
@@ -9295,7 +9158,6 @@ function navigateToHome() {
   
   console.log('✅ Home displayed');
 }
-
 // ==========================================
 // NEW NAVIGATION WRAPPER - PHASE 1
 // ==========================================
@@ -9324,11 +9186,6 @@ function navigateToHome() {
  * Ensures all pages are properly hidden before showing target page
  * @param {string} page - Page name ('dashboard', 'allProducts', 'customers', 'productGroups')
  */
-/**
- * Centralized navigation function - COMPLETE with page hiding
- * Ensures all pages are properly hidden before showing target page
- * @param {string} page - Page name ('dashboard', 'allProducts', 'customers', 'productGroups', 'brands')
- */
 function navigateTo(page) {
   console.log('🔷 navigateTo called with:', page);
   
@@ -9340,8 +9197,6 @@ function navigateTo(page) {
     navigateToCustomers();
   } else if (page === 'productGroups') {
     navigateToProductGroups();
-  } else if (page === 'brands') {
-    navigateToBrands();
   } else if (page === 'invoices') {
     // Navigate to invoices page (no credential check needed)
     console.log('📄 Navigating to invoices page...');
@@ -9462,16 +9317,6 @@ window.addEventListener('DOMContentLoaded', () => {
           console.error('❌ navigateToCustomers function not found');
         }
         break;
-      
-      // ✅ ADD BRANDS CASE
-      case 'brands':
-        console.log('📍 Routing: Invoices → Brands');
-        if (typeof navigateToBrands === 'function') {
-          navigateToBrands();
-        } else {
-          console.error('❌ navigateToBrands function not found');
-        }
-        break;
         
       default:
         console.warn('⚠️ Unknown page parameter:', page);
@@ -9485,7 +9330,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }, 800);
 });
 
-
 // Navigate to Purchase Orders page
 function navigateToPurchaseOrders() {
   // Close sidebar
@@ -9493,108 +9337,6 @@ function navigateToPurchaseOrders() {
   
   // Redirect to purchase page
   window.location.href = 'purchase.html';
-}
-/**
- * Navigate to Brands Page
- */
-/**
- * Navigate to Brands Page - SAFE VERSION
- */
-function navigateToBrands() {
-  console.log('🏷️ Navigating to Brands page');
-  
-  // Hide pages that exist
-  const elementsToHide = [
-    'mainApp',
-    'allProductsPage',
-    'customersPage',
-    'productGroupsPageContainer',
-    'groupDetailPage'
-  ];
-  
-  elementsToHide.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.style.display = 'none';
-      el.classList.remove('active');
-    }
-  });
-  
-  // Hide navbar
-  const navbar = document.querySelector('.navbar');
-  if (navbar) navbar.style.display = 'none';
-  
-  // Show brands page
-  const brandsPage = document.getElementById('brandsPage');
-  if (brandsPage) {
-    brandsPage.style.display = 'block';
-    brandsPage.style.visibility = 'visible';
-    brandsPage.style.opacity = '1';
-    brandsPage.classList.add('active');
-    
-    // Load brands
-    loadBrandsPage();
-  } else {
-    console.error('❌ Brands page HTML not found!');
-  }
-}
-
-/**
- * Load Brands Page
- */
-function loadBrandsPage() {
-  console.log('📋 Loading brands page');
-  
-  const loadingEl = document.getElementById('brandsLoadingState');
-  const contentEl = document.getElementById('brandsListContent');
-  const emptyEl = document.getElementById('emptyBrandsState');
-  
-  if (loadingEl) loadingEl.style.display = 'block';
-  if (contentEl) contentEl.style.display = 'none';
-  if (emptyEl) emptyEl.style.display = 'none';
-  
-  // Fetch brands
-  fetch(ENDPOINT + '?action=getBrands')
-    .then(response => response.json())
-    .then(data => {
-      if (loadingEl) loadingEl.style.display = 'none';
-      
-      if (data.success && data.brands && data.brands.length > 0) {
-        renderBrandsPageList(data.brands);
-      } else {
-        if (emptyEl) emptyEl.style.display = 'block';
-      }
-    })
-    .catch(error => {
-      console.error('❌ Error:', error);
-      if (loadingEl) loadingEl.style.display = 'none';
-      if (emptyEl) emptyEl.style.display = 'block';
-    });
-}
-
-/**
- * Render Brands List on Page
- */
-function renderBrandsPageList(brands) {
-  const contentEl = document.getElementById('brandsListContent');
-  if (!contentEl) return;
-  
-  contentEl.innerHTML = '';
-  contentEl.style.display = 'flex';
-  
-  brands.forEach((brand, index) => {
-    const item = document.createElement('div');
-    item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 4px; border: 1px solid #e0e0e0; margin-bottom: 8px;';
-    
-    item.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
-        <span style="font-weight: bold; color: white; min-width: 30px; background: #2196F3; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">${index + 1}</span>
-        <span style="font-size: 16px; color: #333;">${brand}</span>
-      </div>
-    `;
-    
-    contentEl.appendChild(item);
-  });
 }
 
 
@@ -9902,79 +9644,6 @@ function renderBrandsPageList(brands) {
   </div>
 </div>
 
-<!-- 🏷️ BRANDS MANAGEMENT PAGE -->
-<div id="brandsPage" style="display: none; padding: 20px; max-width: 1200px; margin: 0 auto;">
-  <!-- Header -->
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
-    <!-- Back Button -->
-    <button onclick="navigateToHome()" style="padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-      ← Back
-    </button>
-    
-    <!-- Title -->
-    <h2 style="margin: 0; flex: 1; text-align: center; color: #333; min-width: 200px;">🏷️ Brands Management</h2>
-    
-    <!-- Add Brands Button -->
-    <button onclick="openAddBrandsModal()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; gap: 8px;">
-      ➕ Add Brands
-    </button>
-  </div>
-  
-  <!-- Brands List -->
-  <div id="brandsList" style="background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 20px; min-height: 300px;">
-    <!-- Loading State -->
-    <div id="brandsLoadingState" style="text-align: center; padding: 40px 20px; color: #999;">
-      <p style="font-size: 18px;">Loading brands...</p>
-    </div>
-    
-    <!-- Brands List Content -->
-    <div id="brandsListContent" style="display: none; flex-direction: column; gap: 10px;">
-      <!-- Brands will be loaded here dynamically -->
-    </div>
-    
-    <!-- Empty State -->
-    <div id="emptyBrandsState" style="text-align: center; padding: 40px 20px; color: #999; display: none;">
-      <p style="font-size: 18px; margin: 10px 0;">📦 No brands yet</p>
-      <p style="margin: 10px 0;">Click "➕ Add Brands" button to add new brands</p>
-    </div>
-  </div>
-</div>
-
-<!-- 🏷️ ADD BRANDS MODAL -->
-<div id="addBrandsModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
-  <div style="background: white; border-radius: 8px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-height: 90vh; overflow-y: auto;">
-    <!-- Modal Header -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h3 style="margin: 0;">➕ Add New Brands</h3>
-      <button onclick="closeAddBrandsModal()" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #999; width: 30px; height: 30px;">✕</button>
-    </div>
-    
-    <!-- Instructions -->
-    <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
-      Enter brand names (press <strong>Enter</strong> or type <strong>comma</strong> to add multiple brands)
-    </p>
-    
-    <!-- Input Field -->
-    <input type="text" id="brandInput" placeholder="Enter brand name..." style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; box-sizing: border-box; margin-bottom: 15px;" onkeydown="handleBrandInputKey(event)" />
-    
-    <!-- Preview Section -->
-    <div style="margin-bottom: 20px;">
-      <p style="margin: 0 0 10px 0; font-weight: bold; color: #333;">Preview:</p>
-      <div id="brandPreviewList" style="background: #f5f5f5; border-radius: 4px; padding: 15px; min-height: 80px; max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
-        <p id="brandPreviewEmpty" style="margin: 0; color: #999; font-size: 14px;">No brands added yet</p>
-      </div>
-    </div>
-    
-    <!-- Status Message -->
-    <div id="brandModalStatus" style="padding: 10px; border-radius: 4px; margin-bottom: 15px; display: none;"></div>
-    
-    <!-- Modal Buttons -->
-    <div style="display: flex; gap: 10px; justify-content: flex-end;">
-      <button onclick="closeAddBrandsModal()" style="padding: 10px 20px; background: #f0f0f0; color: #333; border: none; border-radius: 4px; cursor: pointer;">Cancel</button>
-      <button id="saveAllBrandsBtn" onclick="saveAllBrands()" style="padding: 10px 20px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">Save All</button>
-    </div>
-  </div>
-</div>
 
 
     
@@ -9983,14 +9652,6 @@ function renderBrandsPageList(brands) {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
 
 
 
