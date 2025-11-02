@@ -4126,29 +4126,6 @@ async function saveSaleToSheet(item) {
   }
 }
 
-/**
- * BRANDS PAGE RENDERING
- */
-function renderBrandsPage() {
-  console.log('🏷️ Rendering Brands Page');
-  
-  const brandsPageContent = document.getElementById('brandsPageContent');
-  
-  if (!brandsPageContent) {
-    console.error('❌ brandsPageContent element not found');
-    return;
-  }
-  
-  brandsPageContent.innerHTML = `
-    <div style="padding: 20px; max-width: 800px; margin: 0 auto; text-align: center;">
-      <h2 style="margin: 20px 0;">🏷️ Brands Management</h2>
-      <p style="color: #666; font-size: 16px;">Brands page loaded successfully!</p>
-    </div>
-  `;
-  
-  console.log('✅ Brands page rendered');
-}
-
 
 
 
@@ -9848,6 +9825,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
