@@ -9494,64 +9494,89 @@ function navigateToPurchaseOrders() {
   // Redirect to purchase page
   window.location.href = 'purchase.html';
 }
-
 /**
- * Navigate to Brands Management page
- * Follows centralized navigation pattern
+ * Navigate to Brands Page
  */
 function navigateToBrands() {
   console.log('🏷️ Navigating to Brands page');
   
-  currentPage = 'brands';
-  
+  // Hide all pages
   const mainApp = document.getElementById('mainApp');
   const allProductsPage = document.getElementById('allProductsPage');
   const customersPage = document.getElementById('customersPage');
   const productGroupsPageContainer = document.getElementById('productGroupsPageContainer');
   const brandsPage = document.getElementById('brandsPage');
-  const groupDetailPage = document.getElementById('groupDetailPage');
   
-  // Hide all pages
-  if (mainApp) {
-    mainApp.classList.remove('active');
-    mainApp.style.display = 'none';
-  }
-  
-  if (allProductsPage) {
-    allProductsPage.classList.remove('active');
-    allProductsPage.style.display = 'none';
-  }
-  
-  if (customersPage) {
-    customersPage.classList.remove('active');
-    customersPage.style.display = 'none';
-  }
-  
-  if (productGroupsPageContainer) {
-    productGroupsPageContainer.classList.remove('active');
-    productGroupsPageContainer.style.display = 'none';
-  }
-  
-  if (groupDetailPage) {
-    groupDetailPage.classList.remove('active');
-    groupDetailPage.style.display = 'none';
-  }
+  if (mainApp) mainApp.style.display = 'none';
+  if (allProductsPage) allProductsPage.style.display = 'none';
+  if (customersPage) customersPage.style.display = 'none';
+  if (productGroupsPageContainer) productGroupsPageContainer.style.display = 'none';
   
   // Show brands page
   if (brandsPage) {
-    brandsPage.classList.add('active');
     brandsPage.style.display = 'block';
+    loadBrandsPage();
   }
-  
-  // Hide navbar
-  const navbar = document.querySelector('.navbar');
-  if (navbar) navbar.style.display = 'none';
-  
-  // Load brands data
-  loadBrandsPage();
-  
-  console.log('✅ Brands page displayed');
 }
+
+/**
+ * Load Brands Page
+ */
+function loadBrandsPage() {
+  console.log('📋 Loading brands page');
+  
+  const loadingEl = document.getElementById('brandsLoadingState');
+  const contentEl = document.getElementById('brandsListContent');
+  const emptyEl = document.getElementById('emptyBrandsState');
+  
+  if (loadingEl) loadingEl.style.display = 'block';
+  if (contentEl) contentEl.style.display = 'none';
+  if (emptyEl) emptyEl.style.display = 'none';
+  
+  // Fetch brands
+  fetch(ENDPOINT + '?action=getBrands')
+    .then(response => response.json())
+    .then(data => {
+      if (loadingEl) loadingEl.style.display = 'none';
+      
+      if (data.success && data.brands && data.brands.length > 0) {
+        renderBrandsPageList(data.brands);
+      } else {
+        if (emptyEl) emptyEl.style.display = 'block';
+      }
+    })
+    .catch(error => {
+      console.error('❌ Error:', error);
+      if (loadingEl) loadingEl.style.display = 'none';
+      if (emptyEl) emptyEl.style.display = 'block';
+    });
+}
+
+/**
+ * Render Brands List on Page
+ */
+function renderBrandsPageList(brands) {
+  const contentEl = document.getElementById('brandsListContent');
+  if (!contentEl) return;
+  
+  contentEl.innerHTML = '';
+  contentEl.style.display = 'flex';
+  
+  brands.forEach((brand, index) => {
+    const item = document.createElement('div');
+    item.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f9f9f9; border-radius: 4px; border: 1px solid #e0e0e0; margin-bottom: 8px;';
+    
+    item.innerHTML = `
+      <div style="display: flex; align-items: center; gap: 15px; flex: 1;">
+        <span style="font-weight: bold; color: white; min-width: 30px; background: #2196F3; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">${index + 1}</span>
+        <span style="font-size: 16px; color: #333;">${brand}</span>
+      </div>
+    `;
+    
+    contentEl.appendChild(item);
+  });
+}
+
 
 
 
@@ -9938,6 +9963,7 @@ function navigateToBrands() {
 
 </body>
 </html>
+
 
 
 
