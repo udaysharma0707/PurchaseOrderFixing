@@ -1913,6 +1913,17 @@ body.modal-open {
   <span>Invoices</span>
 </div>
 
+<!-- MANAGEMENT Section (add this new section) -->
+<div class="sidebar-section-title">MANAGEMENT</div>
+
+<div class="sidebar-item" onclick="navigateTo('brands')">
+  <i class="bi bi-tag"></i>
+  <span>Brands</span>
+</div>
+
+
+
+
   
   <div class="sidebar-item disabled" onclick="sidebarAction('salesReceipts')">
     <i class="bi bi-cash-stack"></i>
@@ -2349,6 +2360,13 @@ body.modal-open {
         <i class="bi bi-plus-lg"></i> Add First Customer
       </button>
     </div>
+  </div>
+</div>
+
+    <!-- Brands Management Page -->
+<div id="brandsPage" class="page-container" style="display: none;">
+  <div id="brandsPageContent">
+    <!-- Content rendered by brand-manager.js -->
   </div>
 </div>
 
@@ -3276,7 +3294,9 @@ body.modal-open {
 </div>
 
 
-  <script src="s://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="brand-manager.js"></script>
 
   <script>
 
@@ -3286,8 +3306,8 @@ body.modal-open {
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhQ9yDDCJ9owrKHxUFvmPl81g0giNHB4P0ajLtlkykLnyCXBTpVPOKKKzVbRYHXO_S/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzhQ9yDDCJ9owrKHxUFvmPl81g0giNHB4P0ajLtlkykLnyCXBTpVPOKKKzVbRYHXO_S/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzYMGBHq-dZl6oMW-A5PpAcJs33Nk6Sg9L-qkXx63DY_DFYNIVCy3TxZ6iVwdTV4aNW/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzYMGBHq-dZl6oMW-A5PpAcJs33Nk6Sg9L-qkXx63DY_DFYNIVCy3TxZ6iVwdTV4aNW/exec'
   let cachedProducts = [];
   let cachedSales = [];
 
@@ -3860,7 +3880,7 @@ async function syncFromGoogleSheets() {
            alt="Photo" 
            onclick="viewPhotoProduct('${p.id}')"
            style="cursor:pointer; width:40px; height:40px; object-fit:cover; border-radius:4px; border:2px solid #e0e0e0;"
-           onerror="this.onerror=null; this.src='https://via.placeholder.com/40?text=No+Img'; console.error('Image load failed for product: ${escapeHtml(p.name)}');">` : 
+           onerror="this.onerror=null; this.src='s://via.placeholder.com/40?text=No+Img'; console.error('Image load failed for product: ${escapeHtml(p.name)}');">` : 
       `<i class="bi bi-image text-muted"></i>`}
   </td>
           
@@ -8941,6 +8961,69 @@ function viewProductDetails(productId) {
 }
 
 
+/**
+ * Navigate to Brands Page
+ */
+function navigateToBrands() {
+  console.log('🏷️ Navigating to Brands');
+  
+  currentPage = 'brands';
+  
+  // === STEP 1: Get page elements ===
+  const mainApp = document.getElementById('mainApp');
+  const allProductsPage = document.getElementById('allProductsPage');
+  const productGroupsPage = document.getElementById('productGroupsPage');
+  const customersPage = document.getElementById('customersPage');
+  const groupDetailPage = document.getElementById('groupDetailPage');
+  const brandsPage = document.getElementById('brandsPage');  // ✅ NEW
+  
+  // === STEP 2: Hide all other pages ===
+  if (mainApp) {
+    mainApp.style.display = 'none';
+    mainApp.classList.remove('active');
+  }
+  if (allProductsPage) {
+    allProductsPage.style.display = 'none';
+    allProductsPage.classList.remove('active');
+  }
+  if (productGroupsPage) {
+    productGroupsPage.style.display = 'none';
+    productGroupsPage.classList.remove('active');
+  }
+  if (customersPage) {
+    customersPage.style.display = 'none';
+    customersPage.classList.remove('active');
+  }
+  if (groupDetailPage) {
+    groupDetailPage.style.display = 'none';
+    groupDetailPage.classList.remove('active');
+  }
+  
+  // === STEP 3: Show brands page ===
+  if (brandsPage) {
+    brandsPage.style.display = 'block';
+    brandsPage.classList.add('active');
+    console.log('✅ Brands page displayed');
+  }
+  
+  // === STEP 4: Hide the blue navbar ===
+  const navbar = document.querySelector('.navbar.navbar-dark.bg-primary');
+  if (navbar) {
+    navbar.style.display = 'none';
+  }
+  
+  // === STEP 5: Render brands page ===
+  if (typeof renderBrandsPage === 'function') {
+    renderBrandsPage();
+    console.log('✅ Brands page rendered');
+  }
+  
+  // === STEP 6: Close sidebar and scroll ===
+  if (typeof closeSidebar === 'function') {
+    closeSidebar();
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
     
 /**
@@ -9121,8 +9204,9 @@ function navigateToHome() {
   const mainApp = document.getElementById('mainApp');
   const allProductsPage = document.getElementById('allProductsPage');
   const productGroupsPage = document.getElementById('productGroupsPage');
-  const customersPage = document.getElementById('customersPage');  // ✅ ADD THIS
+  const customersPage = document.getElementById('customersPage');
   const groupDetailPage = document.getElementById('groupDetailPage');
+  const brandsPage = document.getElementById('brandsPage');  // ✅ ADD THIS
   
   // Show main app
   if (mainApp) mainApp.style.display = 'block';
@@ -9132,18 +9216,18 @@ function navigateToHome() {
     allProductsPage.classList.remove('active');
     allProductsPage.style.display = 'none';
   }
-  
   if (productGroupsPage) {
     productGroupsPage.classList.remove('active');
     productGroupsPage.style.display = 'none';
   }
-  
-  // ✅✅✅ ADD THIS BLOCK FOR CUSTOMERS PAGE ✅✅✅
   if (customersPage) {
     customersPage.classList.remove('active');
     customersPage.style.display = 'none';
   }
-  
+  if (brandsPage) {                          // ✅ ADD THIS BLOCK
+    brandsPage.classList.remove('active');
+    brandsPage.style.display = 'none';
+  }
   if (groupDetailPage) {
     groupDetailPage.classList.remove('active');
     groupDetailPage.style.display = 'none';
@@ -9153,11 +9237,11 @@ function navigateToHome() {
   const navbar = document.querySelector('.navbar');
   if (navbar) navbar.style.display = 'flex';
   
-  // Scroll to top
   window.scrollTo({ top: 0, behavior: 'smooth' });
   
   console.log('✅ Home displayed');
 }
+
 // ==========================================
 // NEW NAVIGATION WRAPPER - PHASE 1
 // ==========================================
@@ -9197,14 +9281,15 @@ function navigateTo(page) {
     navigateToCustomers();
   } else if (page === 'productGroups') {
     navigateToProductGroups();
+  } else if (page === 'brands') {           // ✅ ADD THIS
+    navigateToBrands();                     // ✅ ADD THIS
   } else if (page === 'invoices') {
-    // Navigate to invoices page (no credential check needed)
-    console.log('📄 Navigating to invoices page...');
     window.location.href = 'invoices.html';
   } else {
     console.error('❌ Unknown page:', page);
   }
 }
+
 
 
 
@@ -9652,6 +9737,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
