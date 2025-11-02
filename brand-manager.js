@@ -135,12 +135,19 @@ function loadBrandsFromBackend() {
  * SECTION 4: DISPLAY BRANDS LIST
  * ==========================================
  */
+/**
+ * SECTION 4: DISPLAY BRANDS LIST
+ */
 
 function displayBrandsList(brands) {
   const brandsList = document.getElementById('brandsList');
   
-  if (!brandsList) return;
+  if (!brandsList) {
+    console.error('❌ brandsList element not found');
+    return;
+  }
   
+  // Check if no brands
   if (!brands || brands.length === 0) {
     brandsList.innerHTML = `
       <p style="text-align: center; color: #999; padding: 30px;">
@@ -150,6 +157,7 @@ function displayBrandsList(brands) {
     return;
   }
   
+  // Build list
   let html = '<ul style="list-style: none; padding: 0; margin: 0;">';
   
   brands.forEach((brand, index) => {
@@ -174,9 +182,18 @@ function displayBrandsList(brands) {
   });
   
   html += '</ul>';
+  
+  // ✅ Add total count
+  html += `
+    <div style="padding: 10px; text-align: center; color: #666; font-size: 13px; border-top: 1px solid #e0e0e0; margin-top: 10px;">
+      Total: <strong>${brands.length}</strong> brand(s)
+    </div>
+  `;
+  
   brandsList.innerHTML = html;
-  console.log('✅ Brands list displayed');
+  console.log('✅ Brands list displayed:', brands.length, 'brands');
 }
+
 
 /**
  * ==========================================
@@ -452,5 +469,6 @@ function escapeHtml(text) {
 }
 
 console.log('✅ Brand Manager Module Loaded - PHASE 2');
+
 
 
