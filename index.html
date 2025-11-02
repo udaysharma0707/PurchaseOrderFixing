@@ -9393,6 +9393,14 @@ function getProductIcon(category) {
  * URL Parameter Detection - Navigate from invoices page
  * IMPORTANT: Clean URL after processing to prevent reload loops!
  */
+/**
+ * ==========================================
+ * URL PARAMETER DETECTION & ROUTING
+ * Location: index.html (at bottom before closing </script>)
+ * Purpose: Detect ?page= parameter and route to correct page
+ * ==========================================
+ */
+
 window.addEventListener('DOMContentLoaded', () => {
   // Wait longer for data to fully load
   setTimeout(() => {
@@ -9434,6 +9442,15 @@ window.addEventListener('DOMContentLoaded', () => {
           console.error('❌ navigateToCustomers function not found');
         }
         break;
+      
+      case 'brands':
+        console.log('📍 Routing: Invoices → Brands');
+        if (typeof navigateToBrands === 'function') {
+          navigateToBrands();
+        } else {
+          console.error('❌ navigateToBrands function not found');
+        }
+        break;
         
       default:
         console.warn('⚠️ Unknown page parameter:', page);
@@ -9444,7 +9461,7 @@ window.addEventListener('DOMContentLoaded', () => {
     window.history.replaceState({}, document.title, window.location.pathname);
     console.log('🧹 URL cleaned - page parameter removed');
     
-  }, 800);
+  }, 800);  // Wait 800ms for data to fully load
 });
 
 // Navigate to Purchase Orders page
@@ -9769,6 +9786,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
