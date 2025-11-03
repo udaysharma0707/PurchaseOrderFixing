@@ -4489,18 +4489,7 @@ async function deleteProductFromSheet(id) {
     new bootstrap.Modal(document.getElementById('productModal')).show();
   }
 
-  async function saveProduct() {
-  // ✅ CHECK IF THIS IS A VARIANT EDIT
-  const form = document.getElementById('productForm');
-  const isVariant = form.dataset.isVariant === 'true';
-  
-  if (isVariant) {
-    // Handle variant save
-    await saveVariantData();
-    return;
-  }
-  
-  // ✅ EXISTING PRODUCT SAVE LOGIC (UNCHANGED)
+ async function saveProduct() {
   const name = document.getElementById('productName').value.trim();
   const category = document.getElementById('category').value;
   const brand = document.getElementById('brand').value.trim();
@@ -4529,7 +4518,7 @@ async function deleteProductFromSheet(id) {
     price: price,
     stock: stock,
     minStock: minStock,
-    imageUrl: window.editingProductImageUrl || ''  // ✅ PRESERVE IMAGE URL
+    imageUrl: window.editingProductImageUrl || ''  // âœ… PRESERVE IMAGE URL
   };
   
   const idx = cachedProducts.findIndex(p => p.id === product.id);
@@ -4545,10 +4534,8 @@ async function deleteProductFromSheet(id) {
   
   const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
   if (modal) modal.hide();
-   // ✅ ADD THIS LINE - Refresh brand cache after saving
-  refreshBrandAutocompleteCache();
+  
   showSyncIndicator('Saving product...');
-    
   
   // Background save
   saveProductToSheet(product, !!editingProductId).then(resp => {
@@ -4572,6 +4559,7 @@ async function deleteProductFromSheet(id) {
   // Clear the temporary imageUrl variable
   window.editingProductImageUrl = '';
 }
+
 
 
 
@@ -10204,6 +10192,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
