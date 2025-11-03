@@ -9309,12 +9309,30 @@ function selectBrandSuggestion(brandName) {
 /**
  * Show suggestions (when field is focused)
  */
+/**
+ * Show all brands when field is focused (clicked)
+ * If user has typed text, show filtered suggestions
+ */
 function showBrandSuggestions() {
-  const input = document.getElementById('brand').value;
-  if (input && input.trim().length > 0) {
-    filterBrandSuggestions(input);
+  const input = document.getElementById('brand');
+  if (!input) return;
+  
+  const inputValue = input.value.trim();
+  
+  // ✅ If field is empty, show ALL brands
+  if (!inputValue || inputValue.length === 0) {
+    if (brandAutocompleteCache && brandAutocompleteCache.length > 0) {
+      renderBrandSuggestions(brandAutocompleteCache);
+      console.log('📋 Showing all', brandAutocompleteCache.length, 'brands');
+    } else {
+      console.warn('⚠️ No brands in cache');
+    }
+  } else {
+    // If user has typed something, filter based on input
+    filterBrandSuggestions(inputValue);
   }
 }
+
 
 /**
  * Hide suggestions dropdown
@@ -10012,6 +10030,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
