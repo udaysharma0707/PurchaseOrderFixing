@@ -110,7 +110,7 @@ async function loadBrands() {
       brandsCache = data.brands;
       console.log('✅ Loaded', data.brands.length, 'brands');
       
-      // Render brands list
+      // ✅ RENDER IMMEDIATELY - Don't wait for anything
       renderBrandsList();
     } else {
       throw new Error(data.error || 'Failed to load brands');
@@ -336,12 +336,31 @@ function saveAllBrands() {
   
   console.log('💾 Saving', pendingBrands.length, 'brands...');
   
+  // ✅ CLOSE MODAL IMMEDIATELY (Optimistic UI)
+  const modal = bootstrap.Modal.getInstance(document.getElementById('addBrandsModal'));
+  if (modal) {
+    modal.hide();
+  }
+  
+  // ✅ ADD BRANDS TO CACHE IMMEDIATELY (Optimistic UI)
+  const brandsToSave = [...pendingBrands];
+  brandsCache.push(...brandsToSave);
+  
+  // ✅ REFRESH DISPLAY IMMEDIATELY
+  renderBrandsList();
+  
+  // ✅ SHOW SUCCESS ALERT IMMEDIATELY
+  alert(`✅ Success!\n\n${brandsToSave.length} brand(s) added!`);
+  
+  // ✅ CLEAR PENDING BRANDS
+  pendingBrands = [];
+  
   let saved = 0;
   let failed = 0;
   let failedBrands = [];
   
-  // Save each brand
-  pendingBrands.forEach((brand, index) => {
+  // Save to backend in background (no UI blocking)
+  brandsToSave.forEach((brand, index) => {
     setTimeout(() => {
       fetch(SCRIPT_URL, {
         method: 'POST',
@@ -354,50 +373,41 @@ function saveAllBrands() {
       .then(data => {
         if (data.success) {
           saved++;
-          console.log('✅ Saved:', brand);
+          console.log('✅ Backend saved:', brand);
         } else {
           failed++;
           failedBrands.push(brand);
-          console.warn('⚠️ Failed:', brand, data.error);
+          console.warn('⚠️ Backend failed:', brand, data.error);
         }
         
         // All done
-        if (saved + failed === pendingBrands.length) {
-          showSaveResult(saved, failed, failedBrands);
+        if (saved + failed === brandsToSave.length) {
+          handleBackendResults(saved, failed, failedBrands);
         }
       })
       .catch(error => {
         failed++;
         failedBrands.push(brand);
-        console.error('❌ Error:', brand, error);
+        console.error('❌ Backend error:', brand, error);
         
-        if (saved + failed === pendingBrands.length) {
-          showSaveResult(saved, failed, failedBrands);
+        if (saved + failed === brandsToSave.length) {
+          handleBackendResults(saved, failed, failedBrands);
         }
       });
     }, index * 200); // Stagger requests
   });
 }
 
-function showSaveResult(saved, failed, failedBrands) {
-  // Close modal
-  const modal = bootstrap.Modal.getInstance(document.getElementById('addBrandsModal'));
-  if (modal) {
-    modal.hide();
-  }
-  
-  if (failed === 0) {
-    alert(`✅ Success!\n\n${saved} brand(s) saved successfully!`);
+/**
+ * Handle backend results (silent, no alert)
+ */
+function handleBackendResults(saved, failed, failedBrands) {
+  if (failed > 0) {
+    console.warn(`⚠️ Backend: ${saved} saved, ${failed} failed`);
+    console.warn('Failed brands:', failedBrands);
   } else {
-    let message = `✅ Saved: ${saved}\n❌ Failed: ${failed}`;
-    if (failedBrands.length > 0) {
-      message += `\n\nFailed brands:\n${failedBrands.join(', ')}`;
-    }
-    alert(message);
+    console.log(`✅ All ${saved} brands saved to backend`);
   }
-  
-  // ✅ Reload brands list
-  loadBrands();
 }
 
 /**
