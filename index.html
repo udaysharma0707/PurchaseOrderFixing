@@ -2701,39 +2701,73 @@ body.modal-open {
           <div class="col-md-8"><label class="form-label">Product Name *</label><input id="productName" class="form-control" required/></div>
           <div class="col-md-4"><label class="form-label">Category *</label><select id="category" class="form-select" required><option value="">Select</option><option value="Tiles">Tiles</option><option value="Sanitaryware">Sanitaryware</option><option value="Accessories">Accessories</option></select></div>
         </div>
-        <div class="row mb-3">
-         <!-- Brand Field with Autocomplete -->
-<div class="col-md-6" style="position: relative;">
-  <label class="form-label">Brand</label>
-  <input 
-    id="brand" 
-    class="form-control" 
-    type="text"
-    autocomplete="off"
-    oninput="filterBrandSuggestions(this.value)"
-    onfocus="showBrandSuggestions()"
-    onblur="setTimeout(() => hideBrandSuggestions(), 200)"
-    placeholder="Type to search brands...">
-  
-  <!-- Brand Suggestions Dropdown -->
-  <div id="brandSuggestionsDropdown" style="
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: white;
-    border: 1px solid #ddd;
-    border-top: none;
-    max-height: 200px;
-    overflow-y: auto;
-    z-index: 1000;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    margin-top: -1px;
-  ">
-    <!-- Suggestions rendered here -->
+       <div class="row mb-3">
+  <!-- Brand Field with Autocomplete + Save Button -->
+  <div class="col-md-6" style="position: relative;">
+    <label class="form-label">Brand</label>
+    
+    <!-- Input Field Container (position: relative for button positioning) -->
+    <div style="position: relative;">
+      <input 
+        id="brand" 
+        class="form-control" 
+        type="text"
+        autocomplete="off"
+        oninput="filterBrandSuggestions(this.value); checkAndShowSaveBrandButton(this.value)"
+        onfocus="showBrandSuggestions()"
+        onblur="setTimeout(() => hideBrandSuggestions(), 200)"
+        placeholder="Type to search brands..."
+        style="padding-right: 40px;">
+      
+      <!-- 💾 Save Brand Button (Inside Field) -->
+      <button id="saveBrandInsideBtn" 
+        type="button"
+        onclick="saveNewBrandFromProductField()"
+        style="
+          display: none;
+          position: absolute;
+          right: 8px;
+          top: 50%;
+          transform: translateY(-50%);
+          background: #28a745;
+          color: white;
+          border: none;
+          padding: 6px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 14px;
+          font-weight: bold;
+          transition: all 0.2s;
+          z-index: 10;
+        "
+        onmouseover="this.style.background='#218838'"
+        onmouseout="this.style.background='#28a745'"
+        title="Save this brand">
+        💾
+      </button>
+    </div>
+    
+    <!-- Brand Suggestions Dropdown -->
+    <div id="brandSuggestionsDropdown" style="
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1px solid #ddd;
+      border-top: none;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      margin-top: -1px;
+    ">
+      <!-- Suggestions rendered here -->
+    </div>
   </div>
 </div>
+
 
           <div class="col-md-6"><label class="form-label">Size</label><input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/></div>
         </div>
@@ -9266,7 +9300,11 @@ function filterBrandSuggestions(inputText) {
   } else {
     hideBrandSuggestions();
   }
+  
+  // ✅ Also check if we should show save button
+  checkAndShowSaveBrandButton(inputText);
 }
+
 
 /**
  * Render brand suggestions in dropdown
@@ -9302,9 +9340,14 @@ function renderBrandSuggestions(matches) {
  */
 function selectBrandSuggestion(brandName) {
   document.getElementById('brand').value = brandName;
+  
+  // ✅ Hide save button when brand is selected
+  document.getElementById('saveBrandInsideBtn').style.display = 'none';
+  
   hideBrandSuggestions();
   console.log('✅ Selected brand:', brandName);
 }
+
 
 /**
  * Show suggestions (when field is focused)
@@ -9342,6 +9385,106 @@ function hideBrandSuggestions() {
   dropdown.style.display = 'none';
 }
 
+/**
+ * Check if brand exists and show/hide save button
+ */
+function checkAndShowSaveBrandButton(inputText) {
+  const btn = document.getElementById('saveBrandInsideBtn');
+  const input = inputText.trim();
+  
+  // Hide button if input is empty
+  if (!input || input.length === 0) {
+    btn.style.display = 'none';
+    return;
+  }
+  
+  // Check if brand already exists in cache
+  const brandExists = brandAutocompleteCache.some(brand => 
+    brand.toLowerCase() === input.toLowerCase()
+  );
+  
+  // Show button ONLY if brand doesn't exist
+  if (!brandExists) {
+    btn.style.display = 'block';
+    console.log('✅ Show save button - new brand:', input);
+  } else {
+    btn.style.display = 'none';
+    console.log('ℹ️ Hide save button - brand already exists:', input);
+  }
+}
+/**
+ * Save new brand from product form field
+ */
+function saveNewBrandFromProductField() {
+  const input = document.getElementById('brand');
+  const brandName = input.value.trim();
+  
+  if (!brandName || brandName.length === 0) {
+    alert('⚠️ Please enter a brand name');
+    return;
+  }
+  
+  // Check again if brand already exists
+  const brandExists = brandAutocompleteCache.some(brand => 
+    brand.toLowerCase() === brandName.toLowerCase()
+  );
+  
+  if (brandExists) {
+    alert('⚠️ This brand already exists!');
+    return;
+  }
+  
+  console.log('💾 Saving new brand:', brandName);
+  
+  // Show loading state on button
+  const btn = document.getElementById('saveBrandInsideBtn');
+  const originalContent = btn.textContent;
+  btn.textContent = '⏳';
+  btn.disabled = true;
+  
+  // Send to backend
+  fetch(scriptURL, {
+    method: 'POST',
+    body: JSON.stringify({ 
+      action: 'addBrand',
+      brandName: brandName
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      console.log('✅ Brand saved successfully:', brandName);
+      
+      // Add to cache
+      brandAutocompleteCache.push(brandName);
+      
+      // Hide button
+      btn.style.display = 'none';
+      btn.textContent = originalContent;
+      btn.disabled = false;
+      
+      // Show success message
+      alert(`✅ Brand "${brandName}" saved!`);
+      
+      // Refresh dropdown
+      filterBrandSuggestions(brandName);
+      
+    } else {
+      throw new Error(data.error || 'Failed to save brand');
+    }
+  })
+  .catch(error => {
+    console.error('❌ Error saving brand:', error);
+    
+    // Restore button
+    btn.textContent = originalContent;
+    btn.disabled = false;
+    
+    alert('❌ Error saving brand: ' + error.message);
+  });
+}
+
+    
 /**
  * Refresh brand cache when new brand is added
  */
@@ -10030,6 +10173,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
