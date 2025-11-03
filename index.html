@@ -9312,7 +9312,7 @@ function filterBrandSuggestions(inputText) {
 function renderBrandSuggestions(matches) {
   const dropdown = document.getElementById('brandSuggestionsDropdown');
   
-  // Limit to max 10 suggestions
+  // Limit to max 15 suggestions
   const limitedMatches = matches.slice(0, 15);
   
   let html = '';
@@ -9388,6 +9388,10 @@ function hideBrandSuggestions() {
 /**
  * Check if brand exists and show/hide save button
  */
+/**
+ * Check if brand exists and show/hide save button
+ * Hides "Saved" state when user modifies the field
+ */
 function checkAndShowSaveBrandButton(inputText) {
   const btn = document.getElementById('saveBrandInsideBtn');
   const input = inputText.trim();
@@ -9405,23 +9409,34 @@ function checkAndShowSaveBrandButton(inputText) {
   
   // Show button ONLY if brand doesn't exist
   if (!brandExists) {
+    // ✅ Reset to save icon when user modifies field
+    btn.innerHTML = '💾';
+    btn.style.background = '#28a745';
+    btn.style.cursor = 'pointer';
+    btn.disabled = false;
     btn.style.display = 'block';
+    
     console.log('✅ Show save button - new brand:', input);
   } else {
     btn.style.display = 'none';
     console.log('ℹ️ Hide save button - brand already exists:', input);
   }
 }
+
 /**
  * Save new brand from product form field
+ */
+/**
+ * Save new brand from product form field
+ * Shows "Brand Saved" feedback on the button itself
  */
 function saveNewBrandFromProductField() {
   const input = document.getElementById('brand');
   const brandName = input.value.trim();
+  const btn = document.getElementById('saveBrandInsideBtn');
   
   if (!brandName || brandName.length === 0) {
-    alert('⚠️ Please enter a brand name');
-    return;
+    return; // Silently return if empty
   }
   
   // Check again if brand already exists
@@ -9430,19 +9445,20 @@ function saveNewBrandFromProductField() {
   );
   
   if (brandExists) {
-    alert('⚠️ This brand already exists!');
+    // Brand already exists, just hide button
+    btn.style.display = 'none';
     return;
   }
   
   console.log('💾 Saving new brand:', brandName);
   
-  // Show loading state on button
-  const btn = document.getElementById('saveBrandInsideBtn');
-  const originalContent = btn.textContent;
-  btn.textContent = '⏳';
+  // ✅ INSTANT FEEDBACK - Change button to "Saved!" immediately
+  btn.innerHTML = '✅ Saved';
+  btn.style.background = '#218838';
   btn.disabled = true;
+  btn.style.cursor = 'default';
   
-  // Send to backend
+  // ✅ Send to backend in background (async)
   fetch(SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify({ 
@@ -9453,36 +9469,51 @@ function saveNewBrandFromProductField() {
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      console.log('✅ Brand saved successfully:', brandName);
+      console.log('✅ Brand saved successfully in backend:', brandName);
       
       // Add to cache
       brandAutocompleteCache.push(brandName);
       
-      // Hide button
-      btn.style.display = 'none';
-      btn.textContent = originalContent;
-      btn.disabled = false;
-      
-      // Show success message
-      alert(`✅ Brand "${brandName}" saved!`);
-      
-      // Refresh dropdown
-      filterBrandSuggestions(brandName);
+      // Button stays as "✅ Saved" until user modifies field
+      // (will be hidden automatically by checkAndShowSaveBrandButton when user types)
       
     } else {
-      throw new Error(data.error || 'Failed to save brand');
+      // If backend fails, revert button
+      console.error('⚠️ Backend save failed:', data.error);
+      btn.innerHTML = '💾';
+      btn.style.background = '#28a745';
+      btn.disabled = false;
+      btn.style.cursor = 'pointer';
+      
+      // Show error (subtle, no alert)
+      btn.innerHTML = '❌ Error';
+      btn.style.background = '#dc3545';
+      
+      // Reset after 2 seconds
+      setTimeout(() => {
+        btn.innerHTML = '💾';
+        btn.style.background = '#28a745';
+        btn.disabled = false;
+      }, 2000);
     }
   })
   .catch(error => {
     console.error('❌ Error saving brand:', error);
     
-    // Restore button
-    btn.textContent = originalContent;
-    btn.disabled = false;
+    // Show error on button
+    btn.innerHTML = '❌ Error';
+    btn.style.background = '#dc3545';
     
-    alert('❌ Error saving brand: ' + error.message);
+    // Reset after 2 seconds
+    setTimeout(() => {
+      btn.innerHTML = '💾';
+      btn.style.background = '#28a745';
+      btn.disabled = false;
+      btn.style.cursor = 'pointer';
+    }, 2000);
   });
 }
+
 
     
 /**
@@ -10173,6 +10204,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
