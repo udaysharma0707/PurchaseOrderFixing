@@ -412,10 +412,13 @@ function handleBackendResults(saved, failed, failedBrands) {
 
 /**
  * ==========================================
- * SECTION 8: DELETE BRAND
+ * SECTION 8: DELETE BRAND (OPTIMISTIC UI)
  * ==========================================
  */
 
+/**
+ * Confirm delete brand
+ */
 function confirmDeleteBrand(brand) {
   const confirmed = confirm(`🗑️ Delete "${brand}"?\n\nThis cannot be undone.`);
   
@@ -424,10 +427,24 @@ function confirmDeleteBrand(brand) {
   }
 }
 
+/**
+ * Delete brand with Optimistic UI
+ * Removes from UI immediately, deletes from backend in background
+ */
 function deleteBrand(brand) {
   console.log('🗑️ Deleting brand:', brand);
   
-  fetch(SCRIPT_URL, {
+  // ✅ REMOVE FROM CACHE IMMEDIATELY (Optimistic UI)
+  brandsCache = brandsCache.filter(b => b !== brand);
+  
+  // ✅ REFRESH DISPLAY IMMEDIATELY
+  renderBrandsList();
+  
+  // ✅ SHOW SUCCESS ALERT IMMEDIATELY
+  alert(`✅ Brand "${brand}" deleted successfully!`);
+  
+  // ✅ DELETE FROM BACKEND IN BACKGROUND (async)
+  fetch(scriptURL, {
     method: 'POST',
     body: JSON.stringify({ 
       action: 'deleteBrand',
@@ -437,19 +454,35 @@ function deleteBrand(brand) {
   .then(response => response.json())
   .then(data => {
     if (data.success) {
-      console.log('✅ Brand deleted:', brand);
-      alert('✅ Brand deleted successfully!');
-      loadBrands();
+      console.log('✅ Backend: Brand deleted:', brand);
+      
+      // ✅ Update autocomplete cache in product form
+      if (typeof refreshBrandAutocompleteCache === 'function') {
+        refreshBrandAutocompleteCache();
+      }
     } else {
-      console.warn('⚠️ Delete failed:', data.error);
-      alert('❌ Failed to delete brand: ' + data.error);
+      console.warn('⚠️ Backend delete failed:', data.error);
+      
+      // If backend fails, restore to cache
+      brandsCache.push(brand);
+      renderBrandsList();
+      
+      // Show error
+      alert('⚠️ Note: Backend deletion may have failed. Refreshing list...');
     }
   })
   .catch(error => {
-    console.error('❌ Error deleting brand:', error);
-    alert('❌ Error deleting brand');
+    console.error('❌ Backend error deleting brand:', error);
+    
+    // If error, restore to cache
+    brandsCache.push(brand);
+    renderBrandsList();
+    
+    // Show error
+    alert('⚠️ Note: Error deleting from backend. Refreshing list...');
   });
 }
+
 
 /**
  * ==========================================
@@ -490,3 +523,4 @@ function escapeHtml(text) {
 }
 
 console.log('✅ Brand Manager Module Loaded');
+
