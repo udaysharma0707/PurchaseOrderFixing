@@ -9443,7 +9443,7 @@ function saveNewBrandFromProductField() {
   btn.disabled = true;
   
   // Send to backend
-  fetch(scriptURL, {
+  fetch(SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify({ 
       action: 'addBrand',
@@ -10173,6 +10173,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
