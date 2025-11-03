@@ -444,7 +444,7 @@ function deleteBrand(brand) {
   alert(`✅ Brand "${brand}" deleted successfully!`);
   
   // ✅ DELETE FROM BACKEND IN BACKGROUND (async)
-  fetch(scriptURL, {
+  fetch(SCRIPT_URL, {
     method: 'POST',
     body: JSON.stringify({ 
       action: 'deleteBrand',
@@ -523,4 +523,5 @@ function escapeHtml(text) {
 }
 
 console.log('✅ Brand Manager Module Loaded');
+
 
