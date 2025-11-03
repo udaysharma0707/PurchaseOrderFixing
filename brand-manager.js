@@ -390,7 +390,7 @@ function saveAllBrands() {
           handleBackendResults(saved, failed, failedBrands);
         }
       });
-    }, index * 200); // Stagger requests
+    }, index * 800); // Stagger requests
   });
 }
 
@@ -519,6 +519,7 @@ function escapeHtml(text) {
 }
 
 console.log('✅ Brand Manager Module Loaded');
+
 
 
 
