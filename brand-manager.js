@@ -5,10 +5,6 @@
  * ==========================================
  */
 
-// ===== GLOBAL VARIABLES =====
-
-let pendingBrands = [];
-
 /**
  * ==========================================
  * SECTION 1: NAVIGATION FUNCTIONS
@@ -523,5 +519,6 @@ function escapeHtml(text) {
 }
 
 console.log('✅ Brand Manager Module Loaded');
+
 
 
