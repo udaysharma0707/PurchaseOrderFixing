@@ -3533,6 +3533,9 @@ let cachedGroupVariants = [];
 let currentPage = 'home'; // home, allProducts, productGroups, groupDetail
 let currentGroupId = null; // For group detail view
 
+// ✅ PRODUCT PHOTO VARIABLES
+let productPhotoBase64 = null;
+let productPhotoFileName = null;
 
 
     
@@ -4573,6 +4576,9 @@ async function deleteProductFromSheet(id) {
 
 
 
+
+
+    
   /***********************
    * Product CRUD UI
    ***********************/
@@ -4602,7 +4608,20 @@ async function deleteProductFromSheet(id) {
     new bootstrap.Modal(document.getElementById('productModal')).show();
   }
 
- async function saveProduct() {
+async function saveProduct() {
+  console.log('💾 saveProduct called');
+  
+  // ✅ CHECK IF THIS IS A VARIANT EDIT
+  const form = document.getElementById('productForm');
+  const isVariant = form.dataset.isVariant === 'true';
+  
+  if (isVariant) {
+    console.log('📝 Saving as variant');
+    await saveVariantData();
+    return;
+  }
+  
+  // ✅ GET FORM VALUES
   const name = document.getElementById('productName').value.trim();
   const category = document.getElementById('category').value;
   const brand = document.getElementById('brand').value.trim();
@@ -4614,11 +4633,16 @@ async function deleteProductFromSheet(id) {
   const stock = parseInt(document.getElementById('stock').value);
   const minStock = parseInt(document.getElementById('minStock').value) || 5;
   
+  console.log('🔍 Form data:', { name, category, brand, price, stock });
+  
+  // ✅ VALIDATION
   if (!name || !category || isNaN(price) || isNaN(stock) || stock < 0) {
+    console.error('❌ Validation failed');
     alert('Fill required fields');
     return;
   }
   
+  // ✅ CREATE PRODUCT OBJECT
   const product = {
     id: editingProductId || (Date.now().toString(36) + Math.random().toString(36).substr(2)),
     name: name,
@@ -4631,9 +4655,12 @@ async function deleteProductFromSheet(id) {
     price: price,
     stock: stock,
     minStock: minStock,
-    imageUrl: window.editingProductImageUrl || ''  // âœ… PRESERVE IMAGE URL
+    imageUrl: window.editingProductImageUrl || ''  // ✅ PRESERVE IMAGE URL
   };
   
+  console.log('📦 Product object:', product);
+  
+  // ✅ UPDATE LOCAL CACHE
   const idx = cachedProducts.findIndex(p => p.id === product.id);
   const previous = idx !== -1 ? Object.assign({}, cachedProducts[idx]) : null;
   
@@ -4645,32 +4672,69 @@ async function deleteProductFromSheet(id) {
   
   renderProducts();
   
+  // ✅ CLOSE MODAL
   const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
   if (modal) modal.hide();
   
+  // ✅ Refresh brand cache
+  refreshBrandAutocompleteCache();
+  
   showSyncIndicator('Saving product...');
   
-  // Background save
-  saveProductToSheet(product, !!editingProductId).then(resp => {
-    if (resp && resp.success) {
+  // ✅ UPLOAD PHOTO FIRST (if available)
+  if (productPhotoBase64) {
+    console.log('📷 Uploading product photo...');
+    const photoUrl = await uploadProductPhotoToBackend(product.id, productPhotoBase64);
+    
+    if (photoUrl) {
+      product.imageUrl = photoUrl;
+      const localIdx = cachedProducts.findIndex(p => p.id === product.id);
+      if (localIdx !== -1) cachedProducts[localIdx].imageUrl = photoUrl;
+      renderProducts();
+    }
+  }
+  
+  // ✅ SAVE PRODUCT TO SHEET
+  try {
+    const resp = await saveProductToSheet(product, !!editingProductId);
+    console.log('📥 saveProductToSheet response:', resp);
+    
+    if (resp && (resp.success || resp.ok)) {
+      console.log('✅ Product saved successfully');
+      
       if (resp.id) {
         const localIdx = cachedProducts.findIndex(p => p.id === product.id);
         if (localIdx !== -1) cachedProducts[localIdx].id = resp.id;
         renderProducts();
       }
+      
       showSyncIndicator('Saved', 900);
+    } else {
+      console.error('⚠️ Save returned false:', resp);
+      if (previous && idx !== -1) {
+        cachedProducts[idx] = previous;
+        renderProducts();
+      }
+      alert('Save failed - reverted locally.');
+      showSyncIndicator('Save failed', 2000);
     }
-  }).catch(err => {
-    console.error(err);
-    if (previous) {
+  } catch (err) {
+    console.error('❌ Error in saveProduct:', err);
+    if (previous && idx !== -1) {
       cachedProducts[idx] = previous;
       renderProducts();
+    } else if (idx !== -1) {
+      cachedProducts.splice(idx, 1);
+      renderProducts();
     }
-    alert('Save failed - reverted locally.');
-  });
+    alert('Save failed - reverted locally. Check console for details.');
+    showSyncIndicator('Save failed', 2000);
+  }
   
-  // Clear the temporary imageUrl variable
+  // ✅ CLEAR TEMPORARY VARIABLES
   window.editingProductImageUrl = '';
+  productPhotoBase64 = null;
+  productPhotoFileName = null;
 }
 
 
@@ -4879,6 +4943,128 @@ async function saveVariantData() {
   });
 }
 
+
+/**
+ * ==========================================
+ * PRODUCT PHOTO UPLOAD FUNCTIONS
+ * ==========================================
+ */
+
+/**
+ * Handle product photo selection
+ */
+function handleProductPhotoSelect(event) {
+  const file = event.target.files[0];
+  if (!file || !file.type.startsWith('image/')) {
+    alert('Please select a valid image file');
+    return;
+  }
+  
+  productPhotoFileName = `product_${Date.now()}.jpg`;
+  
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      // Compress image
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      const maxWidth = 1920;
+      const maxHeight = 1080;
+      let width = img.width;
+      let height = img.height;
+      
+      if (width > height) {
+        if (width > maxWidth) {
+          height = (maxWidth / width) * height;
+          width = maxWidth;
+        }
+      } else {
+        if (height > maxHeight) {
+          width = (maxHeight / height) * width;
+          height = maxHeight;
+        }
+      }
+      
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0, width, height);
+      
+      productPhotoBase64 = canvas.toDataURL('image/jpeg', 0.7);
+      
+      // Show preview
+      document.getElementById('productPhotoPreviewImage').src = productPhotoBase64;
+      document.getElementById('productPhotoPreviewContainer').style.display = 'block';
+      
+      console.log('✅ Product photo selected and compressed');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+/**
+ * Clear product photo selection
+ */
+function clearProductPhotoSelection() {
+  document.getElementById('productPhotoFileInput').value = '';
+  document.getElementById('productPhotoPreviewContainer').style.display = 'none';
+  productPhotoBase64 = null;
+  productPhotoFileName = null;
+}
+
+/**
+ * Remove product photo
+ */
+function removeProductPhoto() {
+  clearProductPhotoSelection();
+  window.editingProductImageUrl = '';
+}
+
+/**
+ * Upload product photo to backend
+ */
+async function uploadProductPhotoToBackend(productId, photoBase64) {
+  try {
+    if (!photoBase64) {
+      console.log('⚠️ No photo to upload');
+      return null;
+    }
+    
+    console.log('📤 Uploading product photo...');
+    
+    const formData = new URLSearchParams({
+      action: 'uploadPhoto',
+      email: userEmail,
+      hash: userHash,
+      imageData: photoBase64,
+      fileName: productPhotoFileName
+    });
+    
+    const response = await fetch(scriptURL, {
+      method: 'POST',
+      body: formData
+    });
+    
+    const result = await response.json();
+    
+    if (result.success && result.photoUrl) {
+      console.log('✅ Product photo uploaded:', result.photoUrl);
+      return result.photoUrl;
+    } else {
+      console.warn('⚠️ Photo upload failed:', result.error);
+      return null;
+    }
+    
+  } catch (error) {
+    console.error('❌ Photo upload error:', error);
+    return null;
+  }
+}
+
+
+    
 
   /***********************
    * SALES GRID: create rows, populate selects, mobile behavior
@@ -6219,10 +6405,11 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Main dashboard visible');
   }
   
-  // ✅ RESET BRAND SAVE BUTTON ON PRODUCT MODAL CLOSE
+  // ✅ RESET PRODUCT MODAL ON CLOSE (Brand button + Photo)
   const productModal = document.getElementById('productModal');
   if (productModal) {
     productModal.addEventListener('hidden.bs.modal', function() {
+      // Reset brand save button
       const saveBrandBtn = document.getElementById('saveBrandInsideBtn');
       if (saveBrandBtn) {
         saveBrandBtn.style.display = 'none';
@@ -6232,13 +6419,22 @@ document.addEventListener('DOMContentLoaded', function() {
         saveBrandBtn.disabled = false;
       }
       
-      // ✅ Also clear brand field on modal close
+      // Clear brand field
       const brandField = document.getElementById('brand');
       if (brandField) {
         brandField.value = '';
       }
       
-      console.log('🔄 Product modal closed - Brand button reset');
+      // ✅ RESET PRODUCT PHOTO
+      clearProductPhotoSelection();
+      
+      // ✅ CLEAR BRAND AUTOCOMPLETE DROPDOWN
+      const dropdown = document.getElementById('brandSuggestionsDropdown');
+      if (dropdown) {
+        dropdown.style.display = 'none';
+      }
+      
+      console.log('🔄 Product modal closed - All fields reset');
     });
   }
   
@@ -10337,6 +10533,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
