@@ -3574,7 +3574,79 @@ let productPhotoBase64 = null;
 let productPhotoFileName = null;
 
 
-    
+    /**
+ * ==========================================
+ * LOCALSTORAGE CACHING SYSTEM
+ * ==========================================
+ */
+
+// Cache keys
+const CACHE_KEYS = {
+  PRODUCTS: 'inventory_products_cache',
+  SALES: 'inventory_sales_cache',
+  BRANDS: 'inventory_brands_cache',
+  CUSTOMERS: 'inventory_customers_cache',
+  CACHE_TIMESTAMP: 'inventory_cache_timestamp'
+};
+
+/**
+ * Save data to localStorage
+ */
+function saveToCache(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+    localStorage.setItem(CACHE_KEYS.CACHE_TIMESTAMP, Date.now().toString());
+    console.log('✅ Cached:', key);
+  } catch (error) {
+    console.warn('⚠️ Cache save failed:', error);
+  }
+}
+
+/**
+ * Load data from localStorage
+ */
+function loadFromCache(key) {
+  try {
+    const data = localStorage.getItem(key);
+    if (data) {
+      console.log('✅ Loaded from cache:', key);
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.warn('⚠️ Cache load failed:', error);
+  }
+  return null;
+}
+
+/**
+ * Clear all cached data
+ */
+function clearAllCache() {
+  try {
+    Object.values(CACHE_KEYS).forEach(key => {
+      localStorage.removeItem(key);
+    });
+    console.log('✅ All cache cleared');
+  } catch (error) {
+    console.warn('⚠️ Cache clear failed:', error);
+  }
+}
+
+/**
+ * Get cache age (in minutes)
+ */
+function getCacheAge() {
+  const timestamp = localStorage.getItem(CACHE_KEYS.CACHE_TIMESTAMP);
+  if (!timestamp) return null;
+  
+  const cacheTime = parseInt(timestamp);
+  const now = Date.now();
+  const ageMs = now - cacheTime;
+  const ageMinutes = Math.floor(ageMs / 60000);
+  
+  return ageMinutes;
+}
+
     
 // ==========================================
 // BACKGROUND SAVE QUEUE
@@ -4002,26 +4074,69 @@ try {
  * Sync / Fetch from Google Sheets
  * Combines authentication check + complete data fetching + sales filtering
  */
+/**
+ * ==========================================
+ * SYNC FROM GOOGLE SHEETS (WITH CACHE)
+ * ==========================================
+ */
+
 async function syncFromGoogleSheets() {
   if (!userEmail || !userHash) {
-    console.warn('Ã¢Å¡ Ã¯Â¸Â No credentials, checking localStorage...');
+    console.warn('⚠️ No credentials, checking localStorage...');
     const savedEmail = localStorage.getItem('userEmail');
     const savedHash = localStorage.getItem('userHash');
     if (savedEmail && savedHash) {
       userEmail = savedEmail;
       userHash = savedHash;
-      console.log('Ã¢Å“â€¦ Restored credentials from localStorage');
+      console.log('✅ Restored credentials from localStorage');
     } else {
-      console.log('Ã°Å¸â€˜Â¤ No credentials found');
+      console.log('❌ No credentials found');
       showAuthScreen();
       return;
     }
   }
 
-  showSyncIndicator('Refreshing...');
+  // ✅ LOAD FROM CACHE FIRST (INSTANT)
+  console.log('📦 Checking cache...');
+  const cachedProducts = localStorage.getItem('inventory_products_cache');
+  const cachedSales = localStorage.getItem('inventory_sales_cache');
+  
+  if (cachedProducts && cachedSales) {
+    console.log('✅ Loading from cache instantly!');
+    
+    try {
+      const products = JSON.parse(cachedProducts);
+      const sales = JSON.parse(cachedSales);
+      
+      if (products.length > 0 || sales.length > 0) {
+        // Update global caches
+        cachedProducts = products;
+        let allSales = sales;
+        
+        // Filter deleted sales
+        cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
+        console.log(`📊 Loaded ${products.length} products and ${cachedSales.length} sales from cache`);
+        
+        // Mark as loaded
+        hasInitialLoaded = true;
+        
+        // Render immediately
+        renderProducts();
+        renderSales();
+        updateSummaryFromCache();
+        
+        console.log('✅ Cache data displayed instantly!');
+      }
+    } catch (error) {
+      console.warn('⚠️ Cache parse error:', error);
+    }
+  }
+
+  // ✅ SYNC WITH GOOGLE SHEETS IN BACKGROUND (SILENTLY)
+  console.log('🌐 Syncing fresh data from Google Sheets...');
+  showSyncIndicator('Syncing...');
   
   try {
-    // Ã¢Å“â€¦ Send email + hash for authentication
     const url = `${GOOGLE_SCRIPT_URL}?action=getAll&email=${encodeURIComponent(userEmail)}&hash=${encodeURIComponent(userHash)}&t=${Date.now()}`;
 
     const res = await fetch(url);
@@ -4034,8 +4149,7 @@ async function syncFromGoogleSheets() {
     
     // Check for unauthorized response
     if (!data.success && data.error === 'unauthorized') {
-      // Ã¢Å“â€¦ ONLY clear auth on real unauthorized error
-      console.error('Ã¢ÂÅ’ Email not authorized');
+      console.error('❌ Email not authorized');
       clearAuth();
       alert('Access denied. Your email is not authorized. Please contact administrator.');
       showAuthScreen();
@@ -4045,15 +4159,15 @@ async function syncFromGoogleSheets() {
     
     // Verify successful response
     if (data && data.success) {
+      console.log('✅ Fresh data received from Google Sheets');
+      
       // Update products
       cachedProducts = data.products || [];
       
       // Update sales with filtering for deleted items
       let allSales = data.sales || [];
-      
-      // Filter out manually deleted sales
       cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
-      console.log(`Ã°Å¸â€œÅ  Loaded ${allSales.length} sales from server, showing ${cachedSales.length} (${allSales.length - cachedSales.length} deleted)`);
+      console.log(`📊 Loaded ${allSales.length} sales from server, showing ${cachedSales.length}`);
       
       // Sort sales by date (newest first)
       sortSalesByDateDescending();
@@ -4061,15 +4175,23 @@ async function syncFromGoogleSheets() {
       // Mark initial load complete
       hasInitialLoaded = true;
       
+      // ✅ SAVE TO CACHE
+      try {
+        localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+        localStorage.setItem('inventory_sales_cache', JSON.stringify(cachedSales));
+        localStorage.setItem('inventory_cache_timestamp', Date.now().toString());
+        console.log('✅ Cache updated with fresh data');
+      } catch (cacheError) {
+        console.warn('⚠️ Cache save failed:', cacheError);
+      }
+      
       // Render both products and sales
       renderProducts();
       renderSales();
       
       // Update dashboard metrics
       updateSummaryFromCache();
-        // ✅ NEW: Sync product groups and variants
-  // await syncProductGroups();
- // await syncAllVariants();
+      
       showSyncIndicator('Synced!', 900);
       
     } else {
@@ -4077,14 +4199,16 @@ async function syncFromGoogleSheets() {
     }
     
   } catch (err) {
-    console.error('Ã¢Å¡ Ã¯Â¸Â Sync error (non-critical):', err);
-    // Ã¢Å“â€¦ Don't show alert or clear auth on network errors
+    console.error('⚠️ Sync error:', err);
+    
+    // If cache exists, keep showing it
+    if (cachedProducts && cachedSales) {
+      console.log('✅ Keeping cached data (sync failed)');
+    }
+    
     hideSyncIndicator();
   }
 }
-
-
-
 
 
 
@@ -4727,6 +4851,14 @@ async function saveProduct() {
   
   renderProducts();
   
+  // ✅ SAVE TO CACHE IMMEDIATELY
+  try {
+    localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    console.log('✅ Product cached immediately');
+  } catch (error) {
+    console.warn('⚠️ Cache save failed:', error);
+  }
+  
   // ✅ CLOSE MODAL
   const modal = bootstrap.Modal.getInstance(document.getElementById('productModal'));
   if (modal) modal.hide();
@@ -4746,6 +4878,13 @@ async function saveProduct() {
       const localIdx = cachedProducts.findIndex(p => p.id === product.id);
       if (localIdx !== -1) cachedProducts[localIdx].imageUrl = photoUrl;
       renderProducts();
+      
+      // ✅ CACHE UPDATED PRODUCT
+      try {
+        localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+      } catch (error) {
+        console.warn('⚠️ Cache update failed:', error);
+      }
     }
   }
   
@@ -4761,6 +4900,13 @@ async function saveProduct() {
         const localIdx = cachedProducts.findIndex(p => p.id === product.id);
         if (localIdx !== -1) cachedProducts[localIdx].id = resp.id;
         renderProducts();
+        
+        // ✅ UPDATE CACHE WITH NEW ID
+        try {
+          localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+        } catch (error) {
+          console.warn('⚠️ Cache update failed:', error);
+        }
       }
       
       showSyncIndicator('Saved', 900);
@@ -4769,6 +4915,13 @@ async function saveProduct() {
       if (previous && idx !== -1) {
         cachedProducts[idx] = previous;
         renderProducts();
+        
+        // ✅ REVERT CACHE
+        try {
+          localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+        } catch (error) {
+          console.warn('⚠️ Cache revert failed:', error);
+        }
       }
       alert('Save failed - reverted locally.');
       showSyncIndicator('Save failed', 2000);
@@ -4782,6 +4935,14 @@ async function saveProduct() {
       cachedProducts.splice(idx, 1);
       renderProducts();
     }
+    
+    // ✅ REVERT CACHE
+    try {
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    } catch (error) {
+      console.warn('⚠️ Cache revert failed:', error);
+    }
+    
     alert('Save failed - reverted locally. Check console for details.');
     showSyncIndicator('Save failed', 2000);
   }
@@ -6429,6 +6590,12 @@ function viewPhotoProduct(productId) {
  * ==========================================
  */
 
+/**
+ * ==========================================
+ * INITIALIZATION ON PAGE LOAD (WITH CACHE)
+ * ==========================================
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 Initializing Inventory App...');
   
@@ -6497,10 +6664,11 @@ document.addEventListener('DOMContentLoaded', function() {
   loadBrandAutocompleteCache();
   console.log('✅ Brand autocomplete cache loaded');
   
-  // Initialize data (existing code)
-  renderProducts();
-  renderSales();
-  syncFromGoogleSheets();
+  // ✅ INITIALIZE DATA (Cache-First Approach)
+  console.log('📱 Starting cache-first initialization...');
+  renderProducts();  // Show empty/cached products
+  renderSales();     // Show empty/cached sales
+  syncFromGoogleSheets();  // Load from cache, then sync background
   
   console.log('✅ Page navigation initialized');
 });
@@ -10604,6 +10772,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
