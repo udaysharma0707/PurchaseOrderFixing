@@ -85,7 +85,29 @@ body:has(.page-view.active) .action-buttons {
     }
   }
 
-    
+
+    #photoProductGrid .row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -0.5rem;
+  }
+  
+  #photoProductGrid .col {
+    flex: 0 0 calc(50% - 0.5rem) !important;
+    margin: 0.25rem;
+  }
+  
+  @media (min-width: 768px) {
+    #photoProductGrid .col {
+      flex: 0 0 calc(33.333% - 0.5rem) !important;
+    }
+  }
+  
+  @media (min-width: 1200px) {
+    #photoProductGrid .col {
+      flex: 0 0 calc(25% - 0.5rem) !important;
+    }
+  }
 
 /* ==========================================
    FULL-SCREEN PAGE VIEW SYSTEM
@@ -2240,9 +2262,11 @@ body.modal-open {
   </div>
 </div>
 
-<!-- âœ… NEW: Photo Product Grid (Hidden by default) -->
-<div id="photoProductGrid" style="display:none;" class="row row-cols-1 row-cols-md-3 g-4 mb-4">
-  <!-- Photo product cards will be dynamically inserted here -->
+<!-- ✅ Photo Product Grid (2 Columns Mobile) -->
+<div id="photoProductGrid" style="display:none;" class="mb-4">
+  <div class="row g-2" style="display: flex; flex-wrap: wrap;">
+    <!-- Photo product cards inserted dynamically here -->
+  </div>
 </div>
 
       </div>
@@ -10795,6 +10819,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
