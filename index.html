@@ -6526,59 +6526,118 @@ async function uploadPhotoToBackend(productData, photoBase64) {
 /**
  * Show all products (table view) - FIXED
  */
+/**
+ * Show all products (table view) - COMPLETE FIX
+ */
 function showAllProducts() {
   console.log('📋 Switching to All Products view');
   
   // ✅ Update button states
-  document.getElementById('btnAllView').classList.add('active');
-  document.getElementById('btnPhotoView').classList.remove('active');
+  const btnAll = document.getElementById('btnAllView');
+  const btnPhoto = document.getElementById('btnPhotoView');
   
-  // ✅ Hide photo grid
+  if (btnAll) btnAll.classList.add('active');
+  if (btnPhoto) btnPhoto.classList.remove('active');
+  
+  // ✅ Hide photo grid - Make sure it's fully hidden
   const photoGrid = document.getElementById('photoProductGrid');
   if (photoGrid) {
     photoGrid.style.display = 'none';
-    console.log('✅ Photo grid hidden');
+    photoGrid.style.visibility = 'hidden';
+    photoGrid.innerHTML = ''; // Clear it
+    console.log('✅ Photo grid hidden and cleared');
   }
   
-  // ✅ Show table
-  const tableExplorer = document.querySelector('.table-explorer');
+  // ✅ Show table - Try multiple selectors to find it
+  let tableExplorer = document.querySelector('.table-explorer');
+  
+  if (!tableExplorer) {
+    tableExplorer = document.querySelector('[class*="table"]');
+  }
+  
   if (tableExplorer) {
     tableExplorer.style.display = 'block';
+    tableExplorer.style.visibility = 'visible';
     console.log('✅ Table explorer shown');
+  } else {
+    console.warn('⚠️ Table explorer element not found!');
   }
   
-  // ✅ Render products in table
+  // ✅ Show mobile list
+  const mobileList = document.getElementById('mobileProductsList');
+  if (mobileList) {
+    mobileList.style.display = 'block';
+    console.log('✅ Mobile list shown');
+  }
+  
+  // ✅ Render products
   renderProducts();
   console.log('✅ All Products view activated');
 }
+
 
 /**
  * Show photo products (grid view) - VERTICAL SCROLL FIXED
  */
 function showPhotoProducts() {
-  document.getElementById('btnAllView').classList.remove('active');
-  document.getElementById('btnPhotoView').classList.add('active');
+  console.log('📷 Switching to Photo Products view');
   
-  document.querySelector('.table-explorer').style.display = 'none';
+  // ✅ Update button states
+  const btnAll = document.getElementById('btnAllView');
+  const btnPhoto = document.getElementById('btnPhotoView');
+  
+  if (btnAll) btnAll.classList.remove('active');
+  if (btnPhoto) btnPhoto.classList.add('active');
+  
+  // ✅ Hide table - Try multiple selectors
+  let tableExplorer = document.querySelector('.table-explorer');
+  
+  if (!tableExplorer) {
+    tableExplorer = document.querySelector('[class*="table"]');
+  }
+  
+  if (tableExplorer) {
+    tableExplorer.style.display = 'none';
+    tableExplorer.style.visibility = 'hidden';
+    console.log('✅ Table explorer hidden');
+  }
+  
+  // ✅ Hide mobile list
+  const mobileList = document.getElementById('mobileProductsList');
+  if (mobileList) {
+    mobileList.style.display = 'none';
+    console.log('✅ Mobile list hidden');
+  }
+  
+  // ✅ Show photo grid
   const photoGrid = document.getElementById('photoProductGrid');
-  photoGrid.style.display = 'block';
-  photoGrid.innerHTML = '';
+  if (photoGrid) {
+    photoGrid.style.display = 'grid';
+    photoGrid.style.visibility = 'visible';
+    console.log('✅ Photo grid shown');
+  } else {
+    console.error('❌ Photo grid element not found!');
+  }
   
-  // ✅ FIX: Set display and flex properties
-  photoGrid.style.display = 'grid';
-  photoGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
-  photoGrid.style.gap = '12px';
-  photoGrid.style.width = '100%';
-  photoGrid.style.overflow = 'visible';
+  // ✅ Render photo products
+  renderPhotoProductsGrid();
+  console.log('✅ Photo Products view activated');
+}
+function renderPhotoProductsGrid() {
+  const photoGrid = document.getElementById('photoProductGrid');
+  if (!photoGrid) {
+    console.error('❌ Photo grid not found');
+    return;
+  }
   
-  // Filter photo products
+  photoGrid.innerHTML = ''; // Clear first
+  
   const photoProducts = cachedProducts.filter(p => {
     const hasImage = p.imageUrl && p.imageUrl !== '' && p.imageUrl !== 'uploading...';
-    console.log(`Product "${p.name}": imageUrl="${p.imageUrl}", showing=${hasImage}`);
     return hasImage;
   });
   
-  console.log(`Found ${photoProducts.length} photo products`);
+  console.log(`📸 Found ${photoProducts.length} photo products`);
   
   if (photoProducts.length === 0) {
     photoGrid.innerHTML = `
@@ -6611,8 +6670,8 @@ function showPhotoProducts() {
            alt="${escapeHtml(product.name)}" 
            style="height:150px; object-fit:cover; cursor:pointer; flex-shrink: 0;" 
            onclick="viewPhotoProduct('${product.id}')"
-           onerror="this.onerror=null; this.src='https://via.placeholder.com/200?text=Image+Not+Found'; console.error('Failed to load image for card: ${escapeHtml(product.name)}');">
-      <div class="card-body p-2" style="flex: 1; overflow-y: auto;">
+           onerror="this.onerror=null; this.src='https://via.placeholder.com/200?text=Image';">
+      <div class="card-body p-2" style="flex: 1;">
         <h6 class="card-title" style="font-size:0.9rem; margin-bottom: 5px;">${escapeHtml(product.name)}</h6>
         <p class="card-text small mb-2" style="font-size:0.75rem;">
           ${product.brand ? `<strong>Brand:</strong> ${escapeHtml(product.brand)}<br>` : ''}
@@ -6638,6 +6697,7 @@ function showPhotoProducts() {
 }
 
 
+    
 
 // View photo product enlarged
 function viewPhotoProduct(productId) {
@@ -10866,6 +10926,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
