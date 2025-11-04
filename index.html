@@ -6523,16 +6523,35 @@ async function uploadPhotoToBackend(productData, photoBase64) {
   }
 }
 
-// Show all products (table view)
+/**
+ * Show all products (table view) - FIXED
+ */
 function showAllProducts() {
+  console.log('📋 Switching to All Products view');
+  
+  // ✅ Update button states
   document.getElementById('btnAllView').classList.add('active');
   document.getElementById('btnPhotoView').classList.remove('active');
   
-  document.querySelector('.table-explorer').style.display = 'block';
-  document.getElementById('photoProductGrid').style.display = 'none';
+  // ✅ Hide photo grid
+  const photoGrid = document.getElementById('photoProductGrid');
+  if (photoGrid) {
+    photoGrid.style.display = 'none';
+    console.log('✅ Photo grid hidden');
+  }
   
+  // ✅ Show table
+  const tableExplorer = document.querySelector('.table-explorer');
+  if (tableExplorer) {
+    tableExplorer.style.display = 'block';
+    console.log('✅ Table explorer shown');
+  }
+  
+  // ✅ Render products in table
   renderProducts();
+  console.log('✅ All Products view activated');
 }
+
 /**
  * Show photo products (grid view) - VERTICAL SCROLL FIXED
  */
@@ -10847,6 +10866,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
