@@ -4080,6 +4080,12 @@ try {
  * ==========================================
  */
 
+/**
+ * ==========================================
+ * SYNC FROM GOOGLE SHEETS (CACHE-FIRST)
+ * ==========================================
+ */
+
 async function syncFromGoogleSheets() {
   if (!userEmail || !userHash) {
     console.warn('⚠️ No credentials, checking localStorage...');
@@ -4096,44 +4102,42 @@ async function syncFromGoogleSheets() {
     }
   }
 
-  // ✅ LOAD FROM CACHE FIRST (INSTANT)
-  console.log('📦 Checking cache...');
-  const cachedProducts = localStorage.getItem('inventory_products_cache');
-  const cachedSales = localStorage.getItem('inventory_sales_cache');
+  // ✅ STEP 1: LOAD FROM CACHE FIRST (INSTANT)
+  console.log('📦 Step 1: Checking localStorage cache...');
+  let cachedProductsData = null;
+  let cachedSalesData = null;
   
-  if (cachedProducts && cachedSales) {
-    console.log('✅ Loading from cache instantly!');
+  try {
+    const productsStr = localStorage.getItem('inventory_products_cache');
+    const salesStr = localStorage.getItem('inventory_sales_cache');
     
-    try {
-      const products = JSON.parse(cachedProducts);
-      const sales = JSON.parse(cachedSales);
+    if (productsStr) cachedProductsData = JSON.parse(productsStr);
+    if (salesStr) cachedSalesData = JSON.parse(salesStr);
+    
+    if (cachedProductsData && cachedSalesData) {
+      console.log('✅ CACHE FOUND! Loading instantly...');
+      console.log('📊 Cached:', cachedProductsData.length, 'products,', cachedSalesData.length, 'sales');
       
-      if (products.length > 0 || sales.length > 0) {
-        // Update global caches
-        cachedProducts = products;
-        let allSales = sales;
-        
-        // Filter deleted sales
-        cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
-        console.log(`📊 Loaded ${products.length} products and ${cachedSales.length} sales from cache`);
-        
-        // Mark as loaded
-        hasInitialLoaded = true;
-        
-        // Render immediately
-        renderProducts();
-        renderSales();
-        updateSummaryFromCache();
-        
-        console.log('✅ Cache data displayed instantly!');
-      }
-    } catch (error) {
-      console.warn('⚠️ Cache parse error:', error);
+      // Apply cache to global variables
+      cachedProducts = cachedProductsData;
+      cachedSales = cachedSalesData.filter(sale => !deletedSaleIds.includes(sale.id));
+      hasInitialLoaded = true;
+      
+      // Render immediately
+      renderProducts();
+      renderSales();
+      updateSummaryFromCache();
+      
+      console.log('✅ Cached data displayed instantly!');
+    } else {
+      console.log('❌ No cache found (first load)');
     }
+  } catch (error) {
+    console.warn('⚠️ Cache load error:', error);
   }
 
-  // ✅ SYNC WITH GOOGLE SHEETS IN BACKGROUND (SILENTLY)
-  console.log('🌐 Syncing fresh data from Google Sheets...');
+  // ✅ STEP 2: SYNC WITH GOOGLE SHEETS IN BACKGROUND
+  console.log('🌐 Step 2: Syncing fresh data from Google Sheets...');
   showSyncIndicator('Syncing...');
   
   try {
@@ -4146,6 +4150,7 @@ async function syncFromGoogleSheets() {
     }
     
     const data = await res.json();
+    console.log('📥 Response received:', data);
     
     // Check for unauthorized response
     if (!data.success && data.error === 'unauthorized') {
@@ -4161,13 +4166,14 @@ async function syncFromGoogleSheets() {
     if (data && data.success) {
       console.log('✅ Fresh data received from Google Sheets');
       
-      // Update products
+      // ✅ Update products
       cachedProducts = data.products || [];
+      console.log('📦 Products:', cachedProducts.length);
       
-      // Update sales with filtering for deleted items
+      // ✅ Update sales with filtering for deleted items
       let allSales = data.sales || [];
       cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
-      console.log(`📊 Loaded ${allSales.length} sales from server, showing ${cachedSales.length}`);
+      console.log('📊 Sales:', cachedSales.length);
       
       // Sort sales by date (newest first)
       sortSalesByDateDescending();
@@ -4175,14 +4181,23 @@ async function syncFromGoogleSheets() {
       // Mark initial load complete
       hasInitialLoaded = true;
       
-      // ✅ SAVE TO CACHE
+      // ✅ SAVE TO CACHE IMMEDIATELY - GUARANTEED
+      console.log('💾 Saving to cache...');
       try {
-        localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-        localStorage.setItem('inventory_sales_cache', JSON.stringify(cachedSales));
+        const productsJson = JSON.stringify(cachedProducts);
+        const salesJson = JSON.stringify(cachedSales);
+        
+        localStorage.setItem('inventory_products_cache', productsJson);
+        localStorage.setItem('inventory_sales_cache', salesJson);
         localStorage.setItem('inventory_cache_timestamp', Date.now().toString());
-        console.log('✅ Cache updated with fresh data');
+        
+        console.log('✅ CACHE SAVED! Size:', {
+          products: (productsJson.length / 1024).toFixed(2) + ' KB',
+          sales: (salesJson.length / 1024).toFixed(2) + ' KB'
+        });
       } catch (cacheError) {
-        console.warn('⚠️ Cache save failed:', cacheError);
+        console.error('❌ CACHE SAVE FAILED:', cacheError);
+        console.error('Storage quota exceeded? Try clearing cache.');
       }
       
       // Render both products and sales
@@ -4199,16 +4214,16 @@ async function syncFromGoogleSheets() {
     }
     
   } catch (err) {
-    console.error('⚠️ Sync error:', err);
+    console.error('❌ Sync error:', err);
+    showSyncIndicator('Sync failed', 2000);
     
     // If cache exists, keep showing it
-    if (cachedProducts && cachedSales) {
-      console.log('✅ Keeping cached data (sync failed)');
+    if (cachedProductsData || cachedSalesData) {
+      console.log('✅ Using cached data (sync failed)');
     }
-    
-    hideSyncIndicator();
   }
 }
+
 
 
 
@@ -10772,6 +10787,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
