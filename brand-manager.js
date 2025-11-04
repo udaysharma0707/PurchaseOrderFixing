@@ -324,6 +324,12 @@ function removePendingBrand(brand) {
  * ==========================================
  */
 
+/**
+ * ==========================================
+ * SECTION 7: SAVE ALL BRANDS (SEQUENTIAL)
+ * ==========================================
+ */
+
 function saveAllBrands() {
   if (pendingBrands.length === 0) {
     alert('⚠️ Please add at least one brand');
@@ -351,47 +357,69 @@ function saveAllBrands() {
   // ✅ CLEAR PENDING BRANDS
   pendingBrands = [];
   
-  let saved = 0;
-  let failed = 0;
-  let failedBrands = [];
+  // ✅ SAVE SEQUENTIALLY IN BACKGROUND (one after another)
+  saveBrandsSequentially(brandsToSave, 0, [], []);
+}
+
+/**
+ * Save brands one by one sequentially
+ * This prevents concurrent request issues
+ */
+function saveBrandsSequentially(brands, index, savedBrands, failedBrands) {
+  // Base case: All done
+  if (index >= brands.length) {
+    handleBackendResults(savedBrands.length, failedBrands.length, failedBrands);
+    return;
+  }
   
-  // Save to backend in background (no UI blocking)
-  brandsToSave.forEach((brand, index) => {
-    setTimeout(() => {
-      fetch(SCRIPT_URL, {
-        method: 'POST',
-        body: JSON.stringify({ 
-          action: 'addBrand',
-          brandName: brand
-        })
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          saved++;
-          console.log('✅ Backend saved:', brand);
-        } else {
-          failed++;
-          failedBrands.push(brand);
-          console.warn('⚠️ Backend failed:', brand, data.error);
-        }
-        
-        // All done
-        if (saved + failed === brandsToSave.length) {
-          handleBackendResults(saved, failed, failedBrands);
-        }
-      })
-      .catch(error => {
-        failed++;
-        failedBrands.push(brand);
-        console.error('❌ Backend error:', brand, error);
-        
-        if (saved + failed === brandsToSave.length) {
-          handleBackendResults(saved, failed, failedBrands);
-        }
-      });
-    }, index * 800); // Stagger requests
+  const brand = brands[index];
+  console.log(`💾 Saving brand ${index + 1}/${brands.length}:`, brand);
+  
+  // Save this brand
+  fetch(SCRIPT_URL, {
+    method: 'POST',
+    body: JSON.stringify({ 
+      action: 'addBrand',
+      brandName: brand
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      savedBrands.push(brand);
+      console.log(`✅ Backend saved (${index + 1}/${brands.length}):`, brand);
+    } else {
+      failedBrands.push(brand);
+      console.warn(`⚠️ Backend failed (${index + 1}/${brands.length}):`, brand, data.error);
+    }
+    
+    // ✅ Save next brand (sequential)
+    saveBrandsSequentially(brands, index + 1, savedBrands, failedBrands);
+  })
+  .catch(error => {
+    failedBrands.push(brand);
+    console.error(`❌ Backend error (${index + 1}/${brands.length}):`, brand, error);
+    
+    // ✅ Continue to next brand even if this one failed
+    saveBrandsSequentially(brands, index + 1, savedBrands, failedBrands);
   });
+}
+
+/**
+ * Handle backend results (silent, no alert)
+ */
+function handleBackendResults(saved, failed, failedBrands) {
+  if (failed > 0) {
+    console.warn(`⚠️ Backend: ${saved} saved, ${failed} failed`);
+    console.warn('Failed brands:', failedBrands);
+    
+    // ✅ Optional: Reload brands from server to sync
+    setTimeout(() => {
+      loadBrands();
+    }, 1000);
+  } else {
+    console.log(`✅ All ${saved} brands saved to backend`);
+  }
 }
 
 /**
@@ -519,6 +547,7 @@ function escapeHtml(text) {
 }
 
 console.log('✅ Brand Manager Module Loaded');
+
 
 
 
