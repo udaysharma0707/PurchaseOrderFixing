@@ -2758,7 +2758,7 @@ body.modal-open {
             </div>
           </div>
           
-          <!-- PRODUCT DETAILS -->
+          <!-- ESSENTIAL FIELDS -->
           <hr>
           
           <!-- Product Name & Category -->
@@ -2778,83 +2778,9 @@ body.modal-open {
             </div>
           </div>
           
-          <!-- Brand & Size -->
+          <!-- Unit Type, Price, Stock, Min Stock (ESSENTIAL) -->
           <div class="row mb-3">
-            <!-- Brand Field (col-md-6) -->
-            <div class="col-md-6" style="position: relative;">
-              <label class="form-label">Brand</label>
-              
-              <!-- Input Field Container -->
-              <div style="position: relative;">
-                <input 
-                  id="brand" 
-                  class="form-control" 
-                  type="text"
-                  autocomplete="off"
-                  oninput="filterBrandSuggestions(this.value); checkAndShowSaveBrandButton(this.value)"
-                  onfocus="showBrandSuggestions()"
-                  onblur="setTimeout(() => hideBrandSuggestions(), 200)"
-                  placeholder="Type to search brands..."
-                  style="padding-right: 40px;">
-                
-                <!-- 💾 Save Brand Button (Inside Field) -->
-                <button id="saveBrandInsideBtn" 
-                  type="button"
-                  onclick="saveNewBrandFromProductField()"
-                  style="
-                    display: none;
-                    position: absolute;
-                    right: 8px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    background: #28a745;
-                    color: white;
-                    border: none;
-                    padding: 6px 10px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    font-size: 14px;
-                    font-weight: bold;
-                    transition: all 0.2s;
-                    z-index: 10;
-                  "
-                  onmouseover="this.style.background='#218838'"
-                  onmouseout="this.style.background='#28a745'"
-                  title="Save this brand">
-                  💾
-                </button>
-              </div>
-              
-              <!-- Brand Suggestions Dropdown -->
-              <div id="brandSuggestionsDropdown" style="
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                right: 0;
-                background: white;
-                border: 1px solid #ddd;
-                border-top: none;
-                max-height: 200px;
-                overflow-y: auto;
-                z-index: 1000;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                margin-top: -1px;
-              ">
-                <!-- Suggestions rendered here -->
-              </div>
-            </div>
-            
-            <!-- Size Field -->
-            <div class="col-md-6">
-              <label class="form-label">Size</label>
-              <input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/>
-            </div>
-          </div>
-          
-          <!-- Unit Type, Pieces per Box, SFT per Box -->
-          <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Unit Type *</label>
               <select id="unitType" class="form-select" required>
                 <option value="Box">Box</option>
@@ -2862,31 +2788,123 @@ body.modal-open {
                 <option value="SFT">Square Feet</option>
               </select>
             </div>
-            <div class="col-md-4">
-              <label class="form-label">Pieces per Box</label>
-              <input id="piecesPerBox" class="form-control" type="number" value="1"/>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label">SFT per Box</label>
-              <input id="sftPerBox" class="form-control" type="number" step="0.01"/>
-            </div>
-          </div>
-          
-          <!-- Price, Stock, Min Stock -->
-          <div class="row mb-3">
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Price per Unit *</label>
               <input id="price" class="form-control" type="number" step="0.01" required/>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Current Stock *</label>
               <input id="stock" class="form-control" type="number" required/>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <label class="form-label">Minimum Stock</label>
               <input id="minStock" class="form-control" type="number" value="5"/>
             </div>
           </div>
+          
+          <!-- ✅ ADVANCED OPTIONS (EXPANDABLE) -->
+          <div style="margin-bottom: 15px;">
+            <button 
+              type="button" 
+              class="btn btn-link btn-sm" 
+              onclick="toggleAdvancedOptions()"
+              style="padding: 0; text-decoration: none;">
+              <i class="bi bi-chevron-down" id="advOptionsIcon"></i>
+              <span style="color: #007bff; font-weight: 500;">+ Advanced Options</span>
+            </button>
+          </div>
+          
+          <!-- Advanced Options Container (Hidden by default) -->
+          <div id="advancedOptionsContainer" style="display: none; background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 15px;">
+            
+            <!-- Brand & Size -->
+            <div class="row mb-3">
+              <!-- Brand Field -->
+              <div class="col-md-6" style="position: relative;">
+                <label class="form-label">Brand</label>
+                
+                <!-- Input Field Container -->
+                <div style="position: relative;">
+                  <input 
+                    id="brand" 
+                    class="form-control" 
+                    type="text"
+                    autocomplete="off"
+                    oninput="filterBrandSuggestions(this.value); checkAndShowSaveBrandButton(this.value)"
+                    onfocus="showBrandSuggestions()"
+                    onblur="setTimeout(() => hideBrandSuggestions(), 200)"
+                    placeholder="Type to search brands..."
+                    style="padding-right: 40px;">
+                  
+                  <!-- 💾 Save Brand Button (Inside Field) -->
+                  <button id="saveBrandInsideBtn" 
+                    type="button"
+                    onclick="saveNewBrandFromProductField()"
+                    style="
+                      display: none;
+                      position: absolute;
+                      right: 8px;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      background: #28a745;
+                      color: white;
+                      border: none;
+                      padding: 6px 10px;
+                      border-radius: 4px;
+                      cursor: pointer;
+                      font-size: 14px;
+                      font-weight: bold;
+                      transition: all 0.2s;
+                      z-index: 10;
+                    "
+                    onmouseover="this.style.background='#218838'"
+                    onmouseout="this.style.background='#28a745'"
+                    title="Save this brand">
+                    💾
+                  </button>
+                </div>
+                
+                <!-- Brand Suggestions Dropdown -->
+                <div id="brandSuggestionsDropdown" style="
+                  display: none;
+                  position: absolute;
+                  top: 100%;
+                  left: 0;
+                  right: 0;
+                  background: white;
+                  border: 1px solid #ddd;
+                  border-top: none;
+                  max-height: 200px;
+                  overflow-y: auto;
+                  z-index: 1000;
+                  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                  margin-top: -1px;
+                ">
+                  <!-- Suggestions rendered here -->
+                </div>
+              </div>
+              
+              <!-- Size Field -->
+              <div class="col-md-6">
+                <label class="form-label">Size</label>
+                <input id="size" class="form-control" placeholder="e.g., 2x2 feet or Standard"/>
+              </div>
+            </div>
+            
+            <!-- Pieces per Box & SFT per Box -->
+            <div class="row mb-0">
+              <div class="col-md-6">
+                <label class="form-label">Pieces per Box</label>
+                <input id="piecesPerBox" class="form-control" type="number" value="1"/>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">SFT per Box</label>
+                <input id="sftPerBox" class="form-control" type="number" step="0.01"/>
+              </div>
+            </div>
+            
+          </div>
+          
         </form>
       </div>
       
@@ -2897,6 +2915,7 @@ body.modal-open {
     </div>
   </div>
 </div>
+
 
 
   <!-- SALES MODAL (grid) - top buttons removed, kept within body below grid -->
@@ -4575,6 +4594,25 @@ async function deleteProductFromSheet(id) {
 }
 
 
+/**
+ * Toggle Advanced Options in Product Modal
+ */
+function toggleAdvancedOptions() {
+  const container = document.getElementById('advancedOptionsContainer');
+  const icon = document.getElementById('advOptionsIcon');
+  
+  if (container.style.display === 'none') {
+    container.style.display = 'block';
+    icon.style.transform = 'rotate(180deg)';
+    icon.style.transition = 'transform 0.3s ease';
+    console.log('📂 Advanced options opened');
+  } else {
+    container.style.display = 'none';
+    icon.style.transform = 'rotate(0deg)';
+    icon.style.transition = 'transform 0.3s ease';
+    console.log('📂 Advanced options closed');
+  }
+}
 
 
 
@@ -10533,6 +10571,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
