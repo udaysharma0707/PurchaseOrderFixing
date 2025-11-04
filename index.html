@@ -5042,7 +5042,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
       fileName: productPhotoFileName
     });
     
-    const response = await fetch(scriptURL, {
+    const response = await fetch(SCRIPT_URL, {
       method: 'POST',
       body: formData
     });
@@ -10533,6 +10533,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
