@@ -6068,7 +6068,12 @@ function viewPhotoProduct(productId) {
  * ==========================================
  */
 
-// Init
+/**
+ * ==========================================
+ * INITIALIZATION ON PAGE LOAD
+ * ==========================================
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
   console.log('🚀 Initializing Inventory App...');
   
@@ -6099,6 +6104,33 @@ document.addEventListener('DOMContentLoaded', function() {
     mainApp.style.display = 'block';
     console.log('✅ Main dashboard visible');
   }
+  
+  // ✅ RESET BRAND SAVE BUTTON ON PRODUCT MODAL CLOSE
+  const productModal = document.getElementById('productModal');
+  if (productModal) {
+    productModal.addEventListener('hidden.bs.modal', function() {
+      const saveBrandBtn = document.getElementById('saveBrandInsideBtn');
+      if (saveBrandBtn) {
+        saveBrandBtn.style.display = 'none';
+        saveBrandBtn.innerHTML = '💾';
+        saveBrandBtn.style.background = '#28a745';
+        saveBrandBtn.style.cursor = 'pointer';
+        saveBrandBtn.disabled = false;
+      }
+      
+      // ✅ Also clear brand field on modal close
+      const brandField = document.getElementById('brand');
+      if (brandField) {
+        brandField.value = '';
+      }
+      
+      console.log('🔄 Product modal closed - Brand button reset');
+    });
+  }
+  
+  // ✅ LOAD BRAND CACHE ON PAGE LOAD
+  loadBrandAutocompleteCache();
+  console.log('✅ Brand autocomplete cache loaded');
   
   // Initialize data (existing code)
   renderProducts();
@@ -10191,6 +10223,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
