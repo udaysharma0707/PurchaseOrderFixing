@@ -86,28 +86,46 @@ body:has(.page-view.active) .action-buttons {
   }
 
 
-    #photoProductGrid .row {
-    display: flex;
-    flex-wrap: wrap;
-    margin: -0.5rem;
+ #photoProductGrid {
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)) !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  overflow-x: visible !important;
+  overflow-y: auto !important;
+}
+
+#photoProductGrid .card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Mobile: 2 columns */
+@media (max-width: 480px) {
+  #photoProductGrid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
   }
-  
-  #photoProductGrid .col {
-    flex: 0 0 calc(50% - 0.5rem) !important;
-    margin: 0.25rem;
+}
+
+/* Tablet: 3 columns */
+@media (min-width: 768px) {
+  #photoProductGrid {
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px !important;
   }
-  
-  @media (min-width: 768px) {
-    #photoProductGrid .col {
-      flex: 0 0 calc(33.333% - 0.5rem) !important;
-    }
+}
+
+/* Desktop: 4 columns */
+@media (min-width: 1200px) {
+  #photoProductGrid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 15px !important;
   }
-  
-  @media (min-width: 1200px) {
-    #photoProductGrid .col {
-      flex: 0 0 calc(25% - 0.5rem) !important;
-    }
-  }
+}
+
 
 /* ==========================================
    FULL-SCREEN PAGE VIEW SYSTEM
@@ -2262,12 +2280,11 @@ body.modal-open {
   </div>
 </div>
 
-<!-- ✅ Photo Product Grid (2 Columns Mobile) -->
-<div id="photoProductGrid" style="display:none;" class="mb-4">
-  <div class="row g-2" style="display: flex; flex-wrap: wrap;">
-    <!-- Photo product cards inserted dynamically here -->
-  </div>
+<!-- Photo Product Grid (Grid Layout - Responsive) -->
+<div id="photoProductGrid" style="display:none; width:100%;">
+  <!-- Grid content inserted here -->
 </div>
+
 
       </div>
     </div>
@@ -6516,15 +6533,24 @@ function showAllProducts() {
   
   renderProducts();
 }
-// Show photo products (grid view)
+/**
+ * Show photo products (grid view) - VERTICAL SCROLL FIXED
+ */
 function showPhotoProducts() {
   document.getElementById('btnAllView').classList.remove('active');
   document.getElementById('btnPhotoView').classList.add('active');
   
   document.querySelector('.table-explorer').style.display = 'none';
   const photoGrid = document.getElementById('photoProductGrid');
-  photoGrid.style.display = 'flex';
+  photoGrid.style.display = 'block';
   photoGrid.innerHTML = '';
+  
+  // ✅ FIX: Set display and flex properties
+  photoGrid.style.display = 'grid';
+  photoGrid.style.gridTemplateColumns = 'repeat(auto-fill, minmax(200px, 1fr))';
+  photoGrid.style.gap = '12px';
+  photoGrid.style.width = '100%';
+  photoGrid.style.overflow = 'visible';
   
   // Filter photo products
   const photoProducts = cachedProducts.filter(p => {
@@ -6537,7 +6563,7 @@ function showPhotoProducts() {
   
   if (photoProducts.length === 0) {
     photoGrid.innerHTML = `
-      <div class="col-12">
+      <div style="grid-column: 1 / -1;">
         <div class="alert alert-info text-center">
           <i class="bi bi-images" style="font-size: 3rem;"></i><br>
           <strong>No photo products yet.</strong><br>
@@ -6555,39 +6581,41 @@ function showPhotoProducts() {
     
     const priceDisplay = product.price > 0 ? `₹${product.price.toFixed(2)}` : 'Price not set';
     
-    const card = `
-      <div class="col">
-        <div class="card h-100 shadow-sm">
-          <img src="${product.imageUrl}" 
-               class="card-img-top" 
-               alt="${escapeHtml(product.name)}" 
-               style="height:200px; object-fit:cover; cursor:pointer;" 
-               onclick="viewPhotoProduct('${product.id}')"
-               onerror="this.onerror=null; this.src='https://via.placeholder.com/200?text=Image+Not+Found'; console.error('Failed to load image for card: ${escapeHtml(product.name)}');">
-          <div class="card-body">
-            <h6 class="card-title">${escapeHtml(product.name)}</h6>
-            <p class="card-text small mb-2">
-              ${product.brand ? `<strong>Brand:</strong> ${escapeHtml(product.brand)}<br>` : ''}
-              ${product.size ? `<strong>Size:</strong> ${escapeHtml(product.size)}<br>` : ''}
-              ${stockBadge}<br>
-              <strong>Price:</strong> ${priceDisplay}
-            </p>
-          </div>
-          <div class="card-footer bg-white border-0 d-flex gap-2">
-            <!-- âœ… FIXED: Call editProduct which opens the correct modal -->
-            <button class="btn btn-sm btn-primary flex-fill" onclick="editProduct('${product.id}')">
-              <i class="bi bi-pencil"></i> Edit
-            </button>
-            <!-- âœ… FIXED: Call deleteProduct with proper confirmation -->
-            <button class="btn btn-sm btn-danger flex-fill" onclick="deleteProduct('${product.id}')">
-              <i class="bi bi-trash"></i> Delete
-            </button>
-          </div>
-        </div>
+    const cardDiv = document.createElement('div');
+    cardDiv.className = 'card h-100 shadow-sm';
+    cardDiv.style.display = 'flex';
+    cardDiv.style.flexDirection = 'column';
+    
+    cardDiv.innerHTML = `
+      <img src="${product.imageUrl}" 
+           class="card-img-top" 
+           alt="${escapeHtml(product.name)}" 
+           style="height:150px; object-fit:cover; cursor:pointer; flex-shrink: 0;" 
+           onclick="viewPhotoProduct('${product.id}')"
+           onerror="this.onerror=null; this.src='https://via.placeholder.com/200?text=Image+Not+Found'; console.error('Failed to load image for card: ${escapeHtml(product.name)}');">
+      <div class="card-body p-2" style="flex: 1; overflow-y: auto;">
+        <h6 class="card-title" style="font-size:0.9rem; margin-bottom: 5px;">${escapeHtml(product.name)}</h6>
+        <p class="card-text small mb-2" style="font-size:0.75rem;">
+          ${product.brand ? `<strong>Brand:</strong> ${escapeHtml(product.brand)}<br>` : ''}
+          ${product.size ? `<strong>Size:</strong> ${escapeHtml(product.size)}<br>` : ''}
+          ${stockBadge}<br>
+          <strong>Price:</strong> ${priceDisplay}
+        </p>
+      </div>
+      <div class="card-footer bg-white border-0 d-flex gap-2 p-2">
+        <button class="btn btn-sm btn-primary flex-fill" onclick="editProduct('${product.id}')">
+          <i class="bi bi-pencil"></i> Edit
+        </button>
+        <button class="btn btn-sm btn-danger flex-fill" onclick="deleteProduct('${product.id}')">
+          <i class="bi bi-trash"></i> Delete
+        </button>
       </div>
     `;
-    photoGrid.innerHTML += card;
+    
+    photoGrid.appendChild(cardDiv);
   });
+  
+  console.log('✅ Photo grid rendered');
 }
 
 
@@ -10819,6 +10847,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
