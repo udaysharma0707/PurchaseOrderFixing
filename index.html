@@ -9571,7 +9571,7 @@ async function createProductGroup(groupData) {
       data: JSON.stringify(groupData)                                            // [attached_file:29]
     });                                                                          // [attached_file:29]
 
-    const response = await fetch(GOOGLESCRIPTURL, { method: 'POST', body });     // [attached_file:29]
+    const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body });     // [attached_file:29]
     const result = await response.json();                                        // [attached_file:29]
 
     if (result.success || result.ok) {                                           // [attached_file:29]
@@ -10191,6 +10191,7 @@ function navigateToPurchaseOrders() {
 
 </body>
 </html>
+
 
 
 
