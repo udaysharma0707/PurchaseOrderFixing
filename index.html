@@ -1956,29 +1956,29 @@ body.modal-open {
 /* Product Name Autocomplete Dropdown */
 .product-autocomplete-container {
   position: relative;
+  z-index: 1;
 }
 
 .product-autocomplete-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  max-height: 200px;
-  overflow-y: auto;
+  position: fixed !important;
+  max-height: 250px;
+  min-width: 200px;
+  overflow-y: auto !important;
   background: white;
-  border: 1px solid #ddd;
-  border-top: none;
-  border-radius: 0 0 4px 4px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  z-index: 1000;
+  border: 2px solid #0066cc;
+  border-radius: 4px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 9999 !important;
   display: none;
+  background-color: #fff;
 }
 
 .product-autocomplete-item {
-  padding: 8px 12px;
+  padding: 10px 12px;
   cursor: pointer;
   border-bottom: 1px solid #f0f0f0;
   font-size: 0.9rem;
+  transition: background-color 0.2s;
 }
 
 .product-autocomplete-item:hover {
@@ -1993,6 +1993,26 @@ body.modal-open {
   color: #666;
   display: block;
   font-size: 0.75rem;
+  margin-top: 2px;
+}
+
+/* Scrollbar styling */
+.product-autocomplete-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.product-autocomplete-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.product-autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
+}
+
+.product-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
     
@@ -7134,10 +7154,17 @@ function deleteInvoiceRow(index) {
   }
 }
 
-// Add New Invoice Row
+/**
+ * Add New Invoice Row (FIXED - preserves existing data)
+ */
 function addInvoiceRow() {
   const tbody = document.getElementById('invoiceItemsBody');
-  const index = tbody.querySelectorAll('tr').length;
+  if (!tbody) return;
+  
+  const existingRows = tbody.querySelectorAll('tr');
+  const index = existingRows.length;
+  
+  console.log('➕ Adding new row at index:', index);
   
   const newItem = {
     name: '',
@@ -7147,7 +7174,16 @@ function addInvoiceRow() {
     amount: 0
   };
   
-  tbody.innerHTML += createInvoiceRow(newItem, index);
+  const rowHTML = createInvoiceRow(newItem, index);
+  
+  // ✅ FIXED: Insert instead of replace
+  const newRow = document.createElement('tr');
+  newRow.innerHTML = rowHTML.replace('<tr data-index="0">', '').replace('</tr>', '');
+  newRow.setAttribute('data-index', index);
+  
+  tbody.appendChild(newRow);
+  
+  console.log('✅ New row added. Total rows:', tbody.querySelectorAll('tr').length);
 }
 
 // Calculate Invoice Total
@@ -7204,11 +7240,19 @@ function loadDefaultTerms() {
 /**
  * Show invoice product dropdown with all products
  */
+/**
+ * Show invoice product dropdown with all products (FIXED positioning)
+ */
 function showInvoiceProductDropdown(rowIndex) {
   console.log('📋 Showing product dropdown for row', rowIndex);
   
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
-  if (!dropdown) return;
+  const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
+  
+  if (!dropdown || !inputField) {
+    console.warn('❌ Dropdown or input not found');
+    return;
+  }
   
   // Get all products
   const products = cachedProducts || [];
@@ -7216,6 +7260,7 @@ function showInvoiceProductDropdown(rowIndex) {
   if (products.length === 0) {
     dropdown.innerHTML = '<div class="product-autocomplete-item">No products available</div>';
     dropdown.style.display = 'block';
+    positionInvoiceDropdown(rowIndex);
     return;
   }
   
@@ -7236,11 +7281,34 @@ function showInvoiceProductDropdown(rowIndex) {
   
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
+  positionInvoiceDropdown(rowIndex);
   console.log('✅ Dropdown shown with', products.length, 'products');
 }
 
 /**
- * Filter invoice products based on user input
+ * Position dropdown next to input field (FIXED)
+ */
+function positionInvoiceDropdown(rowIndex) {
+  const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
+  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
+  
+  if (!inputField || !dropdown) return;
+  
+  const rect = inputField.getBoundingClientRect();
+  
+  dropdown.style.left = rect.left + 'px';
+  dropdown.style.top = (rect.bottom + 5) + 'px';
+  dropdown.style.width = (rect.width) + 'px';
+  
+  console.log('✅ Dropdown positioned at:', {
+    left: rect.left,
+    top: rect.bottom + 5,
+    width: rect.width
+  });
+}
+
+/**
+ * Filter invoice products based on user input (FIXED)
  */
 function filterInvoiceProducts(rowIndex, query) {
   console.log('🔍 Filtering products for:', query);
@@ -7272,6 +7340,7 @@ function filterInvoiceProducts(rowIndex, query) {
   if (filtered.length === 0) {
     dropdown.innerHTML = '<div class="product-autocomplete-item">No matching products</div>';
     dropdown.style.display = 'block';
+    positionInvoiceDropdown(rowIndex);
     return;
   }
   
@@ -7292,7 +7361,9 @@ function filterInvoiceProducts(rowIndex, query) {
   
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
+  positionInvoiceDropdown(rowIndex);
 }
+
 
 /**
  * Select a product from dropdown
@@ -11388,6 +11459,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
