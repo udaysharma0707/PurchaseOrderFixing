@@ -10609,6 +10609,69 @@ function navigateToPurchaseOrders() {
 
 
 
+/**
+ * ==========================================
+ * SHARE INVOICE DROPDOWN FIX
+ * ==========================================
+ */
+
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Initializing Share Invoice dropdown...');
+  
+  // Find all share invoice buttons
+  const shareButtons = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+  console.log('📊 Found', shareButtons.length, 'dropdown buttons');
+  
+  shareButtons.forEach((btn, index) => {
+    // Add click handler to each button
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      console.log('🔘 Share button clicked');
+      
+      // Find the next dropdown menu
+      let menu = this.nextElementSibling;
+      
+      // If next sibling isn't a dropdown, search for it
+      if (!menu || !menu.classList.contains('dropdown-menu')) {
+        menu = this.parentElement.querySelector('.dropdown-menu');
+      }
+      
+      if (menu) {
+        // Toggle the dropdown
+        menu.classList.toggle('show');
+        console.log('✅ Dropdown toggled:', menu.classList.contains('show'));
+        
+        // Force styles
+        if (menu.classList.contains('show')) {
+          menu.style.display = 'block';
+          menu.style.visibility = 'visible';
+          menu.style.opacity = '1';
+        } else {
+          menu.style.display = 'none';
+        }
+      } else {
+        console.warn('⚠️ Dropdown menu not found');
+      }
+    });
+  });
+  
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', function(e) {
+    const menus = document.querySelectorAll('.dropdown-menu.show');
+    menus.forEach(menu => {
+      const btn = menu.previousElementSibling;
+      if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.classList.remove('show');
+        menu.style.display = 'none';
+        console.log('✅ Dropdown closed');
+      }
+    });
+  });
+  
+  console.log('✅ Share Invoice dropdown initialized');
+});
 
 
 
@@ -10979,6 +11042,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
