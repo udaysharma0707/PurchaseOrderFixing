@@ -7160,15 +7160,14 @@ async function saveInvoice() {
   if (modal) modal.hide();
 }
 
-// Collect Invoice Data
 function collectInvoiceData() {
   const items = [];
+  
   document.querySelectorAll('#invoiceItemsBody tr').forEach(row => {
     const name = row.querySelector('input[type="text"]').value;
     const qty = parseFloat(row.querySelector('.invoice-qty').value) || 0;
     const rate = parseFloat(row.querySelector('.invoice-rate').value) || 0;
     
-    // ✅ CHANGED: Include all items (even with 0 quantity)
     items.push({
       name: name,
       quantity: qty,
@@ -7177,10 +7176,44 @@ function collectInvoiceData() {
     });
   });
   
-  const subtotal = parseFloat(document.getElementById('invoiceSubtotal').textContent.replace(/[₹,]/g, ''));
-  const discount = parseFloat(document.getElementById('invoiceDiscountAmount').textContent.replace(/[₹,-]/g, ''));
-  const tax = parseFloat(document.getElementById('invoiceTaxAmount').textContent.replace(/[₹,]/g, ''));
-  const total = parseFloat(document.getElementById('invoiceGrandTotal').textContent.replace(/[₹,]/g, ''));
+  // ✅ FIXED: Handle null/undefined values safely
+  let subtotal = 0;
+  let discount = 0;
+  let tax = 0;
+  let total = 0;
+  
+  const subtotalEl = document.getElementById('invoiceSubtotal');
+  const discountEl = document.getElementById('invoiceDiscountAmount');
+  const taxEl = document.getElementById('invoiceTaxAmount');
+  const totalEl = document.getElementById('invoiceGrandTotal');
+  
+  // Parse subtotal safely
+  if (subtotalEl && subtotalEl.textContent) {
+    subtotal = parseFloat(subtotalEl.textContent.replace(/[₹,]/g, '')) || 0;
+  }
+  
+  // Parse discount safely
+  if (discountEl && discountEl.textContent) {
+    discount = parseFloat(discountEl.textContent.replace(/[₹,-]/g, '')) || 0;
+  }
+  
+  // Parse tax safely
+  if (taxEl && taxEl.textContent) {
+    tax = parseFloat(taxEl.textContent.replace(/[₹,]/g, '')) || 0;
+  }
+  
+  // Parse total safely
+  if (totalEl && totalEl.textContent) {
+    total = parseFloat(totalEl.textContent.replace(/[₹,]/g, '')) || 0;
+  }
+  
+  console.log('📊 Invoice data collected:', {
+    subtotal,
+    discount,
+    tax,
+    total,
+    itemsCount: items.length
+  });
   
   return {
     invoiceNumber: document.getElementById('invoiceNumber').value,
@@ -7188,15 +7221,16 @@ function collectInvoiceData() {
     invoiceDate: document.getElementById('invoiceDate').value,
     dueDate: document.getElementById('invoiceDueDate').value,
     items: items,
-    subtotal: subtotal,
-    discount: discount,
-    tax: tax,
-    total: total,
+    subtotal: isNaN(subtotal) ? 0 : subtotal,
+    discount: isNaN(discount) ? 0 : discount,
+    tax: isNaN(tax) ? 0 : tax,
+    total: isNaN(total) ? 0 : total,
     notes: document.getElementById('invoiceNotes').value,
     terms: document.getElementById('invoiceTerms').value,
     createdAt: new Date().toISOString()
   };
 }
+
 
 // Preview Invoice
 function previewInvoice() {
@@ -7399,20 +7433,43 @@ function viewSavedInvoices() {
 }
 
 function previewSavedInvoice(index) {
+  console.log('👁️ Previewing invoice at index:', index);
+  
   const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
   const invoice = invoices[index];
   
   if (!invoice) {
-    alert('Invoice not found');
+    console.error('❌ Invoice not found at index:', index);
+    alert('❌ Invoice not found');
     return;
   }
   
+  // ✅ Ensure all values are valid numbers
+  invoice.subtotal = parseFloat(invoice.subtotal) || 0;
+  invoice.discount = parseFloat(invoice.discount) || 0;
+  invoice.tax = parseFloat(invoice.tax) || 0;
+  invoice.total = parseFloat(invoice.total) || 0;
+  
+  console.log('✅ Invoice found:', invoice.invoiceNumber);
+  
   // Generate and show preview
-  const invoiceHTML = generateInvoiceHTML(invoice);
-  const previewWindow = window.open('', 'Invoice Preview', 'width=800,height=600');
-  previewWindow.document.write(invoiceHTML);
-  previewWindow.document.close();
+  try {
+    const invoiceHTML = generateInvoiceHTML(invoice);
+    const previewWindow = window.open('', 'Invoice Preview', 'width=900,height=700');
+    
+    if (previewWindow) {
+      previewWindow.document.write(invoiceHTML);
+      previewWindow.document.close();
+      console.log('✅ Preview window opened');
+    } else {
+      alert('⚠️ Could not open preview window. Check your popup blocker.');
+    }
+  } catch (error) {
+    console.error('❌ Error previewing invoice:', error);
+    alert('❌ Error previewing invoice. Check console for details.');
+  }
 }
+
 
 function deleteSavedInvoice(index) {
   if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
@@ -11030,6 +11087,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
