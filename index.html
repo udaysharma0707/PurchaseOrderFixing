@@ -1953,24 +1953,29 @@ body.modal-open {
   }
 }
 
-/* Product Name Autocomplete Dropdown */
+/* Product Name Autocomplete Dropdown - ABSOLUTE POSITIONED */
 .product-autocomplete-container {
   position: relative;
   z-index: 1;
 }
 
 .product-autocomplete-dropdown {
-  position: fixed !important;
-  max-height: 250px;
+  position: absolute !important;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 280px;
   min-width: 200px;
   overflow-y: auto !important;
   background: white;
   border: 2px solid #0066cc;
-  border-radius: 4px;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  z-index: 9999 !important;
+  z-index: 1000 !important;
   display: none;
-  background-color: #fff;
+  margin-top: 2px;
+  pointer-events: auto !important;
 }
 
 .product-autocomplete-item {
@@ -1979,10 +1984,15 @@ body.modal-open {
   border-bottom: 1px solid #f0f0f0;
   font-size: 0.9rem;
   transition: background-color 0.2s;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .product-autocomplete-item:hover {
   background-color: #e3f2fd;
+  padding-left: 14px;
 }
 
 .product-autocomplete-item:last-child {
@@ -1994,6 +2004,7 @@ body.modal-open {
   display: block;
   font-size: 0.75rem;
   margin-top: 2px;
+  white-space: normal;
 }
 
 /* Scrollbar styling */
@@ -2007,12 +2018,29 @@ body.modal-open {
 }
 
 .product-autocomplete-dropdown::-webkit-scrollbar-thumb {
-  background: #888;
+  background: #0066cc;
   border-radius: 3px;
 }
 
 .product-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #0052a3;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .product-autocomplete-dropdown {
+    max-height: 200px;
+    font-size: 0.85rem;
+    z-index: 999 !important;
+  }
+  
+  .product-autocomplete-item {
+    padding: 8px 10px;
+  }
+  
+  .product-autocomplete-item small {
+    font-size: 0.7rem;
+  }
 }
 
 
@@ -7254,10 +7282,16 @@ function loadDefaultTerms() {
 /**
  * Show invoice product dropdown with all products (FIXED - closes others first)
  */
+/**
+ * Show invoice product dropdown with all products
+ */
+/**
+ * Show invoice product dropdown with all products
+ */
 function showInvoiceProductDropdown(rowIndex) {
-  console.log('📋 Showing product dropdown for row', rowIndex);
+  console.log('📋 Showing dropdown for row', rowIndex);
   
-  // ✅ FIXED: Close all other dropdowns first
+  // Close all other dropdowns first
   document.querySelectorAll('.product-autocomplete-dropdown').forEach((dropdown, index) => {
     if (index !== rowIndex) {
       dropdown.style.display = 'none';
@@ -7300,8 +7334,10 @@ function showInvoiceProductDropdown(rowIndex) {
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
   positionInvoiceDropdown(rowIndex);
+  
   console.log('✅ Dropdown shown with', products.length, 'products');
 }
+
 
 /**
  * Position dropdown next to input field (FIXED)
@@ -7318,43 +7354,47 @@ function showInvoiceProductDropdown(rowIndex) {
 /**
  * Position dropdown - SIMPLE & MOBILE FRIENDLY
  */
+/**
+ * Position dropdown BELOW input field with absolute positioning
+ */
+/**
+ * Position dropdown BELOW input field with absolute positioning
+ */
 function positionInvoiceDropdown(rowIndex) {
   const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   
-  if (!inputField || !dropdown) return;
-  
-  const rect = inputField.getBoundingClientRect();
-  const isMobile = window.innerWidth < 768;
-  
-  if (isMobile) {
-    // Mobile: center on screen, below input
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
-    
-    dropdown.style.left = (screenWidth / 2 - 90) + 'px';
-    dropdown.style.top = (rect.bottom + 10) + 'px';
-    dropdown.style.maxHeight = '200px';
-    
-    console.log('📱 Mobile dropdown positioned');
-  } else {
-    // Desktop: above input field
-    dropdown.style.left = rect.left + 'px';
-    dropdown.style.top = (rect.top - 260) + 'px';
-    dropdown.style.width = rect.width + 'px';
-    dropdown.style.maxHeight = '300px';
-    
-    console.log('🖥️ Desktop dropdown positioned');
+  if (!inputField || !dropdown) {
+    console.warn('❌ Input or dropdown not found for row', rowIndex);
+    return;
   }
   
-  dropdown.style.zIndex = '99999';
+  // Get container position
+  const container = inputField.closest('.product-autocomplete-container');
+  if (!container) {
+    console.warn('❌ Container not found');
+    return;
+  }
+  
+  // Position relative to container
+  dropdown.style.position = 'absolute';
+  dropdown.style.top = '100%';
+  dropdown.style.left = '0';
+  dropdown.style.right = '0';
+  dropdown.style.width = '100%';
+  dropdown.style.zIndex = '1000';
+  
+  console.log('✅ Dropdown positioned below input (absolute)');
 }
 
 /**
  * Filter invoice products based on user input (FIXED)
  */
+/**
+ * Filter invoice products based on user input
+ */
 function filterInvoiceProducts(rowIndex, query) {
-  console.log('🔍 Filtering products for:', query);
+  console.log('🔍 Filtering for:', query);
   
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   if (!dropdown) return;
@@ -11135,6 +11175,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+    /**
+ * Close dropdowns when clicking outside
+ */
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.product-autocomplete-container')) {
+    document.querySelectorAll('.product-autocomplete-dropdown').forEach(dropdown => {
+      dropdown.style.display = 'none';
+    });
+  }
+});
+
+
     
 
     
@@ -11502,6 +11554,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
