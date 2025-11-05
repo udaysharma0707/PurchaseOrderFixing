@@ -7090,19 +7090,20 @@ function createInvoiceRow(item, index) {
   return `
     <tr data-index="${index}">
       <td>
-        <!-- ✅ MATCHING BRAND PATTERN -->
+        <!-- ✅ ZOHO-STYLE DROPDOWN -->
         <div style="position: relative;">
           <input type="text" 
                  id="invoiceProduct-${index}"
-                 class="form-control form-control-sm invoice-product-name" 
+                 class="form-control form-control-sm" 
                  value="${escapeHtml(itemName)}" 
-                 placeholder="Enter product name"
+                 placeholder="Type or click to select an item."
                  autocomplete="off"
                  oninput="filterInvoiceProductSuggestions(${index}, this.value)"
                  onfocus="showInvoiceProductSuggestions(${index})"
-                 onblur="setTimeout(() => hideInvoiceProductSuggestions(${index}), 200)">
+                 onblur="setTimeout(() => hideInvoiceProductSuggestions(${index}), 200)"
+                 style="padding: 8px; font-size: 0.9rem;">
           
-          <!-- ✅ PRODUCT DROPDOWN (SAME AS BRAND) -->
+          <!-- ✅ ZOHO-STYLE DROPDOWN (Blue highlight on hover) -->
           <div id="invoiceProductDropdown-${index}" 
                style="
                  display: none;
@@ -7113,34 +7114,37 @@ function createInvoiceRow(item, index) {
                  background: white;
                  border: 1px solid #ddd;
                  border-top: none;
-                 max-height: 200px;
+                 max-height: 220px;
                  overflow-y: auto;
                  z-index: 1000;
-                 box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                 margin-top: -1px;
+                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                 margin-top: 0;
                ">
           </div>
         </div>
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm text-center invoice-qty" 
+        <input type="number" class="form-control form-control-sm text-center" 
                id="invoiceQty-${index}"
-               value="${item.quantity}" min="1" placeholder="Qty"
+               value="${item.quantity}" min="1" placeholder="1"
+               style="font-size: 0.9rem;"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm text-end invoice-rate" 
+        <input type="number" class="form-control form-control-sm text-end" 
                id="invoiceRate-${index}"
-               value="${item.rate}" min="0" step="0.01" placeholder="Price"
+               value="${item.rate}" min="0" step="0.01" placeholder="0.00"
+               style="font-size: 0.9rem;"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
-      <td class="text-end fw-bold invoice-row-total">
-        ₹${(item.quantity * item.rate).toFixed(2)}
+      <td class="text-end fw-bold" style="width: 120px; font-size: 0.9rem;">
+        <span id="invoiceRowTotal-${index}">₹${(item.quantity * item.rate).toFixed(2)}</span>
       </td>
       <td class="text-center">
         <button type="button" class="btn btn-sm btn-link text-danger" 
-                onclick="deleteInvoiceRow(${index})">
-          <i class="bi bi-x-lg"></i>
+                onclick="deleteInvoiceRow(${index})"
+                style="padding: 2px 6px;">
+          ✕
         </button>
       </td>
     </tr>
@@ -7259,22 +7263,19 @@ function loadDefaultTerms() {
  */
 function showInvoiceProductSuggestions(rowIndex) {
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
-  
   if (!dropdown) return;
   
   const products = cachedProducts || [];
   
   if (products.length === 0) {
-    dropdown.innerHTML = '<div style="padding: 10px;">No products available</div>';
+    dropdown.innerHTML = '<div style="padding: 12px; color: #999;">No products available</div>';
     dropdown.style.display = 'block';
     return;
   }
   
-  // Show ALL products (like brand field)
   renderInvoiceProductSuggestions(rowIndex, products);
-  console.log('📋 Showing all', products.length, 'products');
+  console.log('📋 Showing all', products.length, 'products (Zoho style)');
 }
-
 /**
  * Filter products based on user input
  */
@@ -7289,49 +7290,57 @@ function filterInvoiceProductSuggestions(rowIndex, inputText) {
   const query = inputText.toLowerCase().trim();
   const products = cachedProducts || [];
   
-  // Filter products that START with query
-  const matches = products.filter(product => 
-    product.name.toLowerCase().startsWith(query)
-  );
+  // Filter: name, brand, or category contains query
+  const matches = products.filter(product => {
+    const name = product.name.toLowerCase();
+    const brand = (product.brand || '').toLowerCase();
+    const category = (product.category || '').toLowerCase();
+    
+    return name.includes(query) || brand.includes(query) || category.includes(query);
+  });
   
   if (matches.length > 0) {
     renderInvoiceProductSuggestions(rowIndex, matches);
     dropdown.style.display = 'block';
   } else {
-    hideInvoiceProductSuggestions(rowIndex);
+    dropdown.innerHTML = '<div style="padding: 12px; color: #999;">No matching products</div>';
+    dropdown.style.display = 'block';
   }
 }
-
 /**
  * Render product suggestions in dropdown (MATCHING BRAND PATTERN)
  */
 function renderInvoiceProductSuggestions(rowIndex, products) {
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
-  
   if (!dropdown) return;
   
-  // Limit to max 15 suggestions (like brand)
-  const limitedProducts = products.slice(0, 15);
+  // Limit to 12 suggestions (like Zoho)
+  const limitedProducts = products.slice(0, 12);
   
   let html = '';
-  limitedProducts.forEach(product => {
+  limitedProducts.forEach((product, idx) => {
     const displayName = product.size ? `${product.name} (${product.size})` : product.name;
-    const priceText = product.price ? `₹${product.price.toFixed(2)}` : '';
-    const stockText = product.stock ? `Stock: ${product.stock}` : '';
+    const rateText = product.price ? `₹${product.price.toFixed(2)}` : 'Rate: 0.00';
     
+    // ✅ ZOHO STYLE: Blue background on hover
     html += `
       <div onclick="selectInvoiceProductSuggestion(${rowIndex}, '${escapeHtml(product.name)}', '${escapeHtml(product.size || '')}', ${product.price || 0})" 
            style="
-             padding: 10px;
+             padding: 10px 12px;
              cursor: pointer;
              border-bottom: 1px solid #f0f0f0;
-             transition: background 0.2s;
+             transition: background-color 0.2s;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
            " 
-           onmouseover="this.style.background='#f5f5f5'" 
-           onmouseout="this.style.background='transparent'">
-        <strong>${escapeHtml(displayName)}</strong>
-        <div style="font-size: 0.85rem; color: #666;">
-          ${priceText} ${stockText ? '• ' + stockText : ''}
+           onmouseover="this.style.backgroundColor='#4A90E2'; this.style.color='white';" 
+           onmouseout="this.style.backgroundColor='transparent'; this.style.color='black';">
+        <div>
+          <strong>${escapeHtml(displayName)}</strong>
+        </div>
+        <div style="font-size: 0.85rem; opacity: 0.8;">
+          ${rateText}
         </div>
       </div>
     `;
@@ -7340,7 +7349,7 @@ function renderInvoiceProductSuggestions(rowIndex, products) {
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
   
-  console.log('🎯 Rendered', limitedProducts.length, 'product suggestions');
+  console.log('🎯 Rendered', limitedProducts.length, 'products (Zoho style)');
 }
 
 /**
@@ -7357,13 +7366,31 @@ function selectInvoiceProductSuggestion(rowIndex, productName, productSize, prod
   }
   
   if (rateInput) {
-    rateInput.value = productPrice;
+    rateInput.value = productPrice > 0 ? productPrice : '';
   }
   
   hideInvoiceProductSuggestions(rowIndex);
   updateInvoiceRowTotal(rowIndex);
   
-  console.log('✅ Selected product:', displayName);
+  console.log('✅ Selected:', displayName, '• Rate: ₹' + productPrice);
+}
+
+/**
+ * Update row total when qty or rate changes
+ */
+function updateInvoiceRowTotal(rowIndex) {
+  const qtyInput = document.getElementById(`invoiceQty-${rowIndex}`);
+  const rateInput = document.getElementById(`invoiceRate-${rowIndex}`);
+  const totalSpan = document.getElementById(`invoiceRowTotal-${rowIndex}`);
+  
+  if (qtyInput && rateInput && totalSpan) {
+    const qty = parseFloat(qtyInput.value) || 0;
+    const rate = parseFloat(rateInput.value) || 0;
+    const total = qty * rate;
+    
+    totalSpan.textContent = '₹' + total.toFixed(2);
+    console.log('📊 Row ' + rowIndex + ' total: ₹' + total.toFixed(2));
+  }
 }
 
 /**
@@ -7377,7 +7404,18 @@ function hideInvoiceProductSuggestions(rowIndex) {
 }
 
 /**
- * Close all dropdowns when clicking outside
+ * Delete invoice row
+ */
+function deleteInvoiceRow(rowIndex) {
+  const row = document.querySelector(`tr[data-index="${rowIndex}"]`);
+  if (row) {
+    row.remove();
+    console.log('🗑️ Row ' + rowIndex + ' deleted');
+  }
+}
+
+/**
+ * Close all dropdowns when clicking outside (Zoho style)
  */
 document.addEventListener('click', function(e) {
   if (!e.target.closest('[id^="invoiceProduct-"]')) {
@@ -7386,8 +7424,6 @@ document.addEventListener('click', function(e) {
     });
   }
 });
-
-
 
 
 
@@ -11446,6 +11482,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
