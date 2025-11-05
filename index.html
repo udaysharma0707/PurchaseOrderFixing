@@ -2727,52 +2727,67 @@ body.modal-open {
             </button>
           </div>
           
-          <!-- Totals Section -->
-          <div class="row">
-            <div class="col-md-6"></div>
-            <div class="col-md-6">
-              <table class="table table-sm">
-                <tr>
-                  <td class="text-end"><strong>Sub Total:</strong></td>
-                  <td class="text-end" style="width: 150px" id="invoiceSubtotal">₹0.00</td>
-                </tr>
-                <tr>
-                  <td class="text-end">
-                    <span class="me-2">Discount:</span>
-                    <input type="number" class="form-control form-control-sm d-inline-block" 
-                           style="width: 70px" id="invoiceDiscount" value="0" min="0" 
-                           oninput="calculateInvoiceTotal()">
-                    <select class="form-select form-select-sm d-inline-block" 
-                            style="width: 60px" id="invoiceDiscountType" 
-                            onchange="calculateInvoiceTotal()">
-                      <option value="amount">₹</option>
-                      <option value="percent">%</option>
-                    </select>
-                  </td>
-                  <td class="text-end text-danger" id="invoiceDiscountAmount">-₹0.00</td>
-                </tr>
-                <tr>
-                  <td class="text-end">
-                    <span class="me-2">Tax (GST):</span>
-                    <select class="form-select form-select-sm d-inline-block" 
-                            style="width: 90px" id="invoiceTaxRate" 
-                            onchange="calculateInvoiceTotal()">
-                      <option value="0">No Tax</option>
-                      <option value="5">5%</option>
-                      <option value="12">12%</option>
-                      <option value="18" selected>18%</option>
-                      <option value="28">28%</option>
-                    </select>
-                  </td>
-                  <td class="text-end" id="invoiceTaxAmount">₹0.00</td>
-                </tr>
-                <tr class="table-success fw-bold">
-                  <td class="text-end"><h5 class="mb-0">Total (₹):</h5></td>
-                  <td class="text-end"><h5 class="mb-0" id="invoiceGrandTotal">₹0.00</h5></td>
-                </tr>
-              </table>
-            </div>
-          </div>
+          <!-- ✅ COLLAPSIBLE TOTALS SECTION -->
+<div class="mb-3">
+  <!-- Toggle Button -->
+  <button 
+    type="button" 
+    class="btn btn-sm btn-outline-secondary mb-2"
+    onclick="toggleInvoiceTotalsSection()"
+    id="toggleTotalsBtn">
+    📊 Show Advanced Options
+  </button>
+  
+  <!-- Totals Section (Hidden by default) -->
+  <div id="invoiceTotalsSection" style="display: none;">
+    <div class="row">
+      <div class="col-md-6"></div>
+      <div class="col-md-6">
+        <table class="table table-sm">
+          <tr>
+            <td class="text-end"><strong>Sub Total:</strong></td>
+            <td class="text-end" style="width: 150px" id="invoiceSubtotal">₹0.00</td>
+          </tr>
+          <tr>
+            <td class="text-end">
+              <span class="me-2">Discount:</span>
+              <input type="number" class="form-control form-control-sm d-inline-block" 
+                     style="width: 70px" id="invoiceDiscount" value="0" min="0" 
+                     oninput="calculateInvoiceTotal()">
+              <select class="form-select form-select-sm d-inline-block" 
+                      style="width: 60px" id="invoiceDiscountType" 
+                      onchange="calculateInvoiceTotal()">
+                <option value="amount">₹</option>
+                <option value="percent">%</option>
+              </select>
+            </td>
+            <td class="text-end text-danger" id="invoiceDiscountAmount">-₹0.00</td>
+          </tr>
+          <tr>
+            <td class="text-end">
+              <span class="me-2">Tax (GST):</span>
+              <select class="form-select form-select-sm d-inline-block" 
+                      style="width: 90px" id="invoiceTaxRate" 
+                      onchange="calculateInvoiceTotal()">
+                <option value="0">No Tax</option>
+                <option value="5">5%</option>
+                <option value="12">12%</option>
+                <option value="18" selected>18%</option>
+                <option value="28">28%</option>
+              </select>
+            </td>
+            <td class="text-end" id="invoiceTaxAmount">₹0.00</td>
+          </tr>
+          <tr class="table-success fw-bold">
+            <td class="text-end"><h5 class="mb-0">Total (₹):</h5></td>
+            <td class="text-end"><h5 class="mb-0" id="invoiceGrandTotal">₹0.00</h5></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
           
           <!-- Customer Notes -->
           <div class="mb-3">
@@ -7250,6 +7265,56 @@ function loadDefaultTerms() {
   document.getElementById('invoiceTerms').value = defaultTerms;
 }
 
+/**
+ * Toggle Invoice Totals Section Visibility
+ */
+function toggleInvoiceTotalsSection() {
+  const totalsSection = document.getElementById('invoiceTotalsSection');
+  const toggleBtn = document.getElementById('toggleTotalsBtn');
+  
+  if (!totalsSection || !toggleBtn) {
+    console.warn('❌ Totals section or button not found');
+    return;
+  }
+  
+  const isHidden = totalsSection.style.display === 'none';
+  
+  if (isHidden) {
+    // Show totals
+    totalsSection.style.display = 'block';
+    toggleBtn.innerHTML = '📊 Hide Totals';
+    toggleBtn.classList.add('active');
+    console.log('📊 Totals section shown');
+  } else {
+    // Hide totals
+    totalsSection.style.display = 'none';
+    toggleBtn.innerHTML = '📊 Show Totals';
+    toggleBtn.classList.remove('active');
+    console.log('📊 Totals section hidden');
+  }
+}
+
+/**
+ * Reset totals section on modal close (add to your existing modal reset)
+ */
+// Add this to your productModal hidden.bs.modal event listener:
+const invoiceModal = document.getElementById('invoiceModal');
+if (invoiceModal) {
+  invoiceModal.addEventListener('hidden.bs.modal', function() {
+    // ... your existing reset code ...
+    
+    // ✅ ALSO HIDE TOTALS SECTION
+    const totalsSection = document.getElementById('invoiceTotalsSection');
+    if (totalsSection) {
+      totalsSection.style.display = 'none';
+      const toggleBtn = document.getElementById('toggleTotalsBtn');
+      if (toggleBtn) {
+        toggleBtn.innerHTML = '📊 Show Totals';
+        toggleBtn.classList.remove('active');
+      }
+    }
+  });
+}
 
 
 /**
@@ -11482,6 +11547,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
