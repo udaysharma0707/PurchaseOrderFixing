@@ -1953,39 +1953,36 @@ body.modal-open {
   }
 }
 
-/* Product Name Autocomplete Dropdown - FIXED Z-index */
+/* Product Name Autocomplete Dropdown */
 .product-autocomplete-container {
   position: relative;
-  z-index: 10 !important;
+  z-index: 1;
 }
 
 .product-autocomplete-dropdown {
   position: fixed !important;
-  max-height: 300px;
-  min-width: 250px;
+  max-height: 250px;
+  min-width: 200px;
   overflow-y: auto !important;
   background: white;
   border: 2px solid #0066cc;
   border-radius: 4px;
-  box-shadow: 0 12px 24px rgba(0,0,0,0.3);
-  z-index: 99999 !important;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 9999 !important;
   display: none;
   background-color: #fff;
-  pointer-events: auto !important;
 }
 
 .product-autocomplete-item {
-  padding: 12px 12px;
+  padding: 10px 12px;
   cursor: pointer;
   border-bottom: 1px solid #f0f0f0;
   font-size: 0.9rem;
   transition: background-color 0.2s;
-  user-select: none;
 }
 
 .product-autocomplete-item:hover {
   background-color: #e3f2fd;
-  padding-left: 14px;
 }
 
 .product-autocomplete-item:last-child {
@@ -1996,131 +1993,28 @@ body.modal-open {
   color: #666;
   display: block;
   font-size: 0.75rem;
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 /* Scrollbar styling */
 .product-autocomplete-dropdown::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .product-autocomplete-dropdown::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .product-autocomplete-dropdown::-webkit-scrollbar-thumb {
-  background: #0066cc;
-  border-radius: 4px;
+  background: #888;
+  border-radius: 3px;
 }
 
 .product-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
-  background: #0052a3;
+  background: #555;
 }
 
-/* Ensure modal body doesn't clip dropdown */
-.modal-body {
-  overflow: visible !important;
-  position: relative;
-  z-index: 1;
-}
-
-/* Mobile Responsive - KEEP ORIGINAL TABLE LAYOUT */
-@media (max-width: 768px) {
-  /* Modal adjustments */
-  .modal-content {
-    max-height: 95vh !important;
-    border-radius: 0 !important;
-  }
-  
-  .modal-header {
-    padding: 12px 15px !important;
-  }
-  
-  .modal-body {
-    padding: 12px 10px !important;
-    overflow-y: auto !important;
-  }
-  
-  /* Invoice form fields */
-  .form-control, .form-select {
-    font-size: 16px !important;
-    padding: 10px 8px !important;
-  }
-  
-  /* ✅ KEEP ORIGINAL TABLE LAYOUT - Just optimize for mobile */
-  #invoiceItemsBody tr {
-    display: table-row;
-  }
-  
-  #invoiceItemsBody td {
-    padding: 6px 4px !important;
-    font-size: 13px;
-  }
-  
-  #invoiceItemsBody td input {
-    font-size: 13px !important;
-    padding: 6px 4px !important;
-    width: 100%;
-  }
-  
-  /* Fix dropdown on mobile - position ABOVE */
-  .product-autocomplete-dropdown {
-    max-height: 180px !important;
-    max-width: calc(100vw - 20px) !important;
-    left: 10px !important;
-  }
-  
-  /* Buttons */
-  .btn {
-    font-size: 14px !important;
-    padding: 10px 12px !important;
-  }
-  
-  .modal-footer {
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  
-  .modal-footer .btn {
-    flex: 0 0 calc(50% - 3px) !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .modal-body {
-    padding: 8px !important;
-  }
-  
-  #invoiceItemsBody td {
-    font-size: 12px;
-    padding: 5px 3px !important;
-  }
-  
-  #invoiceItemsBody td input {
-    font-size: 12px !important;
-    padding: 5px 3px !important;
-  }
-  
-  /* Dropdown slightly smaller on small mobile */
-  .product-autocomplete-dropdown {
-    max-height: 150px !important;
-    font-size: 12px;
-  }
-  
-  .product-autocomplete-item {
-    padding: 8px 10px;
-  }
-  
-  .btn {
-    font-size: 12px !important;
-    padding: 8px 10px !important;
-  }
-  
-  .modal-footer .btn {
-    flex: 0 0 calc(50% - 2px) !important;
-  }
-}
 
 
     
@@ -11608,6 +11502,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
