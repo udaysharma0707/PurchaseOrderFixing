@@ -85,7 +85,7 @@ body:has(.page-view.active) .action-buttons {
     }
   }
 
-/* ✅ FIX: Dropdown visibility and z-index */
+/* ✅ FIX: Dropdown visibility and z-index (IMPROVED) */
 .dropdown-menu {
   z-index: 99999 !important;
   position: absolute !important;
@@ -103,12 +103,20 @@ body:has(.page-view.active) .action-buttons {
   opacity: 1 !important;
 }
 
-/* Ensure dropdown works in modals */
+/* ✅ FIXED: Allow modal to scroll while dropdown shows */
 .modal {
-  overflow: visible !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 .modal-body {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  position: relative !important;
+}
+
+.modal-content {
+  position: relative !important;
   overflow: visible !important;
 }
 
@@ -10971,6 +10979,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
