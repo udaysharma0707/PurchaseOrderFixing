@@ -1953,6 +1953,47 @@ body.modal-open {
   }
 }
 
+/* Product Name Autocomplete Dropdown */
+.product-autocomplete-container {
+  position: relative;
+}
+
+.product-autocomplete-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  z-index: 1000;
+  display: none;
+}
+
+.product-autocomplete-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.9rem;
+}
+
+.product-autocomplete-item:hover {
+  background-color: #e3f2fd;
+}
+
+.product-autocomplete-item:last-child {
+  border-bottom: none;
+}
+
+.product-autocomplete-item small {
+  color: #666;
+  display: block;
+  font-size: 0.75rem;
+}
 
     
   </style>
@@ -7018,26 +7059,42 @@ function populateInvoiceItems() {
   calculateInvoiceTotal();
 }
 
-// Create Invoice Row HTML
+/**
+ * Create Invoice Row HTML with Product Autocomplete
+ */
 function createInvoiceRow(item, index) {
   const itemName = item.size ? `${item.name} (${item.size})` : item.name;
   return `
     <tr data-index="${index}">
       <td>
-        <input type="text" class="form-control form-control-sm" 
-               value="${escapeHtml(itemName)}" 
-               placeholder="Enter product name"
-               oninput="calculateInvoiceTotal()">
+        <div class="product-autocomplete-container">
+          <input type="text" 
+                 class="form-control form-control-sm invoice-product-name" 
+                 id="invoiceProduct-${index}"
+                 value="${escapeHtml(itemName)}" 
+                 placeholder="Enter product name"
+                 oninput="filterInvoiceProducts(${index}, this.value)"
+                 onfocus="showInvoiceProductDropdown(${index})"
+                 autocomplete="off">
+          <div class="product-autocomplete-dropdown" id="invoiceProductDropdown-${index}"></div>
+        </div>
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm text-center invoice-qty" 
-               value="${item.quantity}" min="1" 
+        <input type="number" 
+               class="form-control form-control-sm text-center invoice-qty" 
+               id="invoiceQty-${index}"
+               value="${item.quantity}" 
+               min="1" 
                placeholder="Qty"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm text-end invoice-rate" 
-               value="${item.rate}" min="0" step="0.01" 
+        <input type="number" 
+               class="form-control form-control-sm text-end invoice-rate" 
+               id="invoiceRate-${index}"
+               value="${item.rate}" 
+               min="0" 
+               step="0.01" 
                placeholder="Price"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
@@ -7053,6 +7110,7 @@ function createInvoiceRow(item, index) {
     </tr>
   `;
 }
+
 
 // Update Invoice Row Total
 function updateInvoiceRowTotal(index) {
@@ -7136,6 +7194,151 @@ function loadDefaultTerms() {
   document.getElementById('invoiceTerms').value = defaultTerms;
 }
 
+
+    /**
+ * ==========================================
+ * INVOICE PRODUCT AUTOCOMPLETE
+ * ==========================================
+ */
+
+/**
+ * Show invoice product dropdown with all products
+ */
+function showInvoiceProductDropdown(rowIndex) {
+  console.log('📋 Showing product dropdown for row', rowIndex);
+  
+  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
+  if (!dropdown) return;
+  
+  // Get all products
+  const products = cachedProducts || [];
+  
+  if (products.length === 0) {
+    dropdown.innerHTML = '<div class="product-autocomplete-item">No products available</div>';
+    dropdown.style.display = 'block';
+    return;
+  }
+  
+  // Show all products
+  let html = '';
+  products.forEach(product => {
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
+    const price = product.price ? `₹${product.price.toFixed(2)}` : '';
+    const stock = product.stock ? `Stock: ${product.stock}` : '';
+    
+    html += `
+      <div class="product-autocomplete-item" onclick="selectInvoiceProduct(${rowIndex}, '${escapeHtml(product.name)}', '${escapeHtml(product.size || '')}', ${product.price || 0})">
+        <strong>${escapeHtml(displayName)}</strong>
+        <small>${price} ${stock ? '• ' + stock : ''}</small>
+      </div>
+    `;
+  });
+  
+  dropdown.innerHTML = html;
+  dropdown.style.display = 'block';
+  console.log('✅ Dropdown shown with', products.length, 'products');
+}
+
+/**
+ * Filter invoice products based on user input
+ */
+function filterInvoiceProducts(rowIndex, query) {
+  console.log('🔍 Filtering products for:', query);
+  
+  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
+  if (!dropdown) return;
+  
+  query = query.toLowerCase().trim();
+  
+  if (!query) {
+    showInvoiceProductDropdown(rowIndex);
+    return;
+  }
+  
+  // Filter products
+  const products = cachedProducts || [];
+  const filtered = products.filter(product => {
+    const name = product.name.toLowerCase();
+    const brand = (product.brand || '').toLowerCase();
+    const category = (product.category || '').toLowerCase();
+    
+    return name.includes(query) || 
+           brand.includes(query) || 
+           category.includes(query);
+  });
+  
+  console.log('📊 Filtered:', filtered.length, 'products');
+  
+  if (filtered.length === 0) {
+    dropdown.innerHTML = '<div class="product-autocomplete-item">No matching products</div>';
+    dropdown.style.display = 'block';
+    return;
+  }
+  
+  // Show filtered products
+  let html = '';
+  filtered.forEach(product => {
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
+    const price = product.price ? `₹${product.price.toFixed(2)}` : '';
+    const stock = product.stock ? `Stock: ${product.stock}` : '';
+    
+    html += `
+      <div class="product-autocomplete-item" onclick="selectInvoiceProduct(${rowIndex}, '${escapeHtml(product.name)}', '${escapeHtml(product.size || '')}', ${product.price || 0})">
+        <strong>${escapeHtml(displayName)}</strong>
+        <small>${price} ${stock ? '• ' + stock : ''}</small>
+      </div>
+    `;
+  });
+  
+  dropdown.innerHTML = html;
+  dropdown.style.display = 'block';
+}
+
+/**
+ * Select a product from dropdown
+ */
+function selectInvoiceProduct(rowIndex, productName, productSize, productPrice) {
+  console.log('✅ Selected product:', productName);
+  
+  const displayName = productSize ? `${productName} (${productSize})` : productName;
+  
+  // Set product name
+  const nameInput = document.getElementById(`invoiceProduct-${rowIndex}`);
+  if (nameInput) {
+    nameInput.value = displayName;
+  }
+  
+  // Set price
+  const rateInput = document.getElementById(`invoiceRate-${rowIndex}`);
+  if (rateInput) {
+    rateInput.value = productPrice;
+  }
+  
+  // Hide dropdown
+  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
+  if (dropdown) {
+    dropdown.style.display = 'none';
+  }
+  
+  // Update total
+  updateInvoiceRowTotal(rowIndex);
+  
+  console.log('✅ Product selected and price updated');
+}
+
+/**
+ * Close dropdowns when clicking outside
+ */
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.product-autocomplete-container')) {
+    document.querySelectorAll('.product-autocomplete-dropdown').forEach(dropdown => {
+      dropdown.style.display = 'none';
+    });
+  }
+});
+
+
+    
 // Save Invoice
 /**
  * ==========================================
@@ -11185,6 +11388,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
