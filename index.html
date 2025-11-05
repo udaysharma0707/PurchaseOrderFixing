@@ -1953,7 +1953,7 @@ body.modal-open {
   }
 }
 
-/* Product Name Autocomplete Dropdown - ABSOLUTE POSITIONED */
+/* Product Name Autocomplete Dropdown - ABSOLUTE POSITIONED (FIXED CLIPPING) */
 .product-autocomplete-container {
   position: relative;
   z-index: 1;
@@ -1972,7 +1972,7 @@ body.modal-open {
   border-top: none;
   border-radius: 0 0 4px 4px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  z-index: 1000 !important;
+  z-index: 9999 !important;
   display: none;
   margin-top: 2px;
   pointer-events: auto !important;
@@ -2026,6 +2026,15 @@ body.modal-open {
   background: #0052a3;
 }
 
+/* ✅ FIXED: Don't clip dropdown */
+#invoiceItemsBody {
+  overflow: visible !important;
+}
+
+.modal-body {
+  overflow: visible !important;
+}
+
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .product-autocomplete-dropdown {
@@ -2042,7 +2051,6 @@ body.modal-open {
     font-size: 0.7rem;
   }
 }
-
 
 
     
@@ -11554,6 +11562,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
