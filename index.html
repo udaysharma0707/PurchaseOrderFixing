@@ -7137,27 +7137,102 @@ function loadDefaultTerms() {
 }
 
 // Save Invoice
+/**
+ * ==========================================
+ * SAVE INVOICE (FIXED - Simple & Reliable)
+ * ==========================================
+ */
+
 async function saveInvoice() {
-  const customerName = document.getElementById('invoiceCustomerName').value.trim();
+  console.log('💾 Save Invoice clicked');
   
-  if (!customerName) {
-    alert('⚠️ Please enter customer name');
-    return;
+  try {
+    const customerName = document.getElementById('invoiceCustomerName').value.trim();
+    
+    if (!customerName) {
+      alert('⚠️ Please enter customer name');
+      console.warn('❌ No customer name');
+      return;
+    }
+    
+    console.log('📝 Customer name:', customerName);
+    
+    // Collect items
+    const items = [];
+    document.querySelectorAll('#invoiceItemsBody tr').forEach(row => {
+      const nameInput = row.querySelector('input[type="text"]');
+      const qtyInput = row.querySelector('.invoice-qty');
+      const rateInput = row.querySelector('.invoice-rate');
+      
+      if (nameInput && qtyInput && rateInput) {
+        const name = nameInput.value.trim();
+        const qty = parseFloat(qtyInput.value) || 0;
+        const rate = parseFloat(rateInput.value) || 0;
+        
+        items.push({
+          name: name,
+          quantity: qty,
+          rate: rate,
+          amount: qty * rate
+        });
+      }
+    });
+    
+    console.log('📦 Items count:', items.length);
+    
+    // Calculate totals
+    let subtotal = 0;
+    items.forEach(item => {
+      subtotal += item.amount;
+    });
+    
+    const discount = parseFloat(document.getElementById('invoiceDiscount')?.value) || 0;
+    const taxRate = parseFloat(document.getElementById('invoiceTaxRate')?.value) || 0;
+    const taxableAmount = subtotal - discount;
+    const tax = (taxableAmount * taxRate) / 100;
+    const total = taxableAmount + tax;
+    
+    console.log('💰 Totals - Subtotal:', subtotal, 'Tax:', tax, 'Total:', total);
+    
+    // Create invoice object
+    const invoiceData = {
+      invoiceNumber: document.getElementById('invoiceNumber').value,
+      customerName: customerName,
+      invoiceDate: document.getElementById('invoiceDate').value,
+      dueDate: document.getElementById('invoiceDueDate').value,
+      items: items,
+      subtotal: subtotal,
+      discount: discount,
+      tax: tax,
+      total: total,
+      notes: document.getElementById('invoiceNotes')?.value || '',
+      terms: document.getElementById('invoiceTerms')?.value || '',
+      createdAt: new Date().toISOString()
+    };
+    
+    console.log('✅ Invoice data ready:', invoiceData);
+    
+    // Save to localStorage
+    let invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    invoices.push(invoiceData);
+    localStorage.setItem('invoices', JSON.stringify(invoices));
+    
+    console.log('✅ Invoice saved! Total invoices:', invoices.length);
+    
+    // Show success message
+    alert('✅ Invoice saved successfully!\n\nInvoice: ' + invoiceData.invoiceNumber + '\nCustomer: ' + customerName + '\nTotal: ₹' + total.toFixed(2));
+    
+    // Close modal
+    const modal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
+    if (modal) {
+      modal.hide();
+      console.log('✅ Modal closed');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error saving invoice:', error);
+    alert('❌ Error saving invoice. Check console for details.\n\n' + error.message);
   }
-  
-  const invoiceData = collectInvoiceData();
-  
-  // ✅ CHANGED: Allow saving even with 0 items
-  console.log('💾 Saving invoice...');
-  
-  let invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-  invoices.push(invoiceData);
-  localStorage.setItem('invoices', JSON.stringify(invoices));
-  
-  alert('✅ Invoice saved successfully!\n\nInvoice Number: ' + invoiceData.invoiceNumber);
-  
-  const modal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
-  if (modal) modal.hide();
 }
 
 function collectInvoiceData() {
@@ -7362,75 +7437,98 @@ function generateInvoiceHTML(data) {
 // VIEW SAVED INVOICES FEATURE
 // ==========================================
 
+/**
+ * ==========================================
+ * VIEW SAVED INVOICES (FIXED)
+ * ==========================================
+ */
+
 function viewSavedInvoices() {
-  const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+  console.log('📋 View Invoices clicked');
   
-  const container = document.getElementById('invoicesListContainer');
-  
-  if (invoices.length === 0) {
-    container.innerHTML = `
-      <div class="alert alert-info text-center">
-        <i class="bi bi-info-circle"></i> No saved invoices found
-      </div>
-    `;
-  } else {
-    let html = `
-      <div class="table-responsive">
-        <table class="table table-hover table-bordered">
-          <thead class="table-light">
-            <tr>
-              <th style="width: 15%">Invoice No</th>
-              <th style="width: 20%">Customer Name</th>
-              <th style="width: 12%">Date</th>
-              <th style="width: 12%">Due Date</th>
-              <th style="width: 10%" class="text-end">Total</th>
-              <th style="width: 18%">Items</th>
-              <th style="width: 13%" class="text-center">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
+  try {
+    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    console.log('📊 Found', invoices.length, 'invoices');
     
-    invoices.forEach((inv, index) => {
-      const itemsCount = inv.items ? inv.items.length : 0;
-      const itemsSummary = inv.items ? inv.items.slice(0, 2).map(i => i.name).join(', ') : '';
-      const moreItems = itemsCount > 2 ? ` +${itemsCount - 2} more` : '';
+    const container = document.getElementById('invoicesListContainer');
+    
+    if (!container) {
+      alert('❌ Container not found');
+      console.error('❌ invoicesListContainer element not found');
+      return;
+    }
+    
+    if (invoices.length === 0) {
+      container.innerHTML = `
+        <div class="alert alert-info text-center">
+          <i class="bi bi-info-circle"></i> No saved invoices found
+        </div>
+      `;
+      console.log('ℹ️ No invoices');
+    } else {
+      let html = `
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>Invoice No</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th class="text-end">Total</th>
+                <th class="text-center" style="width: 120px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      invoices.forEach((inv, index) => {
+        html += `
+          <tr>
+            <td><strong>${inv.invoiceNumber}</strong></td>
+            <td>${inv.customerName}</td>
+            <td>${new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</td>
+            <td class="text-end">₹${(inv.total || 0).toFixed(2)}</td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-info" onclick="previewSavedInvoice(${index})" title="Preview">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteSavedInvoice(${index})" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
       
       html += `
-        <tr>
-          <td><strong>${inv.invoiceNumber}</strong></td>
-          <td>${escapeHtml(inv.customerName)}</td>
-          <td>${new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</td>
-          <td>${new Date(inv.dueDate).toLocaleDateString('en-IN')}</td>
-          <td class="text-end"><strong>Ã¢â€šÂ¹${inv.total.toFixed(2)}</strong></td>
-          <td><small>${escapeHtml(itemsSummary)}${moreItems}</small></td>
-          <td class="text-center">
-            <button class="btn btn-sm btn-info" onclick="previewSavedInvoice(${index})" title="Preview">
-              <i class="bi bi-eye"></i>
-            </button>
-            <button class="btn btn-sm btn-danger" onclick="deleteSavedInvoice(${index})" title="Delete">
-              <i class="bi bi-trash"></i>
-            </button>
-          </td>
-        </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="alert alert-success">
+          <strong>Total Invoices:</strong> ${invoices.length}
+        </div>
       `;
-    });
+      
+      container.innerHTML = html;
+      console.log('✅ Table rendered');
+    }
     
-    html += `
-          </tbody>
-        </table>
-      </div>
-      <div class="alert alert-success">
-        <strong>Total Invoices:</strong> ${invoices.length}
-      </div>
-    `;
+    // Show modal
+    const modalEl = document.getElementById('viewInvoicesModal');
+    if (modalEl) {
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+      console.log('✅ Modal opened');
+    } else {
+      alert('❌ Modal element not found');
+    }
     
-    container.innerHTML = html;
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error: ' + error.message);
   }
-  
-  // Show modal
-  new bootstrap.Modal(document.getElementById('viewInvoicesModal')).show();
 }
+
 
 function previewSavedInvoice(index) {
   console.log('👁️ Previewing invoice at index:', index);
@@ -11087,6 +11185,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
