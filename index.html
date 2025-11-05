@@ -6894,96 +6894,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-    /***********************
- * INVOICE GENERATOR
- ***********************/
+  /**
+ * ==========================================
+ * INVOICE GENERATOR (UPDATED - NO PRODUCT REQUIRED)
+ * ==========================================
+ */
 
 // Global variable to store invoice number counter
 let invoiceCounter = parseInt(localStorage.getItem('lastInvoiceNumber') || '0');
 
 function generateInvoice() {
-  // Collect products from sale grid
-  const rows = document.querySelectorAll('#product-grid-body .product-row');
-  const items = [];
+  // ✅ REMOVED: No longer require products from sale grid
+  // Users can now open invoice modal directly and add items manually
   
-  rows.forEach((r, i) => {
-    const idx = i + 1;
-    const sel = document.getElementById(`product-${idx}`);
-    const qtyEl = document.getElementById(`qty-${idx}`);
-    const priceEl = document.getElementById(`price-${idx}`);
-    const sizeEl = document.getElementById(`size-${idx}`);
-    
-    // Skip if no product selected or no quantity
-    if (!sel || !sel.value || !qtyEl || !qtyEl.value || Number(qtyEl.value) <= 0) {
-      return; // Continue to next iteration
-    }
-    
-    // Get clean product name without stock info
-    let productName = sel.options[sel.selectedIndex]?.text || 'Product';
-    // Remove stock information (e.g., "Stock: 147 Box")
-    productName = productName.replace(/\(Stock:.*?\)/g, '').trim();
-    
-    const quantity = Number(qtyEl.value);
-    const rate = Number(priceEl.value) || 0;
-    const size = sizeEl.value;
-    
-    items.push({
-      name: productName,
-      size: size,
-      quantity: quantity,
-      rate: rate,
-      amount: quantity * rate
-    });
-  });
+  console.log('📄 Opening invoice generator...');
   
-  if (items.length === 0) {
-    alert('âš ï¸ No products in the sale! Add products before generating invoice.');
-    return;
-  }
+  // Store empty items temporarily (user can add manually in modal)
+  window.tempInvoiceItems = [];
   
-  // Store items temporarily
-  window.tempInvoiceItems = items;
-  
-  // âœ… FIX: Close Sales Modal BEFORE opening Invoice Modal
+  // Close Sales Modal if open
   const salesModal = bootstrap.Modal.getInstance(document.getElementById('salesModal'));
   if (salesModal) {
     salesModal.hide();
+    console.log('✅ Sales modal closed');
   }
   
-  // Wait for sales modal to close, then open invoice modal
+  // Wait for modal to close, then open invoice modal
   setTimeout(() => {
     openInvoiceModal();
-  }, 300); // 300ms delay ensures smooth transition
+  }, 300);
 }
 
-
-
 function openInvoiceModal() {
-
+  console.log('🚀 Opening invoice modal...');
   
   // Check if modal exists
   const modalEl = document.getElementById('invoiceModal');
   
-  
   if (!modalEl) {
-    
+    console.error('❌ Invoice modal not found');
+    alert('❌ Invoice modal not found. Please refresh the page.');
     return;
   }
-  
   
   // Generate invoice number
   invoiceCounter++;
   const invoiceNo = 'INV-' + String(invoiceCounter).padStart(6, '0');
   
   const invoiceNumEl = document.getElementById('invoiceNumber');
-  
   if (invoiceNumEl) {
     invoiceNumEl.value = invoiceNo;
   }
   
   localStorage.setItem('lastInvoiceNumber', invoiceCounter);
+  console.log('✅ Invoice number generated:', invoiceNo);
   
- 
   // Set today's date
   const today = new Date().toISOString().split('T')[0];
   const dateEl = document.getElementById('invoiceDate');
@@ -6991,7 +6956,6 @@ function openInvoiceModal() {
     dateEl.value = today;
   }
   
-
   calculateDueDate();
   populateInvoiceItems();
   loadDefaultTerms();
@@ -7000,12 +6964,11 @@ function openInvoiceModal() {
   try {
     const bsModal = new bootstrap.Modal(modalEl);
     bsModal.show();
- 
+    console.log('✅ Invoice modal opened');
   } catch (error) {
-    
+    console.error('❌ Error opening modal:', error);
   }
 }
-
 
 // Regenerate Invoice Number
 function regenerateInvoiceNumber() {
@@ -7013,6 +6976,7 @@ function regenerateInvoiceNumber() {
   const invoiceNo = 'INV-' + String(invoiceCounter).padStart(6, '0');
   document.getElementById('invoiceNumber').value = invoiceNo;
   localStorage.setItem('lastInvoiceNumber', invoiceCounter);
+  console.log('✅ Invoice number regenerated:', invoiceNo);
 }
 
 // Calculate Due Date based on Payment Terms
@@ -7031,7 +6995,20 @@ function populateInvoiceItems() {
   const tbody = document.getElementById('invoiceItemsBody');
   tbody.innerHTML = '';
   
-  if (!window.tempInvoiceItems || window.tempInvoiceItems.length === 0) return;
+  // ✅ CHANGED: If no items, create empty row for user to add
+  if (!window.tempInvoiceItems || window.tempInvoiceItems.length === 0) {
+    console.log('📝 No items from sale, adding empty row for manual entry');
+    const emptyItem = {
+      name: '',
+      size: '',
+      quantity: 1,
+      rate: 0,
+      amount: 0
+    };
+    tbody.innerHTML += createInvoiceRow(emptyItem, 0);
+    calculateInvoiceTotal();
+    return;
+  }
   
   window.tempInvoiceItems.forEach((item, index) => {
     const row = createInvoiceRow(item, index);
@@ -7049,20 +7026,23 @@ function createInvoiceRow(item, index) {
       <td>
         <input type="text" class="form-control form-control-sm" 
                value="${escapeHtml(itemName)}" 
+               placeholder="Enter product name"
                oninput="calculateInvoiceTotal()">
       </td>
       <td>
         <input type="number" class="form-control form-control-sm text-center invoice-qty" 
                value="${item.quantity}" min="1" 
+               placeholder="Qty"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
       <td>
         <input type="number" class="form-control form-control-sm text-end invoice-rate" 
                value="${item.rate}" min="0" step="0.01" 
+               placeholder="Price"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
       <td class="text-end fw-bold invoice-row-total">
-        Ã¢â€šÂ¹${(item.quantity * item.rate).toFixed(2)}
+        ₹${(item.quantity * item.rate).toFixed(2)}
       </td>
       <td class="text-center">
         <button type="button" class="btn btn-sm btn-link text-danger" 
@@ -7114,7 +7094,6 @@ function addInvoiceRow() {
 
 // Calculate Invoice Total
 function calculateInvoiceTotal() {
-  // Calculate subtotal
   let subtotal = 0;
   document.querySelectorAll('#invoiceItemsBody tr').forEach(row => {
     const qty = parseFloat(row.querySelector('.invoice-qty')?.value) || 0;
@@ -7124,7 +7103,6 @@ function calculateInvoiceTotal() {
   
   document.getElementById('invoiceSubtotal').textContent = formatCurrency(subtotal);
   
-  // Calculate discount
   const discountValue = parseFloat(document.getElementById('invoiceDiscount').value) || 0;
   const discountType = document.getElementById('invoiceDiscountType').value;
   let discount = 0;
@@ -7137,14 +7115,12 @@ function calculateInvoiceTotal() {
   
   document.getElementById('invoiceDiscountAmount').textContent = '-' + formatCurrency(discount);
   
-  // Calculate tax
   const taxRate = parseFloat(document.getElementById('invoiceTaxRate').value) || 0;
   const taxableAmount = subtotal - discount;
   const tax = (taxableAmount * taxRate) / 100;
   
   document.getElementById('invoiceTaxAmount').textContent = formatCurrency(tax);
   
-  // Calculate grand total
   const grandTotal = taxableAmount + tax;
   document.getElementById('invoiceGrandTotal').textContent = formatCurrency(grandTotal);
 }
@@ -7154,7 +7130,7 @@ function loadDefaultTerms() {
   const defaultTerms = `1. Payment due within 14 days of invoice date
 2. Late payments subject to 2% monthly interest charge
 3. Goods once sold cannot be returned or exchanged
-4. Delivery charges may apply for orders under Ã¢â€šÂ¹10,000
+4. Delivery charges may apply for orders under ₹10,000
 5. Company not responsible for damages during transit`;
   
   document.getElementById('invoiceTerms').value = defaultTerms;
@@ -7162,25 +7138,24 @@ function loadDefaultTerms() {
 
 // Save Invoice
 async function saveInvoice() {
-  // Validate required fields
   const customerName = document.getElementById('invoiceCustomerName').value.trim();
   
   if (!customerName) {
-    alert('ÃƒÂ¢Ã‚ÂÃ…â€™ Please enter customer name');
+    alert('⚠️ Please enter customer name');
     return;
   }
   
-  // Collect invoice data
   const invoiceData = collectInvoiceData();
   
-  // Save to localStorage
+  // ✅ CHANGED: Allow saving even with 0 items
+  console.log('💾 Saving invoice...');
+  
   let invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
   invoices.push(invoiceData);
   localStorage.setItem('invoices', JSON.stringify(invoices));
   
-  alert('ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Invoice saved successfully!\n\nInvoice Number: ' + invoiceData.invoiceNumber);
+  alert('✅ Invoice saved successfully!\n\nInvoice Number: ' + invoiceData.invoiceNumber);
   
-  // Close modal
   const modal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
   if (modal) modal.hide();
 }
@@ -7193,20 +7168,19 @@ function collectInvoiceData() {
     const qty = parseFloat(row.querySelector('.invoice-qty').value) || 0;
     const rate = parseFloat(row.querySelector('.invoice-rate').value) || 0;
     
-    if (name && qty > 0) {
-      items.push({
-        name: name,
-        quantity: qty,
-        rate: rate,
-        amount: qty * rate
-      });
-    }
+    // ✅ CHANGED: Include all items (even with 0 quantity)
+    items.push({
+      name: name,
+      quantity: qty,
+      rate: rate,
+      amount: qty * rate
+    });
   });
   
-  const subtotal = parseFloat(document.getElementById('invoiceSubtotal').textContent.replace(/[Ã¢â€šÂ¹,]/g, ''));
-  const discount = parseFloat(document.getElementById('invoiceDiscountAmount').textContent.replace(/[Ã¢â€šÂ¹,-]/g, ''));
-  const tax = parseFloat(document.getElementById('invoiceTaxAmount').textContent.replace(/[Ã¢â€šÂ¹,]/g, ''));
-  const total = parseFloat(document.getElementById('invoiceGrandTotal').textContent.replace(/[Ã¢â€šÂ¹,]/g, ''));
+  const subtotal = parseFloat(document.getElementById('invoiceSubtotal').textContent.replace(/[₹,]/g, ''));
+  const discount = parseFloat(document.getElementById('invoiceDiscountAmount').textContent.replace(/[₹,-]/g, ''));
+  const tax = parseFloat(document.getElementById('invoiceTaxAmount').textContent.replace(/[₹,]/g, ''));
+  const total = parseFloat(document.getElementById('invoiceGrandTotal').textContent.replace(/[₹,]/g, ''));
   
   return {
     invoiceNumber: document.getElementById('invoiceNumber').value,
@@ -7229,14 +7203,12 @@ function previewInvoice() {
   const invoiceData = collectInvoiceData();
   
   if (!invoiceData.customerName) {
-    alert('ÃƒÂ¢Ã‚ÂÃ…â€™ Please enter customer name');
+    alert('⚠️ Please enter customer name');
     return;
   }
   
-  // Generate HTML for invoice
   const invoiceHTML = generateInvoiceHTML(invoiceData);
   
-  // Open in new window
   const previewWindow = window.open('', 'Invoice Preview', 'width=800,height=600');
   previewWindow.document.write(invoiceHTML);
   previewWindow.document.close();
@@ -7246,16 +7218,23 @@ function previewInvoice() {
 function generateInvoiceHTML(data) {
   let itemsHTML = '';
   data.items.forEach((item, index) => {
-    itemsHTML += `
-      <tr>
-        <td style="text-align: center">${index + 1}</td>
-        <td>${escapeHtml(item.name)}</td>
-        <td style="text-align: center">${item.quantity}</td>
-        <td style="text-align: right">Ã¢â€šÂ¹${item.rate.toFixed(2)}</td>
-        <td style="text-align: right">Ã¢â€šÂ¹${item.amount.toFixed(2)}</td>
-      </tr>
-    `;
+    if (item.name || item.quantity > 0) { // Only show non-empty rows
+      itemsHTML += `
+        <tr>
+          <td style="text-align: center">${index + 1}</td>
+          <td>${escapeHtml(item.name)}</td>
+          <td style="text-align: center">${item.quantity}</td>
+          <td style="text-align: right">₹${item.rate.toFixed(2)}</td>
+          <td style="text-align: right">₹${item.amount.toFixed(2)}</td>
+        </tr>
+      `;
+    }
   });
+  
+  // ✅ If no items, show a message
+  if (!itemsHTML) {
+    itemsHTML = `<tr><td colspan="5" style="text-align: center; color: #999;">No items added to invoice</td></tr>`;
+  }
   
   return `
     <!DOCTYPE html>
@@ -7275,10 +7254,7 @@ function generateInvoiceHTML(data) {
           button { display: none; }
         }
       </style>
-      </div> <!-- End of appContent -->
-
     </head>
-    
     <body>
       <div class="invoice-header">
         <h1>INVOICE</h1>
@@ -7310,19 +7286,19 @@ function generateInvoiceHTML(data) {
       <table style="width: 400px; margin-left: auto">
         <tr>
           <td>Sub Total:</td>
-          <td class="text-right">Ã¢â€šÂ¹${data.subtotal.toFixed(2)}</td>
+          <td class="text-right">₹${data.subtotal.toFixed(2)}</td>
         </tr>
         <tr>
           <td>Discount:</td>
-          <td class="text-right">-Ã¢â€šÂ¹${data.discount.toFixed(2)}</td>
+          <td class="text-right">-₹${data.discount.toFixed(2)}</td>
         </tr>
         <tr>
           <td>Tax:</td>
-          <td class="text-right">Ã¢â€šÂ¹${data.tax.toFixed(2)}</td>
+          <td class="text-right">₹${data.tax.toFixed(2)}</td>
         </tr>
         <tr class="total-row">
           <td>Grand Total:</td>
-          <td class="text-right">Ã¢â€šÂ¹${data.total.toFixed(2)}</td>
+          <td class="text-right">₹${data.total.toFixed(2)}</td>
         </tr>
       </table>
       
@@ -7341,11 +7317,11 @@ function generateInvoiceHTML(data) {
           Print Invoice
         </button>
       </div>
-
-     </body>
+    </body>
     </html>
   `;
 }
+
             
 
 // ==========================================
@@ -11054,6 +11030,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
