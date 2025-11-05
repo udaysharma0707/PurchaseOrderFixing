@@ -1952,17 +1952,13 @@ body.modal-open {
     transform: translateX(-50%);
   }
 }
-/* Product Name Autocomplete Dropdown - ABSOLUTE (stays attached during scroll) */
+/* Product Name Autocomplete - MOVED TO MODAL-BODY LEVEL */
 .product-autocomplete-container {
   position: relative;
-  z-index: 10;
 }
 
 .product-autocomplete-dropdown {
   position: absolute !important;
-  top: 100%;
-  left: 0;
-  right: 0;
   max-height: 280px;
   overflow-y: auto !important;
   background: white;
@@ -1972,7 +1968,7 @@ body.modal-open {
   z-index: 10000 !important;
   display: none;
   pointer-events: auto !important;
-  margin-top: 2px;
+  min-width: 200px;
 }
 
 .product-autocomplete-item {
@@ -2014,6 +2010,24 @@ body.modal-open {
   .product-autocomplete-dropdown {
     max-height: 200px;
   }
+}
+
+/* ✅ CRITICAL: Allow dropdown to overflow from table cells */
+table tr td {
+  overflow: visible !important;
+  position: relative;
+}
+
+#invoiceItemsBody tr td {
+  overflow: visible !important;
+}
+
+#invoiceItemsBody {
+  overflow: visible !important;
+}
+
+table {
+  overflow: visible !important;
 }
 
 
@@ -7348,20 +7362,36 @@ function attachDropdownToScrolling(rowIndex) {
 /**
  * Position dropdown ABSOLUTE (attached to field, scrolls with modal)
  */
+/**
+ * Move dropdown outside table to modal-body level (FIXES CLIPPING)
+ */
 function positionInvoiceDropdown(rowIndex) {
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
+  const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
   
-  if (!dropdown) return;
+  if (!dropdown || !inputField) return;
   
-  // Absolute positioning relative to container
+  // Get input position
+  const rect = inputField.getBoundingClientRect();
+  const modalBody = document.querySelector('.modal-body');
+  
+  if (modalBody) {
+    // Move dropdown to modal-body level (not inside table)
+    if (dropdown.parentElement !== modalBody) {
+      modalBody.appendChild(dropdown);
+    }
+  }
+  
+  // Position it absolutely relative to viewport
   dropdown.style.position = 'absolute';
-  dropdown.style.top = '100%';
-  dropdown.style.left = '0';
-  dropdown.style.right = '0';
+  dropdown.style.top = (rect.top - modalBody.getBoundingClientRect().top + rect.height + 5) + 'px';
+  dropdown.style.left = (rect.left - modalBody.getBoundingClientRect().left) + 'px';
+  dropdown.style.width = rect.width + 'px';
   dropdown.style.zIndex = '10000';
   
-  console.log('✅ Dropdown positioned ABSOLUTE (attached to field)');
+  console.log('✅ Dropdown moved to modal-body level (no clipping)');
 }
+
 
 /**
  * Filter invoice products based on user input
@@ -11526,6 +11556,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
