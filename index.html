@@ -7061,17 +7061,43 @@ function createInvoiceRow(item, index) {
   `;
 }
 
-// Update Invoice Row Total
-function updateInvoiceRowTotal(index) {
-  const row = document.querySelector(`#invoiceItemsBody tr[data-index="${index}"]`);
-  if (!row) return;
+/**
+ * Update individual row total (FIXED - uses row traversal)
+ */
+function updateInvoiceRowTotal(rowIndex) {
+  console.log('🔄 Updating row', rowIndex, 'total...');
   
-  const qty = parseFloat(row.querySelector('.invoice-qty').value) || 0;
-  const rate = parseFloat(row.querySelector('.invoice-rate').value) || 0;
+  // Get the row element itself
+  const tbody = document.getElementById('invoiceItemsBody');
+  if (!tbody) return;
+  
+  const rows = tbody.querySelectorAll('tr');
+  if (rowIndex >= rows.length) {
+    console.warn('⚠️ Row index out of bounds:', rowIndex);
+    return;
+  }
+  
+  const row = rows[rowIndex];
+  
+  // Find inputs within THIS specific row
+  const inputs = row.querySelectorAll('input[type="number"]');
+  
+  if (inputs.length < 2) {
+    console.warn('⚠️ Row', rowIndex, 'missing quantity or rate inputs');
+    return;
+  }
+  
+  // First number input = quantity, Second = rate
+  const qty = parseFloat(inputs[0].value) || 0;
+  const rate = parseFloat(inputs[1].value) || 0;
   const total = qty * rate;
   
-  row.querySelector('.invoice-row-total').textContent = formatCurrency(total);
-  calculateInvoiceTotal();
+  // Find the total span in this row
+  const totalSpan = row.querySelector('span[id^="invoiceRowTotal"]');
+  if (totalSpan) {
+    totalSpan.textContent = '₹' + total.toFixed(2);
+    console.log('✅ Row', rowIndex, 'updated:', qty, 'x', rate, '=', total);
+  }
 }
 
 /**
@@ -7156,6 +7182,9 @@ function addInvoiceRow() {
 /**
  * Calculate and update invoice totals (Subtotal, Discount, Tax, Grand Total)
  */
+/**
+ * Calculate and update invoice totals (FIXED - better row iteration)
+ */
 function calculateInvoiceTotal() {
   console.log('📊 Calculating invoice totals...');
   
@@ -7165,19 +7194,21 @@ function calculateInvoiceTotal() {
     return;
   }
   
-  // Calculate subtotal from all rows
   let subtotal = 0;
   const rows = tbody.querySelectorAll('tr');
   
   console.log('🔍 Processing', rows.length, 'rows');
   
+  // Process each row
   rows.forEach((row, rowIdx) => {
-    // Find inputs in this row
-    const qtyInput = row.querySelector('input[id^="invoiceQty"]');
-    const rateInput = row.querySelector('input[id^="invoiceRate"]');
-    const totalSpan = row.querySelector('span[id^="invoiceRowTotal"]');
+    // Get all inputs in this row
+    const inputs = row.querySelectorAll('input[type="number"]');
     
-    if (qtyInput && rateInput) {
+    if (inputs.length >= 2) {
+      const qtyInput = inputs[0];
+      const rateInput = inputs[1];
+      const totalSpan = row.querySelector('span[id^="invoiceRowTotal"]');
+      
       const qty = parseFloat(qtyInput.value) || 0;
       const rate = parseFloat(rateInput.value) || 0;
       const rowTotal = qty * rate;
@@ -7246,13 +7277,14 @@ function calculateInvoiceTotal() {
     grandTotalSpan.textContent = '₹' + grandTotal.toFixed(2);
   }
   
-  console.log('✅ Invoice totals updated:', {
+  console.log('✅ Totals updated:', {
     subtotal: subtotal.toFixed(2),
     discount: discountAmount.toFixed(2),
     tax: taxAmount.toFixed(2),
     grandTotal: grandTotal.toFixed(2)
   });
 }
+
 
 // Load Default Terms & Conditions
 function loadDefaultTerms() {
@@ -11973,6 +12005,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
