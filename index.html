@@ -7312,46 +7312,45 @@ function showInvoiceProductDropdown(rowIndex) {
 /**
  * Position dropdown next to input field (IMPROVED z-index)
  */
+/**
+ * Position dropdown SMART (ABOVE input field - FIXED)
+ */
 function positionInvoiceDropdown(rowIndex) {
   const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   
   if (!inputField || !dropdown) return;
   
-  // Get viewport and input position
   const rect = inputField.getBoundingClientRect();
-  const windowHeight = window.innerHeight;
-  
-  // Check if there's enough space below
-  const spaceBelow = windowHeight - rect.bottom;
-  const dropdownHeight = 300; // max-height of dropdown
+  const dropdownHeight = 310; // 300px + padding
+  const spaceAbove = rect.top;
   
   let topPosition;
   
-  if (spaceBelow < dropdownHeight) {
-    // Position above if not enough space below
-    topPosition = rect.top - dropdownHeight - 5;
+  // ✅ PREFER positioning ABOVE
+  if (spaceAbove > dropdownHeight) {
+    // Enough space above - position above
+    topPosition = rect.top - dropdownHeight;
+    console.log('📍 Dropdown above (enough space)');
   } else {
-    // Position below normally
+    // Not enough space above - position below
     topPosition = rect.bottom + 5;
+    console.log('📍 Dropdown below (not enough space above)');
   }
   
   dropdown.style.left = rect.left + 'px';
   dropdown.style.top = topPosition + 'px';
   dropdown.style.width = rect.width + 'px';
   dropdown.style.minWidth = '250px';
-  
-  // Force highest z-index
   dropdown.style.zIndex = '99999';
   
-  console.log('✅ Dropdown positioned:', {
+  console.log('✅ Dropdown positioned at:', {
+    position: topPosition < rect.top ? 'ABOVE' : 'BELOW',
     left: rect.left,
     top: topPosition,
-    width: rect.width,
-    zIndex: 99999
+    width: rect.width
   });
 }
-
 
 /**
  * Filter invoice products based on user input (FIXED)
@@ -11505,6 +11504,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
