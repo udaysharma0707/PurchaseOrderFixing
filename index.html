@@ -85,6 +85,48 @@ body:has(.page-view.active) .action-buttons {
     }
   }
 
+/* ✅ FIX: Dropdown visibility and z-index */
+.dropdown-menu {
+  z-index: 99999 !important;
+  position: absolute !important;
+  min-width: 200px !important;
+}
+
+.modal .dropdown-menu {
+  z-index: 1070 !important;
+  position: absolute !important;
+}
+
+.dropdown-menu.show {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure dropdown works in modals */
+.modal {
+  overflow: visible !important;
+}
+
+.modal-body {
+  overflow: visible !important;
+}
+
+.btn-group {
+  position: relative !important;
+}
+
+/* Dropdown item hover effect */
+.dropdown-item:hover {
+  background-color: #f0f0f0 !important;
+}
+
+.dropdown-item {
+  cursor: pointer !important;
+  padding: 0.5rem 1rem !important;
+}
+
+    
 
  #photoProductGrid {
   width: 100% !important;
@@ -10929,6 +10971,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
