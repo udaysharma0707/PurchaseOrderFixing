@@ -7734,6 +7734,9 @@ function collectInvoiceData() {
 /**
  * Preview Invoice with all current data
  */
+/**
+ * Preview Invoice with all current data (FIXED)
+ */
 function previewInvoice() {
   console.log('👁️ Opening invoice preview...');
   
@@ -7744,20 +7747,30 @@ function previewInvoice() {
   const dueDate = document.getElementById('invoiceDueDate')?.value || invoiceDate;
   const paymentTerms = document.getElementById('paymentTerms')?.value || 'Net 15';
   
-  // Get invoice items
+  // Get invoice items - FIX: Better row parsing
   const tbody = document.getElementById('invoiceItemsBody');
   let items = [];
   let subtotal = 0;
   
+  console.log('📋 Parsing invoice items...');
+  
   if (tbody) {
     const rows = tbody.querySelectorAll('tr');
-    rows.forEach((row) => {
-      const productInputs = row.querySelectorAll('input');
-      if (productInputs.length >= 4) {
-        const name = productInputs[0].value;
-        const qty = parseFloat(productInputs[1].value) || 0;
-        const rate = parseFloat(productInputs[2].value) || 0;
+    console.log('Found', rows.length, 'rows');
+    
+    rows.forEach((row, idx) => {
+      // Get all inputs in the row
+      const nameInput = row.querySelector('input[id^="invoiceProduct"]');
+      const qtyInput = row.querySelector('input[id^="invoiceQty"]');
+      const rateInput = row.querySelector('input[id^="invoiceRate"]');
+      
+      if (nameInput && qtyInput && rateInput) {
+        const name = nameInput.value.trim();
+        const qty = parseFloat(qtyInput.value) || 0;
+        const rate = parseFloat(rateInput.value) || 0;
         const amount = qty * rate;
+        
+        console.log('Row', idx, ':', name, 'x', qty, '@', rate, '=', amount);
         
         if (name || qty > 0) {
           items.push({
@@ -7771,6 +7784,8 @@ function previewInvoice() {
       }
     });
   }
+  
+  console.log('✅ Total items parsed:', items.length, 'Subtotal:', subtotal);
   
   // Get discount
   const discountInput = document.getElementById('invoiceDiscount');
@@ -7805,20 +7820,20 @@ function previewInvoice() {
   
   // Build items HTML
   let itemsHTML = '';
-  items.forEach((item, index) => {
-    itemsHTML += `
-      <tr>
-        <td style="text-align: center">${index + 1}</td>
-        <td>${escapeHtml(item.name)}</td>
-        <td style="text-align: center">${item.quantity}</td>
-        <td style="text-align: right">₹${item.rate.toFixed(2)}</td>
-        <td style="text-align: right">₹${item.amount.toFixed(2)}</td>
-      </tr>
-    `;
-  });
-  
-  if (!itemsHTML) {
-    itemsHTML = `<tr><td colspan="5" style="text-align: center; color: #999;">No items added to invoice</td></tr>`;
+  if (items.length > 0) {
+    items.forEach((item, index) => {
+      itemsHTML += `
+        <tr>
+          <td style="text-align: center">${index + 1}</td>
+          <td>${escapeHtml(item.name)}</td>
+          <td style="text-align: center">${item.quantity}</td>
+          <td style="text-align: right">₹${item.rate.toFixed(2)}</td>
+          <td style="text-align: right">₹${item.amount.toFixed(2)}</td>
+        </tr>
+      `;
+    });
+  } else {
+    itemsHTML = `<tr><td colspan="5" style="text-align: center; color: #999; padding: 20px;">No items added to invoice</td></tr>`;
   }
   
   // Generate HTML
@@ -7848,19 +7863,24 @@ function previewInvoice() {
           border-bottom: 2px solid #007bff;
           padding-bottom: 20px;
         }
-        .invoice-header h1 { margin: 0; color: #333; }
-        .invoice-header h3 { margin: 5px 0 0 0; color: #666; }
+        .invoice-header h1 { margin: 0; color: #333; font-size: 32px; }
+        .invoice-header h3 { margin: 5px 0 0 0; color: #666; font-size: 16px; }
         .invoice-details { 
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 20px;
+          gap: 30px;
           margin-bottom: 30px;
           padding-bottom: 20px;
           border-bottom: 1px solid #ddd;
         }
         .detail-group p {
-          margin: 5px 0;
+          margin: 8px 0;
           font-size: 14px;
+          line-height: 1.6;
+        }
+        .detail-group strong {
+          color: #333;
+          font-weight: 600;
         }
         table { 
           width: 100%; 
@@ -7871,46 +7891,57 @@ function previewInvoice() {
           border: 1px solid #ddd; 
           padding: 12px; 
           font-size: 14px;
+          text-align: left;
         }
         th { 
           background-color: #007bff;
           color: white;
           font-weight: bold;
         }
-        tr:nth-child(even) { background-color: #f9f9f9; }
+        tbody tr:nth-child(even) { background-color: #f9f9f9; }
         .totals-table {
-          width: 400px;
+          width: 450px;
           margin-left: auto;
           margin-bottom: 30px;
+          border-collapse: collapse;
         }
         .totals-table td {
           border: 1px solid #ddd;
-          padding: 10px;
+          padding: 12px;
           font-size: 14px;
         }
         .totals-table .label {
-          font-weight: bold;
+          font-weight: 600;
+          color: #333;
           width: 70%;
         }
         .totals-table .amount {
           text-align: right;
           width: 30%;
+          font-weight: 600;
+          color: #333;
         }
         .totals-table .total-row {
-          background-color: #e8f4f8;
+          background-color: #d4edda;
           font-weight: bold;
           font-size: 16px;
         }
         .notes-section {
           margin-top: 30px;
-          padding-top: 20px;
+          padding: 15px;
           border-top: 1px solid #ddd;
           font-size: 13px;
-          color: #666;
+          color: #555;
         }
         .notes-section h4 {
           margin: 0 0 10px 0;
           color: #333;
+          font-size: 14px;
+          font-weight: 600;
+        }
+        .notes-section p {
+          margin: 0;
+          line-height: 1.5;
         }
         .terms-section {
           margin-top: 20px;
@@ -7918,15 +7949,24 @@ function previewInvoice() {
           color: #666;
           white-space: pre-wrap;
           background: #f9f9f9;
-          padding: 10px;
+          padding: 15px;
           border-radius: 4px;
+          border-left: 3px solid #007bff;
+        }
+        .terms-section strong {
+          color: #333;
+          display: block;
+          margin-bottom: 10px;
+          font-size: 13px;
         }
         .print-button {
           margin-top: 30px;
           text-align: center;
+          padding-top: 20px;
+          border-top: 1px solid #ddd;
         }
         .print-button button {
-          padding: 10px 30px;
+          padding: 12px 30px;
           font-size: 14px;
           background: #28a745;
           color: white;
@@ -7934,6 +7974,8 @@ function previewInvoice() {
           border-radius: 4px;
           cursor: pointer;
           margin-right: 10px;
+          font-weight: 600;
+          transition: background 0.2s;
         }
         .print-button button:hover {
           background: #218838;
@@ -7948,6 +7990,7 @@ function previewInvoice() {
           body { background: white; padding: 0; }
           .invoice-container { box-shadow: none; }
           .print-button { display: none; }
+          .invoice-details { border-bottom: 1px solid #000; }
         }
       </style>
     </head>
@@ -7973,11 +8016,11 @@ function previewInvoice() {
         <table>
           <thead>
             <tr>
-              <th style="width: 50px">#</th>
+              <th style="width: 50px; text-align: center">#</th>
               <th>Item Description</th>
-              <th style="width: 100px">Quantity</th>
-              <th style="width: 120px">Rate</th>
-              <th style="width: 120px">Amount</th>
+              <th style="width: 100px; text-align: center">Quantity</th>
+              <th style="width: 120px; text-align: right">Rate</th>
+              <th style="width: 120px; text-align: right">Amount</th>
             </tr>
           </thead>
           <tbody>
@@ -8013,7 +8056,7 @@ function previewInvoice() {
         
         ${terms ? `
         <div class="terms-section">
-          <strong>Terms & Conditions:</strong><br><br>
+          <strong>Terms & Conditions:</strong>
           ${escapeHtml(terms)}
         </div>
         ` : ''}
@@ -8028,12 +8071,16 @@ function previewInvoice() {
   `;
   
   // Open preview
-  const previewWindow = window.open('', 'invoicePreview', 'width=900,height=1000');
-  previewWindow.document.write(invoiceHTML);
-  previewWindow.document.close();
-  
-  console.log('✅ Preview opened with invoice data');
+  const previewWindow = window.open('', 'invoicePreview', 'width=950,height=1100');
+  if (previewWindow) {
+    previewWindow.document.write(invoiceHTML);
+    previewWindow.document.close();
+    console.log('✅ Preview opened with', items.length, 'items');
+  } else {
+    alert('❌ Preview window blocked. Please allow pop-ups.');
+  }
 }
+
 
             
 
@@ -11864,6 +11911,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
