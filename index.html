@@ -7385,6 +7385,9 @@ function updateBulkCounters() {
 /**
  * Add all selected products to invoice
  */
+/**
+ * Add all selected products to invoice (FIXED)
+ */
 function addBulkProductsToInvoice() {
   const selectedArray = Object.values(selectedBulkProducts);
   
@@ -7395,37 +7398,65 @@ function addBulkProductsToInvoice() {
   
   console.log('📦 Adding', selectedArray.length, 'products to invoice');
   
+  const tbody = document.getElementById('invoiceItemsBody');
+  if (!tbody) {
+    console.error('❌ Invoice table body not found');
+    return;
+  }
+  
   // Add each product as a new row
-  selectedArray.forEach(product => {
-    addInvoiceRow();
+  selectedArray.forEach((product, index) => {
+    // Get current number of rows
+    const rowIndex = tbody.querySelectorAll('tr').length;
     
-    // Get the last row index
-    const rows = document.querySelectorAll('#invoiceItemsBody tr');
-    const lastRowIndex = rows.length - 1;
+    // Create new row element
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-index', rowIndex);
     
-    // Fill in the product details
-    const nameInput = document.getElementById(`invoiceProduct-${lastRowIndex}`);
-    const qtyInput = document.getElementById(`invoiceQty-${lastRowIndex}`);
-    const rateInput = document.getElementById(`invoiceRate-${lastRowIndex}`);
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
     
-    if (nameInput) {
-      const displayName = product.size ? `${product.name} (${product.size})` : product.name;
-      nameInput.value = displayName;
-    }
+    // ✅ Build row HTML (matching your existing table structure)
+    tr.innerHTML = `
+      <td>
+        <input type="text" class="form-control form-control-sm" 
+               id="invoiceProduct-${rowIndex}"
+               value="${escapeHtml(displayName)}" 
+               placeholder="Enter product name"
+               style="padding: 8px; font-size: 0.9rem;">
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm text-center" 
+               id="invoiceQty-${rowIndex}"
+               value="${product.qty}" min="1" placeholder="1"
+               style="font-size: 0.9rem;"
+               oninput="updateInvoiceRowTotal(${rowIndex})">
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm text-end" 
+               id="invoiceRate-${rowIndex}"
+               value="${product.price}" min="0" step="0.01" placeholder="0.00"
+               style="font-size: 0.9rem;"
+               oninput="updateInvoiceRowTotal(${rowIndex})">
+      </td>
+      <td class="text-end fw-bold" style="width: 120px; font-size: 0.9rem;">
+        <span id="invoiceRowTotal-${rowIndex}">₹${(product.qty * product.price).toFixed(2)}</span>
+      </td>
+      <td class="text-center">
+        <button type="button" class="btn btn-sm btn-link text-danger" 
+                onclick="deleteInvoiceRow(${rowIndex})"
+                style="padding: 2px 6px;">
+          ✕
+        </button>
+      </td>
+    `;
     
-    if (qtyInput) {
-      qtyInput.value = product.qty;
-    }
+    tbody.appendChild(tr);
     
-    if (rateInput) {
-      rateInput.value = product.price;
-    }
-    
-    // Update row total
-    updateInvoiceRowTotal(lastRowIndex);
-    
-    console.log('✅ Added:', product.name, 'x' + product.qty);
+    console.log('✅ Added row', rowIndex, ':', displayName, 'x' + product.qty);
   });
+  
+  // Recalculate invoice totals
+  calculateInvoiceTotal();
   
   // Clear selections
   selectedBulkProducts = {};
@@ -7436,10 +7467,7 @@ function addBulkProductsToInvoice() {
     modal.hide();
   }
   
-  // Recalculate invoice totals
-  calculateInvoiceTotal();
-  
-  console.log('✅ All products added! Closing modal...');
+  console.log('✅ All', selectedArray.length, 'products added successfully!');
 }
 
 /**
@@ -11589,6 +11617,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
