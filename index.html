@@ -2025,6 +2025,135 @@ body.modal-open {
   z-index: 1;
 }
 
+/* Mobile Responsive Invoice UI */
+@media (max-width: 768px) {
+  /* Modal adjustments */
+  .modal-content {
+    max-height: 95vh !important;
+    border-radius: 0 !important;
+  }
+  
+  .modal-header {
+    padding: 12px 15px !important;
+  }
+  
+  .modal-body {
+    padding: 12px 10px !important;
+    overflow-y: auto !important;
+  }
+  
+  /* Invoice form fields */
+  .form-control, .form-select {
+    font-size: 16px !important;
+    padding: 10px 8px !important;
+  }
+  
+  /* Invoice items table - convert to stacked layout */
+  #invoiceItemsBody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  #invoiceItemsBody tr {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #f9f9f9;
+  }
+  
+  #invoiceItemsBody td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0 !important;
+    border: none !important;
+    border-bottom: 1px solid #eee;
+  }
+  
+  #invoiceItemsBody td:last-child {
+    border-bottom: none;
+  }
+  
+  #invoiceItemsBody td:before {
+    content: attr(data-label);
+    font-weight: bold;
+    color: #333;
+    flex: 0 0 40%;
+  }
+  
+  #invoiceItemsBody td input {
+    flex: 1;
+    max-width: 100px !important;
+  }
+  
+  /* Hide table headers on mobile */
+  #invoiceItemsBody thead {
+    display: none;
+  }
+  
+  /* Invoice totals section */
+  .invoice-totals {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 14px;
+  }
+  
+  .invoice-total-row {
+    padding: 8px;
+    background: #f5f5f5;
+    border-radius: 4px;
+  }
+  
+  /* Buttons */
+  .btn {
+    font-size: 14px !important;
+    padding: 10px 12px !important;
+  }
+  
+  .modal-footer {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  
+  .modal-footer .btn {
+    flex: 0 0 calc(50% - 3px) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-body {
+    padding: 8px !important;
+  }
+  
+  #invoiceItemsBody tr {
+    padding: 8px;
+    margin-bottom: 6px;
+  }
+  
+  #invoiceItemsBody td {
+    font-size: 13px;
+    padding: 6px 0 !important;
+  }
+  
+  .invoice-total-row {
+    font-size: 12px;
+    padding: 6px;
+  }
+  
+  .btn {
+    font-size: 12px !important;
+    padding: 8px 10px !important;
+  }
+  
+  .modal-footer .btn {
+    flex: 0 0 calc(50% - 2px) !important;
+  }
+}
 
     
   </style>
@@ -7093,48 +7222,58 @@ function populateInvoiceItems() {
 /**
  * Create Invoice Row HTML with Product Autocomplete
  */
+/**
+ * Create Invoice Row HTML with Mobile Support
+ */
 function createInvoiceRow(item, index) {
   const itemName = item.size ? `${item.name} (${item.size})` : item.name;
   return `
-    <tr data-index="${index}">
-      <td>
-        <div class="product-autocomplete-container">
+    <tr data-index="${index}" style="display: table; width: 100%;">
+      <td data-label="Item Details" style="width: 100%; display: flex; flex-direction: column; padding: 8px 0; border: none;">
+        <div class="product-autocomplete-container" style="width: 100%; margin-bottom: 6px;">
           <input type="text" 
                  class="form-control form-control-sm invoice-product-name" 
                  id="invoiceProduct-${index}"
                  value="${escapeHtml(itemName)}" 
-                 placeholder="Enter product name"
+                 placeholder="Product name"
+                 style="font-size: 14px; width: 100%;"
                  oninput="filterInvoiceProducts(${index}, this.value)"
                  onfocus="showInvoiceProductDropdown(${index})"
                  autocomplete="off">
           <div class="product-autocomplete-dropdown" id="invoiceProductDropdown-${index}"></div>
         </div>
       </td>
-      <td>
+      <td data-label="Qty" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border: none;">
+        <span style="font-weight: bold;">Qty:</span>
         <input type="number" 
                class="form-control form-control-sm text-center invoice-qty" 
                id="invoiceQty-${index}"
                value="${item.quantity}" 
                min="1" 
-               placeholder="Qty"
+               style="width: 60px; font-size: 14px;"
+               placeholder="1"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
-      <td>
+      <td data-label="Price" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border: none;">
+        <span style="font-weight: bold;">Price:</span>
         <input type="number" 
                class="form-control form-control-sm text-end invoice-rate" 
                id="invoiceRate-${index}"
                value="${item.rate}" 
                min="0" 
-               step="0.01" 
-               placeholder="Price"
+               step="0.01"
+               style="width: 80px; font-size: 14px;"
+               placeholder="0"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
-      <td class="text-end fw-bold invoice-row-total">
-        ₹${(item.quantity * item.rate).toFixed(2)}
+      <td data-label="Amount" style="width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border: none; font-weight: bold;">
+        <span>Total:</span>
+        <span class="invoice-row-total">₹${(item.quantity * item.rate).toFixed(2)}</span>
       </td>
-      <td class="text-center">
+      <td style="width: 100%; display: flex; justify-content: flex-end; align-items: center; padding: 8px 0; border: none;">
         <button type="button" class="btn btn-sm btn-link text-danger" 
-                onclick="deleteInvoiceRow(${index})">
+                onclick="deleteInvoiceRow(${index})"
+                style="padding: 4px 8px;">
           <i class="bi bi-x-lg"></i>
         </button>
       </td>
@@ -7315,6 +7454,9 @@ function showInvoiceProductDropdown(rowIndex) {
 /**
  * Position dropdown SMART (ABOVE input field - FIXED)
  */
+/**
+ * Position dropdown for mobile and desktop
+ */
 function positionInvoiceDropdown(rowIndex) {
   const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
@@ -7322,35 +7464,30 @@ function positionInvoiceDropdown(rowIndex) {
   if (!inputField || !dropdown) return;
   
   const rect = inputField.getBoundingClientRect();
-  const dropdownHeight = 310; // 300px + padding
-  const spaceAbove = rect.top;
+  const isMobile = window.innerWidth < 768;
   
-  let topPosition;
-  
-  // ✅ PREFER positioning ABOVE
-  if (spaceAbove > dropdownHeight) {
-    // Enough space above - position above
-    topPosition = rect.top - dropdownHeight;
-    console.log('📍 Dropdown above (enough space)');
+  if (isMobile) {
+    // Mobile: position below, let it scroll
+    dropdown.style.position = 'absolute';
+    dropdown.style.left = '0';
+    dropdown.style.top = (rect.height + 2) + 'px';
+    dropdown.style.width = '100%';
+    dropdown.style.zIndex = '10000';
+    dropdown.style.maxHeight = '200px';
   } else {
-    // Not enough space above - position below
-    topPosition = rect.bottom + 5;
-    console.log('📍 Dropdown below (not enough space above)');
+    // Desktop: position above
+    const topPosition = rect.top - 310;
+    dropdown.style.position = 'fixed';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.top = topPosition + 'px';
+    dropdown.style.width = rect.width + 'px';
+    dropdown.style.zIndex = '99999';
+    dropdown.style.maxHeight = '300px';
   }
   
-  dropdown.style.left = rect.left + 'px';
-  dropdown.style.top = topPosition + 'px';
-  dropdown.style.width = rect.width + 'px';
-  dropdown.style.minWidth = '250px';
-  dropdown.style.zIndex = '99999';
-  
-  console.log('✅ Dropdown positioned at:', {
-    position: topPosition < rect.top ? 'ABOVE' : 'BELOW',
-    left: rect.left,
-    top: topPosition,
-    width: rect.width
-  });
+  console.log('✅ Dropdown positioned for', isMobile ? 'mobile' : 'desktop');
 }
+
 
 /**
  * Filter invoice products based on user input (FIXED)
@@ -11504,6 +11641,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
