@@ -1952,26 +1952,27 @@ body.modal-open {
     transform: translateX(-50%);
   }
 }
-/* Product Name Autocomplete Dropdown - FIXED POSITIONING (breaks out of table) */
+/* Product Name Autocomplete Dropdown - ABSOLUTE (stays attached during scroll) */
 .product-autocomplete-container {
   position: relative;
-  z-index: 1;
+  z-index: 10;
 }
 
 .product-autocomplete-dropdown {
-  position: fixed !important;
+  position: absolute !important;
+  top: 100%;
+  left: 0;
+  right: 0;
   max-height: 280px;
-  min-width: 200px;
   overflow-y: auto !important;
   background: white;
   border: 2px solid #0066cc;
   border-radius: 4px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  z-index: 9999 !important;
+  z-index: 10000 !important;
   display: none;
   pointer-events: auto !important;
-  top: auto !important;
-  left: auto !important;
+  margin-top: 2px;
 }
 
 .product-autocomplete-item {
@@ -1981,14 +1982,10 @@ body.modal-open {
   font-size: 0.9rem;
   transition: background-color 0.2s;
   user-select: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .product-autocomplete-item:hover {
   background-color: #e3f2fd;
-  padding-left: 14px;
 }
 
 .product-autocomplete-item:last-child {
@@ -2000,17 +1997,11 @@ body.modal-open {
   display: block;
   font-size: 0.75rem;
   margin-top: 2px;
-  white-space: normal;
 }
 
-/* Scrollbar styling */
+/* Scrollbar */
 .product-autocomplete-dropdown::-webkit-scrollbar {
   width: 6px;
-}
-
-.product-autocomplete-dropdown::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
 }
 
 .product-autocomplete-dropdown::-webkit-scrollbar-thumb {
@@ -2018,25 +2009,13 @@ body.modal-open {
   border-radius: 3px;
 }
 
-.product-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
-  background: #0052a3;
-}
-
-/* Mobile optimizations */
+/* Mobile */
 @media (max-width: 768px) {
   .product-autocomplete-dropdown {
     max-height: 200px;
-    font-size: 0.85rem;
-  }
-  
-  .product-autocomplete-item {
-    padding: 8px 10px;
-  }
-  
-  .product-autocomplete-item small {
-    font-size: 0.7rem;
   }
 }
+
 
 
     
@@ -7285,14 +7264,15 @@ function loadDefaultTerms() {
 /**
  * Show invoice product dropdown with scroll tracking
  */
+/**
+ * Show invoice product dropdown
+ */
 function showInvoiceProductDropdown(rowIndex) {
   console.log('📋 Showing dropdown for row', rowIndex);
   
-  // Close all other dropdowns first
-  document.querySelectorAll('.product-autocomplete-dropdown').forEach((dropdown, index) => {
-    if (index !== rowIndex) {
-      dropdown.style.display = 'none';
-    }
+  // Close all other dropdowns
+  document.querySelectorAll('.product-autocomplete-dropdown').forEach((dropdown) => {
+    dropdown.style.display = 'none';
   });
   
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
@@ -7303,14 +7283,12 @@ function showInvoiceProductDropdown(rowIndex) {
     return;
   }
   
-  // Get all products
   const products = cachedProducts || [];
   
   if (products.length === 0) {
     dropdown.innerHTML = '<div class="product-autocomplete-item">No products available</div>';
     dropdown.style.display = 'block';
     positionInvoiceDropdown(rowIndex);
-    attachDropdownToScrolling(rowIndex);
     return;
   }
   
@@ -7332,9 +7310,8 @@ function showInvoiceProductDropdown(rowIndex) {
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
   positionInvoiceDropdown(rowIndex);
-  attachDropdownToScrolling(rowIndex);  // ✅ ADDED
   
-  console.log('✅ Dropdown shown with', products.length, 'products');
+  console.log('✅ Dropdown shown');
 }
 
 
@@ -7368,40 +7345,32 @@ function attachDropdownToScrolling(rowIndex) {
 /**
  * Position dropdown using FIXED positioning (breaks out of table)
  */
+/**
+ * Position dropdown ABSOLUTE (attached to field, scrolls with modal)
+ */
 function positionInvoiceDropdown(rowIndex) {
-  const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   
-  if (!inputField || !dropdown) {
-    console.warn('❌ Input or dropdown not found for row', rowIndex);
-    return;
-  }
+  if (!dropdown) return;
   
-  // Get input field position in viewport
-  const rect = inputField.getBoundingClientRect();
+  // Absolute positioning relative to container
+  dropdown.style.position = 'absolute';
+  dropdown.style.top = '100%';
+  dropdown.style.left = '0';
+  dropdown.style.right = '0';
+  dropdown.style.zIndex = '10000';
   
-  // Position dropdown below input field
-  dropdown.style.position = 'fixed';
-  dropdown.style.top = (rect.bottom + 5) + 'px';
-  dropdown.style.left = rect.left + 'px';
-  dropdown.style.width = (rect.width) + 'px';
-  dropdown.style.zIndex = '9999';
-  dropdown.style.maxWidth = 'calc(100vw - 20px)'; // Don't overflow screen
-  
-  console.log('✅ Dropdown positioned FIXED below input (breaks out of table)');
-  console.log('📍 Position:', {
-    top: rect.bottom + 5,
-    left: rect.left,
-    width: rect.width
-  });
+  console.log('✅ Dropdown positioned ABSOLUTE (attached to field)');
 }
-
 
 /**
  * Filter invoice products based on user input
  */
 /**
  * Filter invoice products based on user input
+ */
+/**
+ * Filter invoice products
  */
 function filterInvoiceProducts(rowIndex, query) {
   console.log('🔍 Filtering for:', query);
@@ -7416,29 +7385,22 @@ function filterInvoiceProducts(rowIndex, query) {
     return;
   }
   
-  // Filter products
   const products = cachedProducts || [];
   const filtered = products.filter(product => {
     const name = product.name.toLowerCase();
     const brand = (product.brand || '').toLowerCase();
     const category = (product.category || '').toLowerCase();
     
-    return name.includes(query) || 
-           brand.includes(query) || 
-           category.includes(query);
+    return name.includes(query) || brand.includes(query) || category.includes(query);
   });
-  
-  console.log('📊 Filtered:', filtered.length, 'products');
   
   if (filtered.length === 0) {
     dropdown.innerHTML = '<div class="product-autocomplete-item">No matching products</div>';
     dropdown.style.display = 'block';
     positionInvoiceDropdown(rowIndex);
-    attachDropdownToScrolling(rowIndex);  // ✅ ADDED
     return;
   }
   
-  // Show filtered products
   let html = '';
   filtered.forEach(product => {
     const displayName = product.size ? `${product.name} (${product.size})` : product.name;
@@ -7456,9 +7418,7 @@ function filterInvoiceProducts(rowIndex, query) {
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
   positionInvoiceDropdown(rowIndex);
-  attachDropdownToScrolling(rowIndex);  // ✅ ADDED
 }
-
 
 /**
  * Select a product from dropdown
@@ -11566,6 +11526,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
