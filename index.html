@@ -7099,37 +7099,97 @@ function addInvoiceRow() {
   tbody.innerHTML += createInvoiceRow(newItem, index);
 }
 
-// Calculate Invoice Total
+/**
+ * Calculate and update invoice totals (Subtotal, Discount, Tax, Grand Total)
+ */
 function calculateInvoiceTotal() {
-  let subtotal = 0;
-  document.querySelectorAll('#invoiceItemsBody tr').forEach(row => {
-    const qty = parseFloat(row.querySelector('.invoice-qty')?.value) || 0;
-    const rate = parseFloat(row.querySelector('.invoice-rate')?.value) || 0;
-    subtotal += qty * rate;
-  });
+  console.log('📊 Calculating invoice totals...');
   
-  document.getElementById('invoiceSubtotal').textContent = formatCurrency(subtotal);
-  
-  const discountValue = parseFloat(document.getElementById('invoiceDiscount').value) || 0;
-  const discountType = document.getElementById('invoiceDiscountType').value;
-  let discount = 0;
-  
-  if (discountType === 'amount') {
-    discount = discountValue;
-  } else {
-    discount = (subtotal * discountValue) / 100;
+  const tbody = document.getElementById('invoiceItemsBody');
+  if (!tbody) {
+    console.warn('⚠️ Invoice table not found');
+    return;
   }
   
-  document.getElementById('invoiceDiscountAmount').textContent = '-' + formatCurrency(discount);
+  // Calculate subtotal from all rows
+  let subtotal = 0;
+  const rows = tbody.querySelectorAll('tr');
   
-  const taxRate = parseFloat(document.getElementById('invoiceTaxRate').value) || 0;
-  const taxableAmount = subtotal - discount;
-  const tax = (taxableAmount * taxRate) / 100;
+  rows.forEach((row, index) => {
+    const qtyInput = row.querySelector(`input[id$="-${index}"][type="number"][id*="invoiceQty"]`);
+    const rateInput = row.querySelector(`input[id$="-${index}"][type="number"][id*="invoiceRate"]`);
+    const totalSpan = row.querySelector(`span[id^="invoiceRowTotal"]`);
+    
+    if (qtyInput && rateInput) {
+      const qty = parseFloat(qtyInput.value) || 0;
+      const rate = parseFloat(rateInput.value) || 0;
+      const rowTotal = qty * rate;
+      subtotal += rowTotal;
+      
+      // Update row total display
+      if (totalSpan) {
+        totalSpan.textContent = '₹' + rowTotal.toFixed(2);
+      }
+    }
+  });
   
-  document.getElementById('invoiceTaxAmount').textContent = formatCurrency(tax);
+  // Get discount
+  const discountInput = document.getElementById('invoiceDiscount');
+  const discountTypeSelect = document.getElementById('invoiceDiscountType');
+  let discountAmount = 0;
   
-  const grandTotal = taxableAmount + tax;
-  document.getElementById('invoiceGrandTotal').textContent = formatCurrency(grandTotal);
+  if (discountInput && discountTypeSelect) {
+    const discountValue = parseFloat(discountInput.value) || 0;
+    const discountType = discountTypeSelect.value;
+    
+    if (discountType === 'percent') {
+      discountAmount = (subtotal * discountValue) / 100;
+    } else {
+      discountAmount = discountValue;
+    }
+  }
+  
+  // Get tax rate
+  const taxSelect = document.getElementById('invoiceTaxRate');
+  let taxRate = 0;
+  
+  if (taxSelect) {
+    taxRate = parseFloat(taxSelect.value) || 0;
+  }
+  
+  // Calculate amounts
+  const afterDiscount = subtotal - discountAmount;
+  const taxAmount = (afterDiscount * taxRate) / 100;
+  const grandTotal = afterDiscount + taxAmount;
+  
+  // Update display elements
+  const subtotalSpan = document.getElementById('invoiceSubtotal');
+  const discountAmountSpan = document.getElementById('invoiceDiscountAmount');
+  const taxAmountSpan = document.getElementById('invoiceTaxAmount');
+  const grandTotalSpan = document.getElementById('invoiceGrandTotal');
+  
+  if (subtotalSpan) {
+    subtotalSpan.textContent = '₹' + subtotal.toFixed(2);
+  }
+  
+  if (discountAmountSpan) {
+    discountAmountSpan.textContent = '-₹' + discountAmount.toFixed(2);
+  }
+  
+  if (taxAmountSpan) {
+    taxAmountSpan.textContent = '₹' + taxAmount.toFixed(2);
+  }
+  
+  if (grandTotalSpan) {
+    grandTotalSpan.textContent = '₹' + grandTotal.toFixed(2);
+  }
+  
+  console.log('✅ Totals Updated:', {
+    subtotal: subtotal.toFixed(2),
+    discount: discountAmount.toFixed(2),
+    tax: taxAmount.toFixed(2),
+    grandTotal: grandTotal.toFixed(2)
+  });
 }
 
 // Load Default Terms & Conditions
@@ -7388,6 +7448,9 @@ function updateBulkCounters() {
 /**
  * Add all selected products to invoice (FIXED)
  */
+/**
+ * Add all selected products to invoice
+ */
 function addBulkProductsToInvoice() {
   const selectedArray = Object.values(selectedBulkProducts);
   
@@ -7429,14 +7492,14 @@ function addBulkProductsToInvoice() {
                id="invoiceQty-${rowIndex}"
                value="${product.qty}" min="1" placeholder="1"
                style="font-size: 0.9rem;"
-               oninput="updateInvoiceRowTotal(${rowIndex})">
+               oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();">
       </td>
       <td>
         <input type="number" class="form-control form-control-sm text-end" 
                id="invoiceRate-${rowIndex}"
                value="${product.price}" min="0" step="0.01" placeholder="0.00"
                style="font-size: 0.9rem;"
-               oninput="updateInvoiceRowTotal(${rowIndex})">
+               oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();">
       </td>
       <td class="text-end fw-bold" style="width: 120px; font-size: 0.9rem;">
         <span id="invoiceRowTotal-${rowIndex}">₹${(product.qty * product.price).toFixed(2)}</span>
@@ -7455,8 +7518,11 @@ function addBulkProductsToInvoice() {
     console.log('✅ Added row', rowIndex, ':', displayName, 'x' + product.qty);
   });
   
-  // Recalculate invoice totals
-  calculateInvoiceTotal();
+  // ✅ Calculate totals AFTER all rows added
+  setTimeout(() => {
+    calculateInvoiceTotal();
+    console.log('✅ Invoice totals calculated');
+  }, 50);
   
   // Clear selections
   selectedBulkProducts = {};
@@ -7469,6 +7535,7 @@ function addBulkProductsToInvoice() {
   
   console.log('✅ All', selectedArray.length, 'products added successfully!');
 }
+
 
 /**
  * Helper: Escape HTML characters
@@ -7664,128 +7731,308 @@ function collectInvoiceData() {
 }
 
 
-// Preview Invoice
+/**
+ * Preview Invoice with all current data
+ */
 function previewInvoice() {
-  const invoiceData = collectInvoiceData();
+  console.log('👁️ Opening invoice preview...');
   
-  if (!invoiceData.customerName) {
-    alert('⚠️ Please enter customer name');
-    return;
+  // Collect invoice data
+  const customerName = document.getElementById('invoiceCustomerName')?.value || 'Customer';
+  const invoiceNumber = document.getElementById('invoiceNumber')?.value || 'INV-0000';
+  const invoiceDate = document.getElementById('invoiceDate')?.value || new Date().toISOString().split('T')[0];
+  const dueDate = document.getElementById('invoiceDueDate')?.value || invoiceDate;
+  const paymentTerms = document.getElementById('paymentTerms')?.value || 'Net 15';
+  
+  // Get invoice items
+  const tbody = document.getElementById('invoiceItemsBody');
+  let items = [];
+  let subtotal = 0;
+  
+  if (tbody) {
+    const rows = tbody.querySelectorAll('tr');
+    rows.forEach((row) => {
+      const productInputs = row.querySelectorAll('input');
+      if (productInputs.length >= 4) {
+        const name = productInputs[0].value;
+        const qty = parseFloat(productInputs[1].value) || 0;
+        const rate = parseFloat(productInputs[2].value) || 0;
+        const amount = qty * rate;
+        
+        if (name || qty > 0) {
+          items.push({
+            name: name,
+            quantity: qty,
+            rate: rate,
+            amount: amount
+          });
+          subtotal += amount;
+        }
+      }
+    });
   }
   
-  const invoiceHTML = generateInvoiceHTML(invoiceData);
+  // Get discount
+  const discountInput = document.getElementById('invoiceDiscount');
+  const discountTypeSelect = document.getElementById('invoiceDiscountType');
+  let discountAmount = 0;
   
-  const previewWindow = window.open('', 'Invoice Preview', 'width=800,height=600');
-  previewWindow.document.write(invoiceHTML);
-  previewWindow.document.close();
-}
-
-// Generate Invoice HTML for Preview/Print
-function generateInvoiceHTML(data) {
-  let itemsHTML = '';
-  data.items.forEach((item, index) => {
-    if (item.name || item.quantity > 0) { // Only show non-empty rows
-      itemsHTML += `
-        <tr>
-          <td style="text-align: center">${index + 1}</td>
-          <td>${escapeHtml(item.name)}</td>
-          <td style="text-align: center">${item.quantity}</td>
-          <td style="text-align: right">₹${item.rate.toFixed(2)}</td>
-          <td style="text-align: right">₹${item.amount.toFixed(2)}</td>
-        </tr>
-      `;
+  if (discountInput && discountTypeSelect) {
+    const discountValue = parseFloat(discountInput.value) || 0;
+    const discountType = discountTypeSelect.value;
+    
+    if (discountType === 'percent') {
+      discountAmount = (subtotal * discountValue) / 100;
+    } else {
+      discountAmount = discountValue;
     }
+  }
+  
+  // Get tax
+  const taxSelect = document.getElementById('invoiceTaxRate');
+  let taxRate = 0;
+  if (taxSelect) {
+    taxRate = parseFloat(taxSelect.value) || 0;
+  }
+  
+  const afterDiscount = subtotal - discountAmount;
+  const tax = (afterDiscount * taxRate) / 100;
+  const grandTotal = afterDiscount + tax;
+  
+  // Get notes and terms
+  const notes = document.getElementById('invoiceNotes')?.value || '';
+  const terms = document.getElementById('invoiceTerms')?.value || '';
+  
+  // Build items HTML
+  let itemsHTML = '';
+  items.forEach((item, index) => {
+    itemsHTML += `
+      <tr>
+        <td style="text-align: center">${index + 1}</td>
+        <td>${escapeHtml(item.name)}</td>
+        <td style="text-align: center">${item.quantity}</td>
+        <td style="text-align: right">₹${item.rate.toFixed(2)}</td>
+        <td style="text-align: right">₹${item.amount.toFixed(2)}</td>
+      </tr>
+    `;
   });
   
-  // ✅ If no items, show a message
   if (!itemsHTML) {
     itemsHTML = `<tr><td colspan="5" style="text-align: center; color: #999;">No items added to invoice</td></tr>`;
   }
   
-  return `
+  // Generate HTML
+  const invoiceHTML = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Invoice ${data.invoiceNumber}</title>
+      <title>Invoice ${invoiceNumber}</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 40px; }
-        .invoice-header { text-align: center; margin-bottom: 30px; }
-        .invoice-details { margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; }
-        th { background-color: #f8f9fa; }
-        .text-right { text-align: right; }
-        .total-row { font-weight: bold; background-color: #e9ecef; }
+        body { 
+          font-family: Arial, sans-serif; 
+          padding: 40px; 
+          background: #f5f5f5;
+          margin: 0;
+        }
+        .invoice-container {
+          background: white;
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .invoice-header { 
+          text-align: center; 
+          margin-bottom: 30px;
+          border-bottom: 2px solid #007bff;
+          padding-bottom: 20px;
+        }
+        .invoice-header h1 { margin: 0; color: #333; }
+        .invoice-header h3 { margin: 5px 0 0 0; color: #666; }
+        .invoice-details { 
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 20px;
+          margin-bottom: 30px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid #ddd;
+        }
+        .detail-group p {
+          margin: 5px 0;
+          font-size: 14px;
+        }
+        table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-bottom: 20px; 
+        }
+        th, td { 
+          border: 1px solid #ddd; 
+          padding: 12px; 
+          font-size: 14px;
+        }
+        th { 
+          background-color: #007bff;
+          color: white;
+          font-weight: bold;
+        }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .totals-table {
+          width: 400px;
+          margin-left: auto;
+          margin-bottom: 30px;
+        }
+        .totals-table td {
+          border: 1px solid #ddd;
+          padding: 10px;
+          font-size: 14px;
+        }
+        .totals-table .label {
+          font-weight: bold;
+          width: 70%;
+        }
+        .totals-table .amount {
+          text-align: right;
+          width: 30%;
+        }
+        .totals-table .total-row {
+          background-color: #e8f4f8;
+          font-weight: bold;
+          font-size: 16px;
+        }
+        .notes-section {
+          margin-top: 30px;
+          padding-top: 20px;
+          border-top: 1px solid #ddd;
+          font-size: 13px;
+          color: #666;
+        }
+        .notes-section h4 {
+          margin: 0 0 10px 0;
+          color: #333;
+        }
+        .terms-section {
+          margin-top: 20px;
+          font-size: 12px;
+          color: #666;
+          white-space: pre-wrap;
+          background: #f9f9f9;
+          padding: 10px;
+          border-radius: 4px;
+        }
+        .print-button {
+          margin-top: 30px;
+          text-align: center;
+        }
+        .print-button button {
+          padding: 10px 30px;
+          font-size: 14px;
+          background: #28a745;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-right: 10px;
+        }
+        .print-button button:hover {
+          background: #218838;
+        }
+        .print-button button.close-btn {
+          background: #6c757d;
+        }
+        .print-button button.close-btn:hover {
+          background: #5a6268;
+        }
         @media print {
-          button { display: none; }
+          body { background: white; padding: 0; }
+          .invoice-container { box-shadow: none; }
+          .print-button { display: none; }
         }
       </style>
     </head>
     <body>
-      <div class="invoice-header">
-        <h1>INVOICE</h1>
-        <h3>Tile & Sanitaryware Inventory</h3>
-      </div>
-      
-      <div class="invoice-details">
-        <p><strong>Invoice Number:</strong> ${data.invoiceNumber}</p>
-        <p><strong>Customer Name:</strong> ${data.customerName}</p>
-        <p><strong>Invoice Date:</strong> ${new Date(data.invoiceDate).toLocaleDateString('en-IN')}</p>
-        <p><strong>Due Date:</strong> ${new Date(data.dueDate).toLocaleDateString('en-IN')}</p>
-      </div>
-      
-      <table>
-        <thead>
+      <div class="invoice-container">
+        <div class="invoice-header">
+          <h1>INVOICE</h1>
+          <h3>Tile & Sanitaryware Inventory</h3>
+        </div>
+        
+        <div class="invoice-details">
+          <div class="detail-group">
+            <p><strong>Invoice Number:</strong> ${invoiceNumber}</p>
+            <p><strong>Invoice Date:</strong> ${new Date(invoiceDate).toLocaleDateString('en-IN')}</p>
+            <p><strong>Payment Terms:</strong> ${paymentTerms}</p>
+          </div>
+          <div class="detail-group">
+            <p><strong>Customer Name:</strong> ${escapeHtml(customerName)}</p>
+            <p><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString('en-IN')}</p>
+          </div>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50px">#</th>
+              <th>Item Description</th>
+              <th style="width: 100px">Quantity</th>
+              <th style="width: 120px">Rate</th>
+              <th style="width: 120px">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHTML}
+          </tbody>
+        </table>
+        
+        <table class="totals-table">
           <tr>
-            <th style="width: 50px">#</th>
-            <th>Item Description</th>
-            <th style="width: 100px">Quantity</th>
-            <th style="width: 120px">Rate</th>
-            <th style="width: 120px">Amount</th>
+            <td class="label">Sub Total:</td>
+            <td class="amount">₹${subtotal.toFixed(2)}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${itemsHTML}
-        </tbody>
-      </table>
-      
-      <table style="width: 400px; margin-left: auto">
-        <tr>
-          <td>Sub Total:</td>
-          <td class="text-right">₹${data.subtotal.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td>Discount:</td>
-          <td class="text-right">-₹${data.discount.toFixed(2)}</td>
-        </tr>
-        <tr>
-          <td>Tax:</td>
-          <td class="text-right">₹${data.tax.toFixed(2)}</td>
-        </tr>
-        <tr class="total-row">
-          <td>Grand Total:</td>
-          <td class="text-right">₹${data.total.toFixed(2)}</td>
-        </tr>
-      </table>
-      
-      <div style="margin-top: 30px">
-        <p><strong>Customer Notes:</strong></p>
-        <p>${data.notes || 'N/A'}</p>
-      </div>
-      
-      <div style="margin-top: 20px">
-        <p><strong>Terms & Conditions:</strong></p>
-        <p style="white-space: pre-line">${data.terms || 'N/A'}</p>
-      </div>
-      
-      <div style="margin-top: 40px; text-align: center">
-        <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; cursor: pointer">
-          Print Invoice
-        </button>
+          <tr>
+            <td class="label">Discount:</td>
+            <td class="amount">-₹${discountAmount.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td class="label">Tax (${taxRate}%):</td>
+            <td class="amount">₹${tax.toFixed(2)}</td>
+          </tr>
+          <tr class="total-row">
+            <td class="label">Grand Total:</td>
+            <td class="amount">₹${grandTotal.toFixed(2)}</td>
+          </tr>
+        </table>
+        
+        ${notes ? `
+        <div class="notes-section">
+          <h4>Customer Notes</h4>
+          <p>${escapeHtml(notes)}</p>
+        </div>
+        ` : ''}
+        
+        ${terms ? `
+        <div class="terms-section">
+          <strong>Terms & Conditions:</strong><br><br>
+          ${escapeHtml(terms)}
+        </div>
+        ` : ''}
+        
+        <div class="print-button">
+          <button onclick="window.print()">🖨️ Print Invoice</button>
+          <button class="close-btn" onclick="window.close()">✕ Close</button>
+        </div>
       </div>
     </body>
     </html>
   `;
+  
+  // Open preview
+  const previewWindow = window.open('', 'invoicePreview', 'width=900,height=1000');
+  previewWindow.document.write(invoiceHTML);
+  previewWindow.document.close();
+  
+  console.log('✅ Preview opened with invoice data');
 }
 
             
@@ -11617,6 +11864,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
