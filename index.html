@@ -1953,36 +1953,39 @@ body.modal-open {
   }
 }
 
-/* Product Name Autocomplete Dropdown */
+/* Product Name Autocomplete Dropdown - FIXED Z-index */
 .product-autocomplete-container {
   position: relative;
-  z-index: 1;
+  z-index: 10 !important;
 }
 
 .product-autocomplete-dropdown {
   position: fixed !important;
-  max-height: 250px;
-  min-width: 200px;
+  max-height: 300px;
+  min-width: 250px;
   overflow-y: auto !important;
   background: white;
   border: 2px solid #0066cc;
   border-radius: 4px;
-  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  z-index: 9999 !important;
+  box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+  z-index: 99999 !important;
   display: none;
   background-color: #fff;
+  pointer-events: auto !important;
 }
 
 .product-autocomplete-item {
-  padding: 10px 12px;
+  padding: 12px 12px;
   cursor: pointer;
   border-bottom: 1px solid #f0f0f0;
   font-size: 0.9rem;
   transition: background-color 0.2s;
+  user-select: none;
 }
 
 .product-autocomplete-item:hover {
   background-color: #e3f2fd;
+  padding-left: 14px;
 }
 
 .product-autocomplete-item:last-child {
@@ -1993,27 +1996,35 @@ body.modal-open {
   color: #666;
   display: block;
   font-size: 0.75rem;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 
 /* Scrollbar styling */
 .product-autocomplete-dropdown::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 .product-autocomplete-dropdown::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 .product-autocomplete-dropdown::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 3px;
+  background: #0066cc;
+  border-radius: 4px;
 }
 
 .product-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
-  background: #555;
+  background: #0052a3;
 }
+
+/* Ensure modal body doesn't clip dropdown */
+.modal-body {
+  overflow: visible !important;
+  position: relative;
+  z-index: 1;
+}
+
 
     
   </style>
@@ -7243,8 +7254,18 @@ function loadDefaultTerms() {
 /**
  * Show invoice product dropdown with all products (FIXED positioning)
  */
+/**
+ * Show invoice product dropdown with all products (FIXED - closes others first)
+ */
 function showInvoiceProductDropdown(rowIndex) {
   console.log('📋 Showing product dropdown for row', rowIndex);
+  
+  // ✅ FIXED: Close all other dropdowns first
+  document.querySelectorAll('.product-autocomplete-dropdown').forEach((dropdown, index) => {
+    if (index !== rowIndex) {
+      dropdown.style.display = 'none';
+    }
+  });
   
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
@@ -7288,24 +7309,49 @@ function showInvoiceProductDropdown(rowIndex) {
 /**
  * Position dropdown next to input field (FIXED)
  */
+/**
+ * Position dropdown next to input field (IMPROVED z-index)
+ */
 function positionInvoiceDropdown(rowIndex) {
   const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   
   if (!inputField || !dropdown) return;
   
+  // Get viewport and input position
   const rect = inputField.getBoundingClientRect();
+  const windowHeight = window.innerHeight;
+  
+  // Check if there's enough space below
+  const spaceBelow = windowHeight - rect.bottom;
+  const dropdownHeight = 300; // max-height of dropdown
+  
+  let topPosition;
+  
+  if (spaceBelow < dropdownHeight) {
+    // Position above if not enough space below
+    topPosition = rect.top - dropdownHeight - 5;
+  } else {
+    // Position below normally
+    topPosition = rect.bottom + 5;
+  }
   
   dropdown.style.left = rect.left + 'px';
-  dropdown.style.top = (rect.bottom + 5) + 'px';
-  dropdown.style.width = (rect.width) + 'px';
+  dropdown.style.top = topPosition + 'px';
+  dropdown.style.width = rect.width + 'px';
+  dropdown.style.minWidth = '250px';
   
-  console.log('✅ Dropdown positioned at:', {
+  // Force highest z-index
+  dropdown.style.zIndex = '99999';
+  
+  console.log('✅ Dropdown positioned:', {
     left: rect.left,
-    top: rect.bottom + 5,
-    width: rect.width
+    top: topPosition,
+    width: rect.width,
+    zIndex: 99999
   });
 }
+
 
 /**
  * Filter invoice products based on user input (FIXED)
@@ -11459,6 +11505,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
