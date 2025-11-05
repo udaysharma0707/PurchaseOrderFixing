@@ -2237,24 +2237,36 @@ body.modal-open {
   </nav>
 
 
-  <div class="container-fluid py-4">
-    <!-- Actions -->
-    <div class="row mb-4">
-      <div class="text-center my-3">
-  <button class="btn btn-success me-2" onclick="showAddProduct()">
-    <i class="bi bi-plus-circle"></i> Add Product
-  </button>
-  
-  <!-- âœ… NEW: Photo Product Button -->
-  <button class="btn btn-primary me-2" onclick="openPhotoProductModal()">
-    <i class="bi bi-camera"></i> Product by Photo
-  </button>
-  
-  <button class="btn btn-info" onclick="openSalesModal()">
-    <i class="bi bi-cart"></i> Record Sale
-  </button>
+ <div class="container-fluid py-4">
+  <!-- Actions -->
+  <div class="row mb-4">
+    <div class="text-center my-3">
+      
+      <!-- Add Product Button -->
+      <button class="btn btn-success me-2" onclick="showAddProduct()">
+        <i class="bi bi-plus-circle"></i> Add Product
+      </button>
+      
+      <!-- Product by Photo Button -->
+      <button class="btn btn-primary me-2" onclick="openPhotoProductModal()">
+        <i class="bi bi-camera"></i> Product by Photo
+      </button>
+      
+      <!-- Record Sale Button -->
+      <button class="btn btn-info me-2" onclick="openSalesModal()">
+        <i class="bi bi-cart"></i> Record Sale
+      </button>
+      
+      <!-- ✅ NEW: Generate Invoice Button -->
+      <button class="btn btn-warning" onclick="generateInvoice()">
+        <i class="bi bi-receipt"></i> Generate Invoice
+      </button>
+      
+    </div>
+  </div>
 </div>
 
+      
 
  <!-- Summary - 2 Columns Mobile (FIXED) -->
 <div class="row mb-4" style="gap: 0.5rem;">
@@ -11042,6 +11054,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
