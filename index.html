@@ -7282,6 +7282,9 @@ function loadDefaultTerms() {
 /**
  * Show invoice product dropdown with all products
  */
+/**
+ * Show invoice product dropdown with scroll tracking
+ */
 function showInvoiceProductDropdown(rowIndex) {
   console.log('📋 Showing dropdown for row', rowIndex);
   
@@ -7307,6 +7310,7 @@ function showInvoiceProductDropdown(rowIndex) {
     dropdown.innerHTML = '<div class="product-autocomplete-item">No products available</div>';
     dropdown.style.display = 'block';
     positionInvoiceDropdown(rowIndex);
+    attachDropdownToScrolling(rowIndex);
     return;
   }
   
@@ -7328,10 +7332,38 @@ function showInvoiceProductDropdown(rowIndex) {
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
   positionInvoiceDropdown(rowIndex);
+  attachDropdownToScrolling(rowIndex);  // ✅ ADDED
   
   console.log('✅ Dropdown shown with', products.length, 'products');
 }
 
+
+      /**
+ * Keep dropdown attached to field while scrolling
+ */
+function attachDropdownToScrolling(rowIndex) {
+  const modalBody = document.querySelector('.modal-body');
+  
+  if (!modalBody) return;
+  
+  modalBody.addEventListener('scroll', function() {
+    const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
+    const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
+    
+    if (!inputField || !dropdown || dropdown.style.display === 'none') {
+      return;
+    }
+    
+    // Recalculate position on scroll
+    const rect = inputField.getBoundingClientRect();
+    
+    dropdown.style.position = 'fixed';
+    dropdown.style.top = (rect.bottom + 5) + 'px';
+    dropdown.style.left = rect.left + 'px';
+    dropdown.style.width = rect.width + 'px';
+    dropdown.style.zIndex = '9999';
+  }, { passive: true });
+}
 
 /**
  * Position dropdown using FIXED positioning (breaks out of table)
@@ -7368,6 +7400,9 @@ function positionInvoiceDropdown(rowIndex) {
 /**
  * Filter invoice products based on user input
  */
+/**
+ * Filter invoice products based on user input
+ */
 function filterInvoiceProducts(rowIndex, query) {
   console.log('🔍 Filtering for:', query);
   
@@ -7399,6 +7434,7 @@ function filterInvoiceProducts(rowIndex, query) {
     dropdown.innerHTML = '<div class="product-autocomplete-item">No matching products</div>';
     dropdown.style.display = 'block';
     positionInvoiceDropdown(rowIndex);
+    attachDropdownToScrolling(rowIndex);  // ✅ ADDED
     return;
   }
   
@@ -7420,6 +7456,7 @@ function filterInvoiceProducts(rowIndex, query) {
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
   positionInvoiceDropdown(rowIndex);
+  attachDropdownToScrolling(rowIndex);  // ✅ ADDED
 }
 
 
@@ -11529,6 +11566,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
