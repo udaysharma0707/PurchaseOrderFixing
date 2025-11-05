@@ -1952,30 +1952,26 @@ body.modal-open {
     transform: translateX(-50%);
   }
 }
-
-/* Product Name Autocomplete Dropdown - ABSOLUTE POSITIONED (FIXED CLIPPING) */
+/* Product Name Autocomplete Dropdown - FIXED POSITIONING (breaks out of table) */
 .product-autocomplete-container {
   position: relative;
   z-index: 1;
 }
 
 .product-autocomplete-dropdown {
-  position: absolute !important;
-  top: 100%;
-  left: 0;
-  right: 0;
+  position: fixed !important;
   max-height: 280px;
   min-width: 200px;
   overflow-y: auto !important;
   background: white;
   border: 2px solid #0066cc;
-  border-top: none;
-  border-radius: 0 0 4px 4px;
+  border-radius: 4px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.2);
   z-index: 9999 !important;
   display: none;
-  margin-top: 2px;
   pointer-events: auto !important;
+  top: auto !important;
+  left: auto !important;
 }
 
 .product-autocomplete-item {
@@ -2026,21 +2022,11 @@ body.modal-open {
   background: #0052a3;
 }
 
-/* ✅ FIXED: Don't clip dropdown */
-#invoiceItemsBody {
-  overflow: visible !important;
-}
-
-.modal-body {
-  overflow: visible !important;
-}
-
 /* Mobile optimizations */
 @media (max-width: 768px) {
   .product-autocomplete-dropdown {
     max-height: 200px;
     font-size: 0.85rem;
-    z-index: 999 !important;
   }
   
   .product-autocomplete-item {
@@ -7348,25 +7334,7 @@ function showInvoiceProductDropdown(rowIndex) {
 
 
 /**
- * Position dropdown next to input field (FIXED)
- */
-/**
- * Position dropdown next to input field (IMPROVED z-index)
- */
-/**
- * Position dropdown SMART (ABOVE input field - FIXED)
- */
-/**
- * Position dropdown for mobile and desktop
- */
-/**
- * Position dropdown - SIMPLE & MOBILE FRIENDLY
- */
-/**
- * Position dropdown BELOW input field with absolute positioning
- */
-/**
- * Position dropdown BELOW input field with absolute positioning
+ * Position dropdown using FIXED positioning (breaks out of table)
  */
 function positionInvoiceDropdown(rowIndex) {
   const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
@@ -7377,27 +7345,26 @@ function positionInvoiceDropdown(rowIndex) {
     return;
   }
   
-  // Get container position
-  const container = inputField.closest('.product-autocomplete-container');
-  if (!container) {
-    console.warn('❌ Container not found');
-    return;
-  }
+  // Get input field position in viewport
+  const rect = inputField.getBoundingClientRect();
   
-  // Position relative to container
-  dropdown.style.position = 'absolute';
-  dropdown.style.top = '100%';
-  dropdown.style.left = '0';
-  dropdown.style.right = '0';
-  dropdown.style.width = '100%';
-  dropdown.style.zIndex = '1000';
+  // Position dropdown below input field
+  dropdown.style.position = 'fixed';
+  dropdown.style.top = (rect.bottom + 5) + 'px';
+  dropdown.style.left = rect.left + 'px';
+  dropdown.style.width = (rect.width) + 'px';
+  dropdown.style.zIndex = '9999';
+  dropdown.style.maxWidth = 'calc(100vw - 20px)'; // Don't overflow screen
   
-  console.log('✅ Dropdown positioned below input (absolute)');
+  console.log('✅ Dropdown positioned FIXED below input (breaks out of table)');
+  console.log('📍 Position:', {
+    top: rect.bottom + 5,
+    left: rect.left,
+    width: rect.width
+  });
 }
 
-/**
- * Filter invoice products based on user input (FIXED)
- */
+
 /**
  * Filter invoice products based on user input
  */
@@ -11562,6 +11529,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
