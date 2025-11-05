@@ -1952,23 +1952,28 @@ body.modal-open {
     transform: translateX(-50%);
   }
 }
-/* Product Name Autocomplete - MOVED TO MODAL-BODY LEVEL */
+
+
+
+
+    /* Product Name Autocomplete Dropdown */
 .product-autocomplete-container {
   position: relative;
+  z-index: 1;
 }
 
 .product-autocomplete-dropdown {
-  position: absolute !important;
-  max-height: 280px;
+  position: fixed !important;
+  max-height: 250px;
+  min-width: 200px;
   overflow-y: auto !important;
   background: white;
   border: 2px solid #0066cc;
   border-radius: 4px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  z-index: 10000 !important;
+  z-index: 9999 !important;
   display: none;
-  pointer-events: auto !important;
-  min-width: 200px;
+  background-color: #fff;
 }
 
 .product-autocomplete-item {
@@ -1977,7 +1982,6 @@ body.modal-open {
   border-bottom: 1px solid #f0f0f0;
   font-size: 0.9rem;
   transition: background-color 0.2s;
-  user-select: none;
 }
 
 .product-autocomplete-item:hover {
@@ -1995,42 +1999,24 @@ body.modal-open {
   margin-top: 2px;
 }
 
-/* Scrollbar */
+/* Scrollbar styling */
 .product-autocomplete-dropdown::-webkit-scrollbar {
   width: 6px;
 }
 
-.product-autocomplete-dropdown::-webkit-scrollbar-thumb {
-  background: #0066cc;
+.product-autocomplete-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
   border-radius: 3px;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .product-autocomplete-dropdown {
-    max-height: 200px;
-  }
+.product-autocomplete-dropdown::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 3px;
 }
 
-/* ✅ CRITICAL: Allow dropdown to overflow from table cells */
-table tr td {
-  overflow: visible !important;
-  position: relative;
+.product-autocomplete-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
-
-#invoiceItemsBody tr td {
-  overflow: visible !important;
-}
-
-#invoiceItemsBody {
-  overflow: visible !important;
-}
-
-table {
-  overflow: visible !important;
-}
-
-
 
     
   </style>
@@ -4504,8 +4490,8 @@ async function syncFromGoogleSheets() {
             <div style="width:36px;text-align:center;"><i class="bi bi-file-earmark-fill" style="font-size:1.25rem;color:${iconColor}"></i></div>
             <div>
               <div style="font-weight:600">${escapeHtml(p.name)}</div>
-              <div class="small-muted">${escapeHtml(p.category||'')} •  ${escapeHtml(p.brand||'')}</div>
-              <div class="small-muted"><strong>${escapeHtml(p.size||'')}</strong> •  ₹${parseFloat(p.price||0).toFixed(2)}/${p.unitType}</div>
+              <div class="small-muted">${escapeHtml(p.category||'')} • ${escapeHtml(p.brand||'')}</div>
+              <div class="small-muted"><strong>${escapeHtml(p.size||'')}</strong> • ₹${parseFloat(p.price||0).toFixed(2)}/${p.unitType}</div>
             </div>
           </div>
           <div style="text-align:right;">
@@ -4526,7 +4512,7 @@ async function syncFromGoogleSheets() {
   function renderSales(){
     const tbody = document.getElementById('salesList');
     
-    if(!hasInitialLoaded){ tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4"><div class="spinner-border"></div><div class="mt-2 text-muted">Loading salesÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</div></td></tr>`; return; }
+    if(!hasInitialLoaded){ tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4"><div class="spinner-border"></div><div class="mt-2 text-muted">Loading sales</div></td></tr>`; return; }
     
     if(!cachedSales || cachedSales.length===0){ tbody.innerHTML=`<tr><td colspan="5" class="text-center text-muted py-4">No sales recorded yet</td></tr>`; return; }
     
@@ -7099,12 +7085,6 @@ function populateInvoiceItems() {
 /**
  * Create Invoice Row HTML with Product Autocomplete
  */
-/**
- * Create Invoice Row HTML with Mobile Support
- */
-/**
- * Create Invoice Row HTML (ORIGINAL LAYOUT)
- */
 function createInvoiceRow(item, index) {
   const itemName = item.size ? `${item.name} (${item.size})` : item.name;
   return `
@@ -7254,40 +7234,19 @@ function loadDefaultTerms() {
 }
 
 
-    /**
+
+
+/**
  * ==========================================
  * INVOICE PRODUCT AUTOCOMPLETE
  * ==========================================
  */
 
 /**
- * Show invoice product dropdown with all products
- */
-/**
  * Show invoice product dropdown with all products (FIXED positioning)
  */
-/**
- * Show invoice product dropdown with all products (FIXED - closes others first)
- */
-/**
- * Show invoice product dropdown with all products
- */
-/**
- * Show invoice product dropdown with all products
- */
-/**
- * Show invoice product dropdown with scroll tracking
- */
-/**
- * Show invoice product dropdown
- */
 function showInvoiceProductDropdown(rowIndex) {
-  console.log('📋 Showing dropdown for row', rowIndex);
-  
-  // Close all other dropdowns
-  document.querySelectorAll('.product-autocomplete-dropdown').forEach((dropdown) => {
-    dropdown.style.display = 'none';
-  });
+  console.log('📋 Showing product dropdown for row', rowIndex);
   
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
@@ -7297,6 +7256,7 @@ function showInvoiceProductDropdown(rowIndex) {
     return;
   }
   
+  // Get all products
   const products = cachedProducts || [];
   
   if (products.length === 0) {
@@ -7324,86 +7284,36 @@ function showInvoiceProductDropdown(rowIndex) {
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
   positionInvoiceDropdown(rowIndex);
-  
-  console.log('✅ Dropdown shown');
-}
-
-
-      /**
- * Keep dropdown attached to field while scrolling
- */
-function attachDropdownToScrolling(rowIndex) {
-  const modalBody = document.querySelector('.modal-body');
-  
-  if (!modalBody) return;
-  
-  modalBody.addEventListener('scroll', function() {
-    const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
-    const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
-    
-    if (!inputField || !dropdown || dropdown.style.display === 'none') {
-      return;
-    }
-    
-    // Recalculate position on scroll
-    const rect = inputField.getBoundingClientRect();
-    
-    dropdown.style.position = 'fixed';
-    dropdown.style.top = (rect.bottom + 5) + 'px';
-    dropdown.style.left = rect.left + 'px';
-    dropdown.style.width = rect.width + 'px';
-    dropdown.style.zIndex = '9999';
-  }, { passive: true });
+  console.log('✅ Dropdown shown with', products.length, 'products');
 }
 
 /**
- * Position dropdown using FIXED positioning (breaks out of table)
- */
-/**
- * Position dropdown ABSOLUTE (attached to field, scrolls with modal)
- */
-/**
- * Move dropdown outside table to modal-body level (FIXES CLIPPING)
+ * Position dropdown next to input field (FIXED)
  */
 function positionInvoiceDropdown(rowIndex) {
-  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
+  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   
-  if (!dropdown || !inputField) return;
+  if (!inputField || !dropdown) return;
   
-  // Get input position
   const rect = inputField.getBoundingClientRect();
-  const modalBody = document.querySelector('.modal-body');
   
-  if (modalBody) {
-    // Move dropdown to modal-body level (not inside table)
-    if (dropdown.parentElement !== modalBody) {
-      modalBody.appendChild(dropdown);
-    }
-  }
+  dropdown.style.left = rect.left + 'px';
+  dropdown.style.top = (rect.bottom + 5) + 'px';
+  dropdown.style.width = (rect.width) + 'px';
   
-  // Position it absolutely relative to viewport
-  dropdown.style.position = 'absolute';
-  dropdown.style.top = (rect.top - modalBody.getBoundingClientRect().top + rect.height + 5) + 'px';
-  dropdown.style.left = (rect.left - modalBody.getBoundingClientRect().left) + 'px';
-  dropdown.style.width = rect.width + 'px';
-  dropdown.style.zIndex = '10000';
-  
-  console.log('✅ Dropdown moved to modal-body level (no clipping)');
+  console.log('✅ Dropdown positioned at:', {
+    left: rect.left,
+    top: rect.bottom + 5,
+    width: rect.width
+  });
 }
 
-
 /**
- * Filter invoice products based on user input
- */
-/**
- * Filter invoice products based on user input
- */
-/**
- * Filter invoice products
+ * Filter invoice products based on user input (FIXED)
  */
 function filterInvoiceProducts(rowIndex, query) {
-  console.log('🔍 Filtering for:', query);
+  console.log('🔍 Filtering products for:', query);
   
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   if (!dropdown) return;
@@ -7415,14 +7325,19 @@ function filterInvoiceProducts(rowIndex, query) {
     return;
   }
   
+  // Filter products
   const products = cachedProducts || [];
   const filtered = products.filter(product => {
     const name = product.name.toLowerCase();
     const brand = (product.brand || '').toLowerCase();
     const category = (product.category || '').toLowerCase();
     
-    return name.includes(query) || brand.includes(query) || category.includes(query);
+    return name.includes(query) || 
+           brand.includes(query) || 
+           category.includes(query);
   });
+  
+  console.log('📊 Filtered:', filtered.length, 'products');
   
   if (filtered.length === 0) {
     dropdown.innerHTML = '<div class="product-autocomplete-item">No matching products</div>';
@@ -7431,6 +7346,7 @@ function filterInvoiceProducts(rowIndex, query) {
     return;
   }
   
+  // Show filtered products
   let html = '';
   filtered.forEach(product => {
     const displayName = product.size ? `${product.name} (${product.size})` : product.name;
@@ -7492,6 +7408,18 @@ document.addEventListener('click', function(e) {
     });
   }
 });
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     
@@ -11177,18 +11105,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
-    /**
- * Close dropdowns when clicking outside
- */
-document.addEventListener('click', function(e) {
-  if (!e.target.closest('.product-autocomplete-container')) {
-    document.querySelectorAll('.product-autocomplete-dropdown').forEach(dropdown => {
-      dropdown.style.display = 'none';
-    });
-  }
-});
-
-
     
 
     
@@ -11556,21 +11472,6 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
