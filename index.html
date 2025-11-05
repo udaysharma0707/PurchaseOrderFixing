@@ -2727,67 +2727,52 @@ body.modal-open {
             </button>
           </div>
           
-          <!-- ✅ COLLAPSIBLE TOTALS SECTION -->
-<div class="mb-3">
-  <!-- Toggle Button -->
-  <button 
-    type="button" 
-    class="btn btn-sm btn-outline-secondary mb-2"
-    onclick="toggleInvoiceTotalsSection()"
-    id="toggleTotalsBtn">
-    📊 Show Advanced Options
-  </button>
-  
-  <!-- Totals Section (Hidden by default) -->
-  <div id="invoiceTotalsSection" style="display: none;">
-    <div class="row">
-      <div class="col-md-6"></div>
-      <div class="col-md-6">
-        <table class="table table-sm">
-          <tr>
-            <td class="text-end"><strong>Sub Total:</strong></td>
-            <td class="text-end" style="width: 150px" id="invoiceSubtotal">₹0.00</td>
-          </tr>
-          <tr>
-            <td class="text-end">
-              <span class="me-2">Discount:</span>
-              <input type="number" class="form-control form-control-sm d-inline-block" 
-                     style="width: 70px" id="invoiceDiscount" value="0" min="0" 
-                     oninput="calculateInvoiceTotal()">
-              <select class="form-select form-select-sm d-inline-block" 
-                      style="width: 60px" id="invoiceDiscountType" 
-                      onchange="calculateInvoiceTotal()">
-                <option value="amount">₹</option>
-                <option value="percent">%</option>
-              </select>
-            </td>
-            <td class="text-end text-danger" id="invoiceDiscountAmount">-₹0.00</td>
-          </tr>
-          <tr>
-            <td class="text-end">
-              <span class="me-2">Tax (GST):</span>
-              <select class="form-select form-select-sm d-inline-block" 
-                      style="width: 90px" id="invoiceTaxRate" 
-                      onchange="calculateInvoiceTotal()">
-                <option value="0">No Tax</option>
-                <option value="5">5%</option>
-                <option value="12">12%</option>
-                <option value="18" selected>18%</option>
-                <option value="28">28%</option>
-              </select>
-            </td>
-            <td class="text-end" id="invoiceTaxAmount">₹0.00</td>
-          </tr>
-          <tr class="table-success fw-bold">
-            <td class="text-end"><h5 class="mb-0">Total (₹):</h5></td>
-            <td class="text-end"><h5 class="mb-0" id="invoiceGrandTotal">₹0.00</h5></td>
-          </tr>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
+          <!-- Totals Section -->
+          <div class="row">
+            <div class="col-md-6"></div>
+            <div class="col-md-6">
+              <table class="table table-sm">
+                <tr>
+                  <td class="text-end"><strong>Sub Total:</strong></td>
+                  <td class="text-end" style="width: 150px" id="invoiceSubtotal">₹0.00</td>
+                </tr>
+                <tr>
+                  <td class="text-end">
+                    <span class="me-2">Discount:</span>
+                    <input type="number" class="form-control form-control-sm d-inline-block" 
+                           style="width: 70px" id="invoiceDiscount" value="0" min="0" 
+                           oninput="calculateInvoiceTotal()">
+                    <select class="form-select form-select-sm d-inline-block" 
+                            style="width: 60px" id="invoiceDiscountType" 
+                            onchange="calculateInvoiceTotal()">
+                      <option value="amount">₹</option>
+                      <option value="percent">%</option>
+                    </select>
+                  </td>
+                  <td class="text-end text-danger" id="invoiceDiscountAmount">-₹0.00</td>
+                </tr>
+                <tr>
+                  <td class="text-end">
+                    <span class="me-2">Tax (GST):</span>
+                    <select class="form-select form-select-sm d-inline-block" 
+                            style="width: 90px" id="invoiceTaxRate" 
+                            onchange="calculateInvoiceTotal()">
+                      <option value="0">No Tax</option>
+                      <option value="5">5%</option>
+                      <option value="12">12%</option>
+                      <option value="18" selected>18%</option>
+                      <option value="28">28%</option>
+                    </select>
+                  </td>
+                  <td class="text-end" id="invoiceTaxAmount">₹0.00</td>
+                </tr>
+                <tr class="table-success fw-bold">
+                  <td class="text-end"><h5 class="mb-0">Total (₹):</h5></td>
+                  <td class="text-end"><h5 class="mb-0" id="invoiceGrandTotal">₹0.00</h5></td>
+                </tr>
+              </table>
+            </div>
+          </div>
           
           <!-- Customer Notes -->
           <div class="mb-3">
@@ -7105,61 +7090,44 @@ function createInvoiceRow(item, index) {
   return `
     <tr data-index="${index}">
       <td>
-        <!-- ✅ ZOHO-STYLE DROPDOWN -->
-        <div style="position: relative;">
+        <div class="product-autocomplete-container">
           <input type="text" 
+                 class="form-control form-control-sm invoice-product-name" 
                  id="invoiceProduct-${index}"
-                 class="form-control form-control-sm" 
                  value="${escapeHtml(itemName)}" 
-                 placeholder="Type or click to select an item."
-                 autocomplete="off"
-                 oninput="filterInvoiceProductSuggestions(${index}, this.value)"
-                 onfocus="showInvoiceProductSuggestions(${index})"
-                 onblur="setTimeout(() => hideInvoiceProductSuggestions(${index}), 200)"
-                 style="padding: 8px; font-size: 0.9rem;">
-          
-          <!-- ✅ ZOHO-STYLE DROPDOWN (Blue highlight on hover) -->
-          <div id="invoiceProductDropdown-${index}" 
-               style="
-                 display: none;
-                 position: absolute;
-                 top: 100%;
-                 left: 0;
-                 right: 0;
-                 background: white;
-                 border: 1px solid #ddd;
-                 border-top: none;
-                 max-height: 220px;
-                 overflow-y: auto;
-                 z-index: 1000;
-                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                 margin-top: 0;
-               ">
-          </div>
+                 placeholder="Enter product name"
+                 oninput="filterInvoiceProducts(${index}, this.value)"
+                 onfocus="showInvoiceProductDropdown(${index})"
+                 autocomplete="off">
+          <div class="product-autocomplete-dropdown" id="invoiceProductDropdown-${index}"></div>
         </div>
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm text-center" 
+        <input type="number" 
+               class="form-control form-control-sm text-center invoice-qty" 
                id="invoiceQty-${index}"
-               value="${item.quantity}" min="1" placeholder="1"
-               style="font-size: 0.9rem;"
+               value="${item.quantity}" 
+               min="1" 
+               placeholder="Qty"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm text-end" 
+        <input type="number" 
+               class="form-control form-control-sm text-end invoice-rate" 
                id="invoiceRate-${index}"
-               value="${item.rate}" min="0" step="0.01" placeholder="0.00"
-               style="font-size: 0.9rem;"
+               value="${item.rate}" 
+               min="0" 
+               step="0.01" 
+               placeholder="Price"
                oninput="updateInvoiceRowTotal(${index})">
       </td>
-      <td class="text-end fw-bold" style="width: 120px; font-size: 0.9rem;">
-        <span id="invoiceRowTotal-${index}">₹${(item.quantity * item.rate).toFixed(2)}</span>
+      <td class="text-end fw-bold invoice-row-total">
+        ₹${(item.quantity * item.rate).toFixed(2)}
       </td>
       <td class="text-center">
         <button type="button" class="btn btn-sm btn-link text-danger" 
-                onclick="deleteInvoiceRow(${index})"
-                style="padding: 2px 6px;">
-          ✕
+                onclick="deleteInvoiceRow(${index})">
+          <i class="bi bi-x-lg"></i>
         </button>
       </td>
     </tr>
@@ -7265,230 +7233,187 @@ function loadDefaultTerms() {
   document.getElementById('invoiceTerms').value = defaultTerms;
 }
 
+
+
+
 /**
- * Toggle Invoice Totals Section Visibility
+ * ==========================================
+ * INVOICE PRODUCT AUTOCOMPLETE
+ * ==========================================
  */
-function toggleInvoiceTotalsSection() {
-  const totalsSection = document.getElementById('invoiceTotalsSection');
-  const toggleBtn = document.getElementById('toggleTotalsBtn');
+
+/**
+ * Show invoice product dropdown with all products (FIXED positioning)
+ */
+function showInvoiceProductDropdown(rowIndex) {
+  console.log('📋 Showing product dropdown for row', rowIndex);
   
-  if (!totalsSection || !toggleBtn) {
-    console.warn('❌ Totals section or button not found');
+  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
+  const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
+  
+  if (!dropdown || !inputField) {
+    console.warn('❌ Dropdown or input not found');
     return;
   }
   
-  const isHidden = totalsSection.style.display === 'none';
-  
-  if (isHidden) {
-    // Show totals
-    totalsSection.style.display = 'block';
-    toggleBtn.innerHTML = '📊 Hide Totals';
-    toggleBtn.classList.add('active');
-    console.log('📊 Totals section shown');
-  } else {
-    // Hide totals
-    totalsSection.style.display = 'none';
-    toggleBtn.innerHTML = '📊 Show Totals';
-    toggleBtn.classList.remove('active');
-    console.log('📊 Totals section hidden');
-  }
-}
-
-/**
- * Reset totals section on modal close (add to your existing modal reset)
- */
-// Add this to your productModal hidden.bs.modal event listener:
-const invoiceModal = document.getElementById('invoiceModal');
-if (invoiceModal) {
-  invoiceModal.addEventListener('hidden.bs.modal', function() {
-    // ... your existing reset code ...
-    
-    // ✅ ALSO HIDE TOTALS SECTION
-    const totalsSection = document.getElementById('invoiceTotalsSection');
-    if (totalsSection) {
-      totalsSection.style.display = 'none';
-      const toggleBtn = document.getElementById('toggleTotalsBtn');
-      if (toggleBtn) {
-        toggleBtn.innerHTML = '📊 Show Totals';
-        toggleBtn.classList.remove('active');
-      }
-    }
-  });
-}
-
-
-/**
- * ==========================================
- * INVOICE PRODUCT AUTOCOMPLETE (BRAND PATTERN)
- * ==========================================
- */
-
-/**
- * Show all products when field is focused
- */
-function showInvoiceProductSuggestions(rowIndex) {
-  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
-  if (!dropdown) return;
-  
+  // Get all products
   const products = cachedProducts || [];
   
   if (products.length === 0) {
-    dropdown.innerHTML = '<div style="padding: 12px; color: #999;">No products available</div>';
+    dropdown.innerHTML = '<div class="product-autocomplete-item">No products available</div>';
     dropdown.style.display = 'block';
+    positionInvoiceDropdown(rowIndex);
     return;
   }
   
-  renderInvoiceProductSuggestions(rowIndex, products);
-  console.log('📋 Showing all', products.length, 'products (Zoho style)');
-}
-/**
- * Filter products based on user input
- */
-function filterInvoiceProductSuggestions(rowIndex, inputText) {
-  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
-  
-  if (!inputText || inputText.trim().length === 0) {
-    hideInvoiceProductSuggestions(rowIndex);
-    return;
-  }
-  
-  const query = inputText.toLowerCase().trim();
-  const products = cachedProducts || [];
-  
-  // Filter: name, brand, or category contains query
-  const matches = products.filter(product => {
-    const name = product.name.toLowerCase();
-    const brand = (product.brand || '').toLowerCase();
-    const category = (product.category || '').toLowerCase();
-    
-    return name.includes(query) || brand.includes(query) || category.includes(query);
-  });
-  
-  if (matches.length > 0) {
-    renderInvoiceProductSuggestions(rowIndex, matches);
-    dropdown.style.display = 'block';
-  } else {
-    dropdown.innerHTML = '<div style="padding: 12px; color: #999;">No matching products</div>';
-    dropdown.style.display = 'block';
-  }
-}
-/**
- * Render product suggestions in dropdown (MATCHING BRAND PATTERN)
- */
-function renderInvoiceProductSuggestions(rowIndex, products) {
-  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
-  if (!dropdown) return;
-  
-  // Limit to 12 suggestions (like Zoho)
-  const limitedProducts = products.slice(0, 12);
-  
+  // Show all products
   let html = '';
-  limitedProducts.forEach((product, idx) => {
+  products.forEach(product => {
     const displayName = product.size ? `${product.name} (${product.size})` : product.name;
-    const rateText = product.price ? `₹${product.price.toFixed(2)}` : 'Rate: 0.00';
+    const price = product.price ? `₹${product.price.toFixed(2)}` : '';
+    const stock = product.stock ? `Stock: ${product.stock}` : '';
     
-    // ✅ ZOHO STYLE: Blue background on hover
     html += `
-      <div onclick="selectInvoiceProductSuggestion(${rowIndex}, '${escapeHtml(product.name)}', '${escapeHtml(product.size || '')}', ${product.price || 0})" 
-           style="
-             padding: 10px 12px;
-             cursor: pointer;
-             border-bottom: 1px solid #f0f0f0;
-             transition: background-color 0.2s;
-             display: flex;
-             justify-content: space-between;
-             align-items: center;
-           " 
-           onmouseover="this.style.backgroundColor='#4A90E2'; this.style.color='white';" 
-           onmouseout="this.style.backgroundColor='transparent'; this.style.color='black';">
-        <div>
-          <strong>${escapeHtml(displayName)}</strong>
-        </div>
-        <div style="font-size: 0.85rem; opacity: 0.8;">
-          ${rateText}
-        </div>
+      <div class="product-autocomplete-item" onclick="selectInvoiceProduct(${rowIndex}, '${escapeHtml(product.name)}', '${escapeHtml(product.size || '')}', ${product.price || 0})">
+        <strong>${escapeHtml(displayName)}</strong>
+        <small>${price} ${stock ? '• ' + stock : ''}</small>
       </div>
     `;
   });
   
   dropdown.innerHTML = html;
   dropdown.style.display = 'block';
-  
-  console.log('🎯 Rendered', limitedProducts.length, 'products (Zoho style)');
+  positionInvoiceDropdown(rowIndex);
+  console.log('✅ Dropdown shown with', products.length, 'products');
 }
 
 /**
- * Select product from dropdown
+ * Position dropdown next to input field (FIXED)
  */
-function selectInvoiceProductSuggestion(rowIndex, productName, productSize, productPrice) {
-  const nameInput = document.getElementById(`invoiceProduct-${rowIndex}`);
-  const rateInput = document.getElementById(`invoiceRate-${rowIndex}`);
+function positionInvoiceDropdown(rowIndex) {
+  const inputField = document.getElementById(`invoiceProduct-${rowIndex}`);
+  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
+  
+  if (!inputField || !dropdown) return;
+  
+  const rect = inputField.getBoundingClientRect();
+  
+  dropdown.style.left = rect.left + 'px';
+  dropdown.style.top = (rect.bottom + 5) + 'px';
+  dropdown.style.width = (rect.width) + 'px';
+  
+  console.log('✅ Dropdown positioned at:', {
+    left: rect.left,
+    top: rect.bottom + 5,
+    width: rect.width
+  });
+}
+
+/**
+ * Filter invoice products based on user input (FIXED)
+ */
+function filterInvoiceProducts(rowIndex, query) {
+  console.log('🔍 Filtering products for:', query);
+  
+  const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
+  if (!dropdown) return;
+  
+  query = query.toLowerCase().trim();
+  
+  if (!query) {
+    showInvoiceProductDropdown(rowIndex);
+    return;
+  }
+  
+  // Filter products
+  const products = cachedProducts || [];
+  const filtered = products.filter(product => {
+    const name = product.name.toLowerCase();
+    const brand = (product.brand || '').toLowerCase();
+    const category = (product.category || '').toLowerCase();
+    
+    return name.includes(query) || 
+           brand.includes(query) || 
+           category.includes(query);
+  });
+  
+  console.log('📊 Filtered:', filtered.length, 'products');
+  
+  if (filtered.length === 0) {
+    dropdown.innerHTML = '<div class="product-autocomplete-item">No matching products</div>';
+    dropdown.style.display = 'block';
+    positionInvoiceDropdown(rowIndex);
+    return;
+  }
+  
+  // Show filtered products
+  let html = '';
+  filtered.forEach(product => {
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
+    const price = product.price ? `₹${product.price.toFixed(2)}` : '';
+    const stock = product.stock ? `Stock: ${product.stock}` : '';
+    
+    html += `
+      <div class="product-autocomplete-item" onclick="selectInvoiceProduct(${rowIndex}, '${escapeHtml(product.name)}', '${escapeHtml(product.size || '')}', ${product.price || 0})">
+        <strong>${escapeHtml(displayName)}</strong>
+        <small>${price} ${stock ? '• ' + stock : ''}</small>
+      </div>
+    `;
+  });
+  
+  dropdown.innerHTML = html;
+  dropdown.style.display = 'block';
+  positionInvoiceDropdown(rowIndex);
+}
+
+/**
+ * Select a product from dropdown
+ */
+function selectInvoiceProduct(rowIndex, productName, productSize, productPrice) {
+  console.log('✅ Selected product:', productName);
   
   const displayName = productSize ? `${productName} (${productSize})` : productName;
   
+  // Set product name
+  const nameInput = document.getElementById(`invoiceProduct-${rowIndex}`);
   if (nameInput) {
     nameInput.value = displayName;
   }
   
-  if (rateInput) {
-    rateInput.value = productPrice > 0 ? productPrice : '';
-  }
-  
-  hideInvoiceProductSuggestions(rowIndex);
-  updateInvoiceRowTotal(rowIndex);
-  
-  console.log('✅ Selected:', displayName, '• Rate: ₹' + productPrice);
-}
-
-/**
- * Update row total when qty or rate changes
- */
-function updateInvoiceRowTotal(rowIndex) {
-  const qtyInput = document.getElementById(`invoiceQty-${rowIndex}`);
+  // Set price
   const rateInput = document.getElementById(`invoiceRate-${rowIndex}`);
-  const totalSpan = document.getElementById(`invoiceRowTotal-${rowIndex}`);
-  
-  if (qtyInput && rateInput && totalSpan) {
-    const qty = parseFloat(qtyInput.value) || 0;
-    const rate = parseFloat(rateInput.value) || 0;
-    const total = qty * rate;
-    
-    totalSpan.textContent = '₹' + total.toFixed(2);
-    console.log('📊 Row ' + rowIndex + ' total: ₹' + total.toFixed(2));
+  if (rateInput) {
+    rateInput.value = productPrice;
   }
-}
-
-/**
- * Hide suggestions dropdown
- */
-function hideInvoiceProductSuggestions(rowIndex) {
+  
+  // Hide dropdown
   const dropdown = document.getElementById(`invoiceProductDropdown-${rowIndex}`);
   if (dropdown) {
     dropdown.style.display = 'none';
   }
+  
+  // Update total
+  updateInvoiceRowTotal(rowIndex);
+  
+  console.log('✅ Product selected and price updated');
 }
 
 /**
- * Delete invoice row
- */
-function deleteInvoiceRow(rowIndex) {
-  const row = document.querySelector(`tr[data-index="${rowIndex}"]`);
-  if (row) {
-    row.remove();
-    console.log('🗑️ Row ' + rowIndex + ' deleted');
-  }
-}
-
-/**
- * Close all dropdowns when clicking outside (Zoho style)
+ * Close dropdowns when clicking outside
  */
 document.addEventListener('click', function(e) {
-  if (!e.target.closest('[id^="invoiceProduct-"]')) {
-    document.querySelectorAll('[id^="invoiceProductDropdown-"]').forEach(dropdown => {
+  if (!e.target.closest('.product-autocomplete-container')) {
+    document.querySelectorAll('.product-autocomplete-dropdown').forEach(dropdown => {
       dropdown.style.display = 'none';
     });
   }
 });
+
+
+
+
+
+
 
 
 
@@ -10787,1009 +10712,4 @@ function refreshBrandAutocompleteCache() {
   brandCacheLoaded = false;
   loadBrandAutocompleteCache();
 }
-
-
-
-    
-/**
- * ==========================================
- * INITIALIZE ON PAGE LOAD
- * ==========================================
- */
-
-// Add event listeners when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🎨 Product Groups UI initialized');
- // ✅ ADD THIS LINE - Load brand cache on page load
-  loadBrandAutocompleteCache();
-
-  
-  // Add event listener for group name input (real-time preview)
-  const groupNameInput = document.getElementById('groupName');
-  if (groupNameInput) {
-    groupNameInput.addEventListener('input', updateVariantPreview);
-  }
-  
-  // Close modals on ESC key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      const createModal = document.getElementById('createGroupModal');
-      const editModal = document.getElementById('editVariantModal');
-      
-      if (createModal && createModal.classList.contains('active')) {
-        closeCreateGroupModal();
-      }
-      
-      if (editModal && editModal.classList.contains('active')) {
-        closeEditVariantModal();
-      }
-    }
-  });
-});
-
-
-/**
- * ==========================================
- * UTILITY: Navigate to Home (Override if needed)
- * ==========================================
- */
-
-
-
-async function createProductGroup(groupData) {
-  try {                                                                          // [attached_file:29]
-    const btn = document.getElementById('btnSaveGroup');                         // [attached_file:29]
-    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Creating...'; }          // [attached_file:29]
-
-    const body = new URLSearchParams({                                           // [attached_file:29]
-      action: 'createProductGroup',                                              // [attached_file:29]
-      email: userEmail,                                                          // [attached_file:29]
-      hash: userHash,                                                            // [attached_file:29]
-      data: JSON.stringify(groupData)                                            // [attached_file:29]
-    });                                                                          // [attached_file:29]
-
-    const response = await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', body });     // [attached_file:29]
-    const result = await response.json();                                        // [attached_file:29]
-
-    if (result.success || result.ok) {                                           // [attached_file:29]
-      alert(`Success! Group "${groupData.groupName}" created.`);                 // [attached_file:29]
-      closeCreateGroupModal();                                                   // [attached_file:29]
-      setTimeout(() => loadProductGroups(), 500);                                // [attached_file:29]
-    } else {
-      throw new Error(result.error || 'Failed to create product group');         // [attached_file:29]
-    }
-  } catch (error) {
-    console.error('❌ Error creating product group:', error);                    // [attached_file:29]
-    alert('Error: ' + error.message);                                            // [attached_file:29]
-  } finally {
-    const btn = document.getElementById('btnSaveGroup');                         // [attached_file:29]
-    if (btn) { btn.disabled = false; btn.innerHTML = '💾 Save & Generate'; }     // [attached_file:29]
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-
-// Navigate back to Home - FIXED
-function navigateToHome() {
-  console.log('🏠 Navigating to Home');
-  
-  currentPage = 'home';
-  
-  const mainApp = document.getElementById('mainApp');
-  const allProductsPage = document.getElementById('allProductsPage');
-  const productGroupsPage = document.getElementById('productGroupsPage');
-  const customersPage = document.getElementById('customersPage');
-  const groupDetailPage = document.getElementById('groupDetailPage');
-  const brandsPage = document.getElementById('brandsPage');  // ✅ ADD THIS
-  
-  // Show main app
-  if (mainApp) mainApp.style.display = 'block';
-  
-  // Hide all other pages
-  if (allProductsPage) {
-    allProductsPage.classList.remove('active');
-    allProductsPage.style.display = 'none';
-  }
-  if (productGroupsPage) {
-    productGroupsPage.classList.remove('active');
-    productGroupsPage.style.display = 'none';
-  }
-  if (customersPage) {
-    customersPage.classList.remove('active');
-    customersPage.style.display = 'none';
-  }
-  if (brandsPage) {                          // ✅ ADD THIS BLOCK
-    brandsPage.classList.remove('active');
-    brandsPage.style.display = 'none';
-  }
-  if (groupDetailPage) {
-    groupDetailPage.classList.remove('active');
-    groupDetailPage.style.display = 'none';
-  }
-  
-  // Show navbar
-  const navbar = document.querySelector('.navbar');
-  if (navbar) navbar.style.display = 'flex';
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  
-  console.log('✅ Home displayed');
-}
-
-// ==========================================
-// NEW NAVIGATION WRAPPER - PHASE 1
-// ==========================================
-/**
- * Centralized navigation function
- * Phase 1: Only handles dashboard (calls navigateToHome)
- * @param {string} page - Page name ('dashboard', 'allProducts', etc.)
- */
-/**
- * Centralized navigation function
- * Phase 2: Handles dashboard AND allProducts
- * @param {string} page - Page name ('dashboard', 'allProducts', etc.)
- */
-/**
- * Centralized navigation function
- * Phase 3: Handles dashboard, allProducts, AND customers
- * @param {string} page - Page name ('dashboard', 'allProducts', 'customers', etc.)
- */
-/**
- * Centralized navigation function - COMPLETE
- * All pages now use this system!
- * @param {string} page - Page name ('dashboard', 'allProducts', 'customers', 'productGroups')
- */
-/**
- * Centralized navigation function - COMPLETE with page hiding
- * Ensures all pages are properly hidden before showing target page
- * @param {string} page - Page name ('dashboard', 'allProducts', 'customers', 'productGroups')
- */
-function navigateTo(page) {
-  console.log('🔷 navigateTo called with:', page);
-  
-  if (page === 'dashboard') {
-    navigateToHome();
-  } else if (page === 'allProducts') {
-    navigateToAllProducts();
-  } else if (page === 'customers') {
-    navigateToCustomers();
-  } else if (page === 'productGroups') {
-    navigateToProductGroups();
-  } else if (page === 'brands') {           // ✅ ADD THIS
-    navigateToBrands();                     // ✅ ADD THIS
-  } else if (page === 'invoices') {
-    window.location.href = 'invoices.html';
-  } else {
-    console.error('❌ Unknown page:', page);
-  }
-}
-
-
-
-
-// Navigate to Group Detail - FIXED
-function navigateToGroupDetail(groupId, groupName) {
-  console.log('📦 Navigating to Group Detail:', groupName);
-  
-  currentPage = 'groupDetail';
-  currentGroupId = groupId;
-  
-  const mainApp = document.getElementById('mainApp');
-  const allProductsPage = document.getElementById('allProductsPage');
-  const productGroupsPage = document.getElementById('productGroupsPage');
-  const groupDetailPage = document.getElementById('groupDetailPage');
-  
-  // HIDE the main dashboard
-  if (mainApp) {
-    mainApp.style.display = 'none';
-  }
-  
-  // ✅ HIDE THE BLUE NAVBAR
-  const navbar = document.querySelector('.navbar');
-  if (navbar) {
-    navbar.style.display = 'none';
-  }
-  
-  // SHOW Group Detail page
-  if (groupDetailPage) {
-    groupDetailPage.classList.add('active');
-  }
-  
-  if (allProductsPage) allProductsPage.classList.remove('active');
-  if (productGroupsPage) productGroupsPage.classList.remove('active');
-  
-  // Set group title
-  const groupTitleEl = document.getElementById('groupDetailTitle');
-  if (groupTitleEl) {
-    groupTitleEl.textContent = groupName;
-  }
-  
-  // Load variants
-  if (typeof syncGroupVariants === 'function') {
-    syncGroupVariants(groupId);
-  }
-  
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-
-// Get product icon based on category
-function getProductIcon(category) {
-  const icons = {
-    'Tiles': '🔲',
-    'Sanitaryware': '🚿',
-    'Accessories': '🔧',
-    'Custom': '📦',
-    'Photo Products': '📸'
-  };
-  return icons[category] || '📦';
-}
-
-
-
-
-
-window.addEventListener('DOMContentLoaded', () => {
-  // Wait longer for data to fully load
-  setTimeout(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const page = urlParams.get('page');
-    
-    if (!page) {
-      console.log('✅ No page parameter - Normal page load');
-      return;
-    }
-    
-    console.log('🔍 URL page parameter detected:', page);
-    
-    // Route to appropriate page based on parameter
-    switch(page) {
-      case 'allProducts':
-        console.log('📍 Routing: Invoices → All Products');
-        if (typeof navigateToAllProducts === 'function') {
-          navigateToAllProducts();
-        } else {
-          console.error('❌ navigateToAllProducts function not found');
-        }
-        break;
-        
-      case 'productGroups':
-        console.log('📍 Routing: Invoices → Product Groups');
-        if (typeof navigateToProductGroups === 'function') {
-          navigateToProductGroups();
-        } else {
-          console.error('❌ navigateToProductGroups function not found');
-        }
-        break;
-        
-      case 'customers':
-        console.log('📍 Routing: Invoices → Customers');
-        if (typeof navigateToCustomers === 'function') {
-          navigateToCustomers();
-        } else {
-          console.error('❌ navigateToCustomers function not found');
-        }
-        break;
-      
-      case 'brands':
-        console.log('📍 Routing: Invoices → Brands');
-        if (typeof navigateToBrands === 'function') {
-          navigateToBrands();
-        } else {
-          console.error('❌ navigateToBrands function not found');
-        }
-        break;
-        
-      default:
-        console.warn('⚠️ Unknown page parameter:', page);
-    }
-    
-    // === ✅ CLEAN URL AFTER NAVIGATION ===
-    // Remove the query parameter so it doesn't persist on reload
-    window.history.replaceState({}, document.title, window.location.pathname);
-    console.log('🧹 URL cleaned - page parameter removed');
-    
-  }, 800);  // Wait 800ms for data to fully load
-});
-
-// Navigate to Purchase Orders page
-function navigateToPurchaseOrders() {
-  // Close sidebar
-  closeSidebar();
-  
-  // Redirect to purchase page
-  window.location.href = 'purchase.html';
-}
-
-
-
-/**
- * ==========================================
- * SHARE INVOICE DROPDOWN FIX
- * ==========================================
- */
-
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 Initializing Share Invoice dropdown...');
-  
-  // Find all share invoice buttons
-  const shareButtons = document.querySelectorAll('[data-bs-toggle="dropdown"]');
-  console.log('📊 Found', shareButtons.length, 'dropdown buttons');
-  
-  shareButtons.forEach((btn, index) => {
-    // Add click handler to each button
-    btn.addEventListener('click', function(e) {
-      e.preventDefault();
-      e.stopPropagation();
-      
-      console.log('🔘 Share button clicked');
-      
-      // Find the next dropdown menu
-      let menu = this.nextElementSibling;
-      
-      // If next sibling isn't a dropdown, search for it
-      if (!menu || !menu.classList.contains('dropdown-menu')) {
-        menu = this.parentElement.querySelector('.dropdown-menu');
-      }
-      
-      if (menu) {
-        // Toggle the dropdown
-        menu.classList.toggle('show');
-        console.log('✅ Dropdown toggled:', menu.classList.contains('show'));
-        
-        // Force styles
-        if (menu.classList.contains('show')) {
-          menu.style.display = 'block';
-          menu.style.visibility = 'visible';
-          menu.style.opacity = '1';
-        } else {
-          menu.style.display = 'none';
-        }
-      } else {
-        console.warn('⚠️ Dropdown menu not found');
-      }
-    });
-  });
-  
-  // Close dropdowns when clicking outside
-  document.addEventListener('click', function(e) {
-    const menus = document.querySelectorAll('.dropdown-menu.show');
-    menus.forEach(menu => {
-      const btn = menu.previousElementSibling;
-      if (btn && !btn.contains(e.target) && !menu.contains(e.target)) {
-        menu.classList.remove('show');
-        menu.style.display = 'none';
-        console.log('✅ Dropdown closed');
-      }
-    });
-  });
-  
-  console.log('✅ Share Invoice dropdown initialized');
-});
-
-
-
-    
-
-    
-  </script>
-
-
-
-
-
-
-    
-    </script>
-
-  <!-- Ã¢Å“â€¦ NEW: Change Password Modal -->
-  <div id="changePasswordModal" class="modal fade" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">
-            <i class="bi bi-key me-2"></i>Change Password
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <!-- Step 1: Verify Current Password -->
-          <div id="verifyPasswordStep">
-            <p class="text-muted">Enter your current password to continue</p>
-            <div class="mb-3">
-              <label class="form-label">Current Password</label>
-              <input 
-                type="password" 
-                id="currentPasswordInput" 
-                class="form-control" 
-                placeholder="Enter current password"
-                required
-              >
-            </div>
-            <div class="d-grid">
-              <button class="btn btn-primary" onclick="verifyCurrentPassword()">
-                Continue
-              </button>
-            </div>
-          </div>
-          
-          <!-- Step 2: Enter New Password -->
-          <div id="newPasswordStep" style="display: none;">
-            <p class="text-muted">Choose a new password (minimum 6 characters)</p>
-            <div class="mb-3">
-              <label class="form-label">New Password</label>
-              <input 
-                type="password" 
-                id="newPasswordInput" 
-                class="form-control" 
-                placeholder="Enter new password"
-                minlength="6"
-                required
-              >
-            </div>
-            <div class="mb-3">
-              <label class="form-label">Confirm New Password</label>
-              <input 
-                type="password" 
-                id="confirmPasswordInput" 
-                class="form-control" 
-                placeholder="Re-enter new password"
-                minlength="6"
-                required
-              >
-            </div>
-            <div class="d-grid">
-              <button class="btn btn-success" onclick="submitNewPassword()">
-                <i class="bi bi-check-circle me-2"></i>Change Password
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-<!-- âœ… NEW: WhatsApp Number Input Modal -->
-<div class="modal fade" id="whatsappNumberModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">
-          <i class="bi bi-whatsapp"></i> Share Invoice on WhatsApp
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <div class="alert alert-info">
-          <i class="bi bi-info-circle"></i> Enter the recipient's WhatsApp number (with country code)
-        </div>
-        
-        <div class="mb-3">
-          <label class="form-label">WhatsApp Number</label>
-          <div class="input-group">
-            <span class="input-group-text">+91</span>
-            <input type="tel" 
-                   class="form-control" 
-                   id="whatsappNumberInput" 
-                   placeholder="9876543210" 
-                   maxlength="10"
-                   pattern="[0-9]{10}"
-                   required>
-          </div>
-          <small class="text-muted">Enter 10-digit mobile number (without +91)</small>
-        </div>
-        
-        <div class="form-check mb-3">
-          <input class="form-check-input" type="checkbox" id="saveWhatsAppNumber">
-          <label class="form-check-label" for="saveWhatsAppNumber">
-            Remember this number for next time
-          </label>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Cancel
-        </button>
-        <button type="button" class="btn btn-success" onclick="sendInvoiceToWhatsApp()">
-          <i class="bi bi-whatsapp"></i> Send to WhatsApp
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- Product Detail Modal -->
-<div class="modal fade" id="productDetailModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Product Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body" id="productDetailModalBody">
-        <!-- Content will be inserted here -->
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ✅✅✅ CUSTOMER MODAL (Add/Edit) ✅✅✅ -->
-<div class="modal fade" id="customerModal" tabindex="-1">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="customerFormTitle">Add Customer</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <form id="customerForm">
-          <input type="hidden" id="customerId">
-          
-          <!-- Customer Type -->
-          <div class="mb-3">
-            <label class="form-label">Customer Type *</label>
-            <div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="customerType" id="typeBusiness" value="Business" checked>
-                <label class="form-check-label" for="typeBusiness">
-                  🏢 Business
-                </label>
-              </div>
-              <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="customerType" id="typeIndividual" value="Individual">
-                <label class="form-check-label" for="typeIndividual">
-                  👤 Individual
-                </label>
-              </div>
-            </div>
-          </div>
-          
-          <!-- Customer Name -->
-          <div class="mb-3">
-            <label for="customerName" class="form-label">Customer Name *</label>
-            <input type="text" class="form-control" id="customerName" required>
-          </div>
-          
-          <!-- Advanced Options Toggle -->
-          <div class="mb-3">
-            <a href="javascript:void(0)" onclick="toggleAdvancedOptions()" class="text-primary">
-              <i class="bi bi-chevron-down"></i> Advanced Options
-            </a>
-          </div>
-          
-          <!-- Advanced Options Container (Hidden by default) -->
-          <div id="advancedOptionsContainer" style="display:none;">
-            <!-- Phone Number -->
-            <div class="mb-3">
-              <label for="customerPhone" class="form-label">Phone Number</label>
-              <input type="tel" class="form-control" id="customerPhone" placeholder="+91-9876543210">
-            </div>
-            
-            <!-- Email -->
-            <div class="mb-3">
-              <label for="customerEmail" class="form-label">Email Address</label>
-              <input type="email" class="form-control" id="customerEmail" placeholder="customer@example.com">
-            </div>
-            
-            <!-- Address -->
-            <div class="mb-3">
-              <label for="customerAddress" class="form-label">Billing/Shipping Address</label>
-              <textarea class="form-control" id="customerAddress" rows="3" placeholder="Enter complete address"></textarea>
-            </div>
-            
-            <!-- Other Info -->
-            <div class="mb-3">
-              <label for="customerOtherInfo" class="form-label">Any Other Information</label>
-              <textarea class="form-control" id="customerOtherInfo" rows="2" placeholder="Additional notes, preferences, etc."></textarea>
-            </div>
-          </div>
-        </form>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveCustomer()">Save Customer</button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- ✅✅✅ CUSTOMER DETAIL MODAL ✅✅✅ -->
-<div class="modal fade" id="customerDetailModal" tabindex="-1">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="detailCustomerName">Customer Details</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        <!-- Tab Navigation -->
-        <ul class="nav nav-tabs mb-3">
-          <li class="nav-item">
-            <a class="nav-link active customer-tab-btn" href="javascript:void(0)" onclick="showCustomerTab('info')">
-              <i class="bi bi-info-circle"></i> Info
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link customer-tab-btn" href="javascript:void(0)" onclick="showCustomerTab('transactions')">
-              <i class="bi bi-receipt"></i> Transactions
-            </a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link customer-tab-btn" href="javascript:void(0)" onclick="showCustomerTab('invoices')">
-              <i class="bi bi-file-text"></i> Invoices
-            </a>
-          </li>
-        </ul>
-        
-        <!-- Tab Content -->
-        <div id="customerInfoTab">
-          <table class="table">
-            <tr>
-              <th width="30%">Type:</th>
-              <td id="detailCustomerType">-</td>
-            </tr>
-            <tr>
-              <th>Phone:</th>
-              <td id="detailCustomerPhone">-</td>
-            </tr>
-            <tr>
-              <th>Email:</th>
-              <td id="detailCustomerEmail">-</td>
-            </tr>
-            <tr>
-              <th>Address:</th>
-              <td id="detailCustomerAddress">-</td>
-            </tr>
-          </table>
-        </div>
-        
-        <div id="customerTransactionsTab" style="display:none;">
-          <div id="customerTransactionsList">
-            <p class="text-center text-muted">Loading transactions...</p>
-          </div>
-        </div>
-        
-        <div id="customerInvoicesTab" style="display:none;">
-          <div id="customerInvoicesList">
-            <p class="text-center text-muted">No invoices yet</p>
-          </div>
-          <button class="btn btn-success mt-3" onclick="createInvoiceForCustomer()">
-            <i class="bi bi-plus-lg"></i> Create New Invoice
-          </button>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-primary" onclick="openEditCustomerModal(currentCustomerId)">
-          <i class="bi bi-pencil"></i> Edit
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Add Brands Modal -->
-<div class="modal fade" id="addBrandsModal" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">➕ Add New Brands</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body">
-        
-        <!-- Instructions -->
-        <p style="color: #666; margin-bottom: 15px; font-size: 14px;">
-          Enter brand names below. Press <strong>Enter</strong> or <strong>Comma (,)</strong> after each brand:
-        </p>
-        
-        <!-- Input Field -->
-        <input id="brandInput" type="text" class="form-control" placeholder="e.g., Somany"
-          onkeydown="handleBrandInputKeydown(event)">
-        
-        <!-- Preview Section -->
-        <div style="margin-top: 20px;">
-          <p style="font-weight: bold; margin-bottom: 10px; font-size: 14px;" id="previewCount">
-            📝 Brands to Save (0):
-          </p>
-          <div id="brandPreviewList" style="
-            background: #f8f9fa; border: 1px solid #e0e0e0;
-            border-radius: 5px; max-height: 200px; overflow-y: auto;
-            min-height: 60px; padding: 10px;
-          ">
-            <div style="padding: 10px; color: #999; text-align: center; font-size: 14px;">
-              No brands added yet
-            </div>
-          </div>
-        </div>
-        
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-        <button type="button" class="btn btn-primary" onclick="saveAllBrands()">💾 Save All</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<script>
-// Register service worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/PurchaseOrderFixing/sw.js')
-      .then(registration => {
-        console.log('✅ Service Worker registered:', registration);
-      })
-      .catch(error => {
-        console.log('❌ Service Worker registration failed:', error);
-      });
-  });
-}
-</script>
-
-
-    
-</body>
-</html>
-
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
