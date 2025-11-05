@@ -7439,6 +7439,9 @@ function toggleBulkProductSelection(productId, productName, productSize, product
 /**
  * Render selected items on right side
  */
+/**
+ * Render selected items on right side (WITH BIGGER BUTTONS FOR MOBILE)
+ */
 function renderBulkSelectedItems() {
   const container = document.getElementById('bulkSelectedItems');
   if (!container) return;
@@ -7462,32 +7465,86 @@ function renderBulkSelectedItems() {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        gap: 8px;
       ">
-        <div style="flex: 1;">
-          <strong>${escapeHtml(displayName)}</strong>
+        <div style="flex: 1; min-width: 0;">
+          <strong style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            ${escapeHtml(displayName)}
+          </strong>
           <div style="font-size: 0.85rem; color: #666;">
             ₹${product.price.toFixed(2)}
           </div>
         </div>
         
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <!-- Qty Controls -->
-          <button type="button" class="btn btn-sm btn-outline-secondary" 
+        <!-- ✅ BIGGER QUANTITY CONTROLS FOR MOBILE -->
+        <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+          <!-- Minus Button - BIGGER -->
+          <button type="button" class="btn btn-sm" 
                   onclick="updateBulkQty('${product.id}', -1)"
-                  style="padding: 2px 6px; font-size: 0.9rem;">−</button>
+                  style="
+                    padding: 8px 12px;
+                    font-size: 18px;
+                    background: #dc3545;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    min-width: 44px;
+                    min-height: 44px;
+                    font-weight: bold;
+                    transition: background 0.2s;
+                  "
+                  onmouseover="this.style.background='#c82333'"
+                  onmouseout="this.style.background='#dc3545'">
+            −
+          </button>
           
+          <!-- Quantity Input -->
           <input type="number" value="${product.qty}" 
-                 style="width: 45px; padding: 4px; text-align: center; font-size: 0.9rem; border: 1px solid #ddd; border-radius: 3px;"
+                 style="
+                   width: 50px;
+                   padding: 8px;
+                   text-align: center;
+                   font-size: 14px;
+                   font-weight: bold;
+                   border: 1px solid #ddd;
+                   border-radius: 4px;
+                 "
                  onchange="updateBulkQtyDirect('${product.id}', this.value)">
           
-          <button type="button" class="btn btn-sm btn-outline-secondary" 
+          <!-- Plus Button - BIGGER -->
+          <button type="button" class="btn btn-sm" 
                   onclick="updateBulkQty('${product.id}', 1)"
-                  style="padding: 2px 6px; font-size: 0.9rem;">+</button>
+                  style="
+                    padding: 8px 12px;
+                    font-size: 18px;
+                    background: #28a745;
+                    color: white;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    min-width: 44px;
+                    min-height: 44px;
+                    font-weight: bold;
+                    transition: background 0.2s;
+                  "
+                  onmouseover="this.style.background='#218838'"
+                  onmouseout="this.style.background='#28a745'">
+            +
+          </button>
           
-          <!-- Remove Button -->
+          <!-- Remove Button - BIGGER -->
           <button type="button" class="btn btn-sm btn-link text-danger" 
                   onclick="toggleBulkProductSelection('${product.id}', '${escapeHtml(product.name)}', '${product.size}', ${product.price})"
-                  style="padding: 2px 6px; font-size: 0.9rem;">×</button>
+                  style="
+                    padding: 8px 12px;
+                    font-size: 18px;
+                    min-width: 44px;
+                    min-height: 44px;
+                    cursor: pointer;
+                  ">
+            ✕
+          </button>
         </div>
       </div>
     `;
@@ -7495,7 +7552,7 @@ function renderBulkSelectedItems() {
   
   container.innerHTML = html;
   updateBulkCounters();
-  console.log('✅ Rendered', selectedArray.length, 'selected items');
+  console.log('✅ Rendered', selectedArray.length, 'selected items with bigger buttons');
 }
 
 /**
@@ -11910,7 +11967,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- ✅ BULK ADD PRODUCTS MODAL -->
 <div class="modal fade" id="bulkAddModal" tabindex="-1" backdrop="static">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-sm">
     <div class="modal-content">
       <div class="modal-header bg-success text-white">
         <h5 class="modal-title">
@@ -12005,6 +12062,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
