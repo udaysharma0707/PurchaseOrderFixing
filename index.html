@@ -1952,6 +1952,50 @@ body.modal-open {
     transform: translateX(-50%);
   }
 }
+/* Responsive Bulk Modal Buttons */
+@media (max-width: 768px) {
+  /* Mobile: Bigger buttons */
+  .bulk-qty-btn {
+    min-width: 48px !important;
+    min-height: 48px !important;
+    padding: 8px 12px !important;
+    font-size: 18px !important;
+  }
+  
+  .bulk-remove-btn {
+    min-width: 48px !important;
+    min-height: 48px !important;
+    font-size: 20px !important;
+  }
+  
+  .bulk-qty-input {
+    width: 55px !important;
+    padding: 8px !important;
+    font-size: 16px !important;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Desktop: Normal sized buttons */
+  .bulk-qty-btn {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    padding: 6px 10px !important;
+    font-size: 16px !important;
+  }
+  
+  .bulk-remove-btn {
+    min-width: 40px !important;
+    min-height: 40px !important;
+    font-size: 16px !important;
+  }
+  
+  .bulk-qty-input {
+    width: 50px !important;
+    padding: 6px !important;
+    font-size: 14px !important;
+  }
+}
 
 
     
@@ -7442,6 +7486,9 @@ function toggleBulkProductSelection(productId, productName, productSize, product
 /**
  * Render selected items on right side (WITH BIGGER BUTTONS FOR MOBILE)
  */
+/**
+ * Render selected items with RESPONSIVE BUTTONS
+ */
 function renderBulkSelectedItems() {
   const container = document.getElementById('bulkSelectedItems');
   if (!container) return;
@@ -7468,7 +7515,7 @@ function renderBulkSelectedItems() {
         gap: 8px;
       ">
         <div style="flex: 1; min-width: 0;">
-          <strong style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          <strong style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px;">
             ${escapeHtml(displayName)}
           </strong>
           <div style="font-size: 0.85rem; color: #666;">
@@ -7476,21 +7523,21 @@ function renderBulkSelectedItems() {
           </div>
         </div>
         
-        <!-- ✅ BIGGER QUANTITY CONTROLS FOR MOBILE -->
+        <!-- ✅ RESPONSIVE QUANTITY CONTROLS -->
         <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
-          <!-- Minus Button - BIGGER -->
-          <button type="button" class="btn btn-sm" 
+          <!-- Minus Button -->
+          <button type="button" class="btn btn-sm bulk-qty-btn" 
                   onclick="updateBulkQty('${product.id}', -1)"
                   style="
-                    padding: 8px 12px;
-                    font-size: 18px;
+                    padding: 6px 10px;
+                    font-size: 16px;
                     background: #dc3545;
                     color: white;
                     border: none;
                     border-radius: 4px;
                     cursor: pointer;
-                    min-width: 44px;
-                    min-height: 44px;
+                    min-width: 40px;
+                    min-height: 40px;
                     font-weight: bold;
                     transition: background 0.2s;
                   "
@@ -7501,9 +7548,10 @@ function renderBulkSelectedItems() {
           
           <!-- Quantity Input -->
           <input type="number" value="${product.qty}" 
+                 class="bulk-qty-input"
                  style="
                    width: 50px;
-                   padding: 8px;
+                   padding: 6px;
                    text-align: center;
                    font-size: 14px;
                    font-weight: bold;
@@ -7512,19 +7560,19 @@ function renderBulkSelectedItems() {
                  "
                  onchange="updateBulkQtyDirect('${product.id}', this.value)">
           
-          <!-- Plus Button - BIGGER -->
-          <button type="button" class="btn btn-sm" 
+          <!-- Plus Button -->
+          <button type="button" class="btn btn-sm bulk-qty-btn" 
                   onclick="updateBulkQty('${product.id}', 1)"
                   style="
-                    padding: 8px 12px;
-                    font-size: 18px;
+                    padding: 6px 10px;
+                    font-size: 16px;
                     background: #28a745;
                     color: white;
                     border: none;
                     border-radius: 4px;
                     cursor: pointer;
-                    min-width: 44px;
-                    min-height: 44px;
+                    min-width: 40px;
+                    min-height: 40px;
                     font-weight: bold;
                     transition: background 0.2s;
                   "
@@ -7533,14 +7581,14 @@ function renderBulkSelectedItems() {
             +
           </button>
           
-          <!-- Remove Button - BIGGER -->
-          <button type="button" class="btn btn-sm btn-link text-danger" 
+          <!-- Remove Button -->
+          <button type="button" class="btn btn-sm btn-link text-danger bulk-remove-btn" 
                   onclick="toggleBulkProductSelection('${product.id}', '${escapeHtml(product.name)}', '${product.size}', ${product.price})"
                   style="
-                    padding: 8px 12px;
-                    font-size: 18px;
-                    min-width: 44px;
-                    min-height: 44px;
+                    padding: 6px 10px;
+                    font-size: 16px;
+                    min-width: 40px;
+                    min-height: 40px;
                     cursor: pointer;
                   ">
             ✕
@@ -7552,7 +7600,7 @@ function renderBulkSelectedItems() {
   
   container.innerHTML = html;
   updateBulkCounters();
-  console.log('✅ Rendered', selectedArray.length, 'selected items with bigger buttons');
+  console.log('✅ Rendered', selectedArray.length, 'selected items (responsive)');
 }
 
 /**
@@ -11964,10 +12012,9 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-
-<!-- ✅ BULK ADD PRODUCTS MODAL -->
+<!-- ✅ BULK ADD PRODUCTS MODAL (RESPONSIVE) -->
 <div class="modal fade" id="bulkAddModal" tabindex="-1" backdrop="static">
-  <div class="modal-dialog modal-sm">
+  <div class="modal-dialog modal-dialog-centered" style="max-width: 800px; width: 95%; margin: auto;">
     <div class="modal-content">
       <div class="modal-header bg-success text-white">
         <h5 class="modal-title">
@@ -11975,6 +12022,7 @@ document.addEventListener('DOMContentLoaded', function() {
         </h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
+
       
       <div class="modal-body">
         <!-- Search Input -->
@@ -12062,6 +12110,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
