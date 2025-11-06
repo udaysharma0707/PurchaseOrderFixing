@@ -1952,9 +1952,14 @@ body.modal-open {
     transform: translateX(-50%);
   }
 }
-/* Responsive Bulk Modal Buttons */
+
+
+
+
+    
+/* ✅ MOBILE RESPONSIVE BULK CONTROLS */
 @media (max-width: 768px) {
-  /* Mobile: Bigger buttons */
+  /* Mobile: Bigger buttons, full width controls */
   .bulk-qty-btn {
     min-width: 48px !important;
     min-height: 48px !important;
@@ -1972,11 +1977,12 @@ body.modal-open {
     width: 55px !important;
     padding: 8px !important;
     font-size: 16px !important;
+    min-height: 48px;
   }
 }
 
 @media (min-width: 769px) {
-  /* Desktop: Normal sized buttons */
+  /* Desktop: Normal sized buttons, horizontal layout */
   .bulk-qty-btn {
     min-width: 40px !important;
     min-height: 40px !important;
@@ -7489,6 +7495,9 @@ function toggleBulkProductSelection(productId, productName, productSize, product
 /**
  * Render selected items with RESPONSIVE BUTTONS
  */
+/**
+ * Render selected items with RESPONSIVE LAYOUT (vertical on mobile)
+ */
 function renderBulkSelectedItems() {
   const container = document.getElementById('bulkSelectedItems');
   if (!container) return;
@@ -7509,13 +7518,10 @@ function renderBulkSelectedItems() {
       <div style="
         padding: 12px;
         border-bottom: 1px solid #ddd;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 8px;
       ">
-        <div style="flex: 1; min-width: 0;">
-          <strong style="display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px;">
+        <!-- Product Info (always on top) -->
+        <div style="margin-bottom: 8px;">
+          <strong style="display: block; font-size: 14px; margin-bottom: 4px;">
             ${escapeHtml(displayName)}
           </strong>
           <div style="font-size: 0.85rem; color: #666;">
@@ -7523,65 +7529,78 @@ function renderBulkSelectedItems() {
           </div>
         </div>
         
-        <!-- ✅ RESPONSIVE QUANTITY CONTROLS -->
-        <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
-          <!-- Minus Button -->
-          <button type="button" class="btn btn-sm bulk-qty-btn" 
-                  onclick="updateBulkQty('${product.id}', -1)"
-                  style="
-                    padding: 6px 10px;
-                    font-size: 16px;
-                    background: #dc3545;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    min-width: 40px;
-                    min-height: 40px;
-                    font-weight: bold;
-                    transition: background 0.2s;
-                  "
-                  onmouseover="this.style.background='#c82333'"
-                  onmouseout="this.style.background='#dc3545'">
-            −
-          </button>
+        <!-- Quantity Controls (responsive layout) -->
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 8px;
+        ">
+          <!-- LEFT: Minus, Qty, Plus (stacked on mobile) -->
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+          ">
+            <!-- Minus Button -->
+            <button type="button" class="bulk-qty-btn" 
+                    onclick="updateBulkQty('${product.id}', -1)"
+                    style="
+                      padding: 6px 10px;
+                      font-size: 16px;
+                      background: #dc3545;
+                      color: white;
+                      border: none;
+                      border-radius: 4px;
+                      cursor: pointer;
+                      min-width: 40px;
+                      min-height: 40px;
+                      font-weight: bold;
+                      transition: background 0.2s;
+                    "
+                    onmouseover="this.style.background='#c82333'"
+                    onmouseout="this.style.background='#dc3545'">
+              −
+            </button>
+            
+            <!-- Quantity Input -->
+            <input type="number" value="${product.qty}" 
+                   class="bulk-qty-input"
+                   style="
+                     width: 50px;
+                     padding: 6px;
+                     text-align: center;
+                     font-size: 14px;
+                     font-weight: bold;
+                     border: 1px solid #ddd;
+                     border-radius: 4px;
+                   "
+                   onchange="updateBulkQtyDirect('${product.id}', this.value)">
+            
+            <!-- Plus Button -->
+            <button type="button" class="bulk-qty-btn" 
+                    onclick="updateBulkQty('${product.id}', 1)"
+                    style="
+                      padding: 6px 10px;
+                      font-size: 16px;
+                      background: #28a745;
+                      color: white;
+                      border: none;
+                      border-radius: 4px;
+                      cursor: pointer;
+                      min-width: 40px;
+                      min-height: 40px;
+                      font-weight: bold;
+                      transition: background 0.2s;
+                    "
+                    onmouseover="this.style.background='#218838'"
+                    onmouseout="this.style.background='#28a745'">
+              +
+            </button>
+          </div>
           
-          <!-- Quantity Input -->
-          <input type="number" value="${product.qty}" 
-                 class="bulk-qty-input"
-                 style="
-                   width: 50px;
-                   padding: 6px;
-                   text-align: center;
-                   font-size: 14px;
-                   font-weight: bold;
-                   border: 1px solid #ddd;
-                   border-radius: 4px;
-                 "
-                 onchange="updateBulkQtyDirect('${product.id}', this.value)">
-          
-          <!-- Plus Button -->
-          <button type="button" class="btn btn-sm bulk-qty-btn" 
-                  onclick="updateBulkQty('${product.id}', 1)"
-                  style="
-                    padding: 6px 10px;
-                    font-size: 16px;
-                    background: #28a745;
-                    color: white;
-                    border: none;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    min-width: 40px;
-                    min-height: 40px;
-                    font-weight: bold;
-                    transition: background 0.2s;
-                  "
-                  onmouseover="this.style.background='#218838'"
-                  onmouseout="this.style.background='#28a745'">
-            +
-          </button>
-          
-          <!-- Remove Button -->
+          <!-- RIGHT: Remove Button -->
           <button type="button" class="btn btn-sm btn-link text-danger bulk-remove-btn" 
                   onclick="toggleBulkProductSelection('${product.id}', '${escapeHtml(product.name)}', '${product.size}', ${product.price})"
                   style="
@@ -12110,6 +12129,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
