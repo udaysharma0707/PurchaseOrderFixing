@@ -3773,8 +3773,8 @@ body.modal-open {
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz55bLMSi8FvaVTevfXtYyhdJNn4drbUydUruygxSiUGB4s2tx2R1So2KOEZvMCsZpB/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz55bLMSi8FvaVTevfXtYyhdJNn4drbUydUruygxSiUGB4s2tx2R1So2KOEZvMCsZpB/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJTzTQWKgcE6Br43STTfsLe1dCyBAuvPFWiM-FUlb4wAPekwTNr-3vlRkjmjNgQGRy/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJTzTQWKgcE6Br43STTfsLe1dCyBAuvPFWiM-FUlb4wAPekwTNr-3vlRkjmjNgQGRy/exec'
   let cachedProducts = [];
   let cachedSales = [];
 
@@ -4992,6 +4992,89 @@ function toggleAdvancedOptions() {
   }
 }
 
+/**
+ * Fetch products from backend
+ */
+async function loadProducts() {
+  try {
+    console.log('📦 Loading products from backend...');
+    
+    const hash = localStorage.getItem('userHash');
+    const email = localStorage.getItem('userEmail');
+    
+    if (!hash || !email) {
+      console.error('❌ No auth found');
+      alert('Please sign in first');
+      return;
+    }
+    
+    // Call backend to get all products
+    const response = await fetch('/api/getProducts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'getAll',
+        email: email,
+        hash: hash
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to load products');
+    }
+    
+    const result = await response.json();
+    
+    if (result.success && result.products) {
+      // ✅ KEY: Parse stock data from backend response
+      cachedProducts = result.products.map(product => {
+        
+        let stockStatus = product.stockStatus || 'medium';
+        let stockValue = product.stockValue || 0;
+        
+        // If backend returned raw stockStatusData (Column M), parse it
+        if (product.stockStatusData && !stockStatus) {
+          try {
+            const parsed = JSON.parse(product.stockStatusData);
+            stockStatus = parsed.status || stockStatus;
+            stockValue = parsed.value || stockValue;
+            console.log('✅ Parsed Column M data:', { stockStatus, stockValue });
+          } catch (e) {
+            console.warn('⚠️ Could not parse stockStatusData:', e);
+          }
+        }
+        
+        return {
+          ...product,
+          stockStatus: stockStatus,
+          stockValue: stockValue
+        };
+      });
+      
+      console.log('✅ Loaded', cachedProducts.length, 'products');
+      console.log('📊 Sample product:', cachedProducts[0]);
+      
+      // Cache locally
+      try {
+        localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+      } catch (e) {
+        console.warn('⚠️ Cache save failed:', e);
+      }
+      
+      renderProducts();
+    } else {
+      throw new Error(result.error || 'Invalid response');
+    }
+    
+  } catch (err) {
+    console.error('❌ Error loading products:', err);
+    // Fallback to cache
+    cachedProducts = JSON.parse(localStorage.getItem('inventory_products_cache') || '[]');
+    renderProducts();
+  }
+}
 
 
     
@@ -5000,7 +5083,7 @@ function toggleAdvancedOptions() {
    ***********************/
   let editingProductId = null;
   function showAddProduct(){ editingProductId=null; document.getElementById('modalTitle').textContent='Add New Product'; document.getElementById('productForm').reset(); document.getElementById('productId').value=''; new bootstrap.Modal(document.getElementById('productModal')).show(); }
- function editProduct(id){
+function editProduct(id){
   console.log('✏️ Editing product:', id);
   
   const p = (cachedProducts||[]).find(x=>x.id===id);
@@ -5010,6 +5093,8 @@ function toggleAdvancedOptions() {
   }
   
   console.log('📦 Product data:', p);
+  console.log('📊 Stock Status from cache:', p.stockStatus);
+  console.log('📊 Stock Value from cache:', p.stockValue);
   
   editingProductId = id;
   
@@ -5029,28 +5114,28 @@ function toggleAdvancedOptions() {
   // ✅ CRITICAL: Preserve imageUrl when editing
   window.editingProductImageUrl = p.imageUrl || '';
   
-  // ✅ NEW: Load stock status (if editing)
+  // ✅ LOAD STOCK STATUS (from cache, which should have been parsed)
   resetStockSelection(); // Clear previous selection
   
-  console.log('📊 Stock Status:', p.stockStatus);
-  console.log('📊 Stock Value:', p.stockValue);
-  
-  if (p.stockStatus) {
-    console.log('✅ Loading stock status:', p.stockStatus);
+  // ✅ IMPORTANT: Check if stockStatus exists in cache
+  if (p.stockStatus && ['good', 'medium', 'low', 'urgent', 'exact'].includes(p.stockStatus)) {
+    console.log('✅ Loading stock status from cache:', p.stockStatus);
     
     if (p.stockStatus === 'exact' && p.stockValue) {
       // Exact quantity - fill the input
       document.getElementById('productCurrentStock').value = p.stockValue;
       console.log('✅ Set exact stock value:', p.stockValue);
-    } else if (['good', 'medium', 'low', 'urgent'].includes(p.stockStatus)) {
+    } else {
       // Status selected - highlight the button
       selectStockStatus(p.stockStatus);
       console.log('✅ Selected status button:', p.stockStatus);
     }
   } else {
-    // Fallback for old products without stock status
-    console.log('⚠️ No stock status found, using medium as default');
-    selectStockStatus('medium'); 
+    console.warn('⚠️ No valid stock status in cache, using fallback');
+    // Only default if truly no status info
+    if (!p.stockStatus) {
+      selectStockStatus('medium');
+    }
   }
   
   // ✅ LOAD PHOTO IF EXISTS
@@ -12453,6 +12538,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
