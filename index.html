@@ -7498,6 +7498,9 @@ function toggleBulkProductSelection(productId, productName, productSize, product
 /**
  * Render selected items with RESPONSIVE LAYOUT (vertical on mobile)
  */
+/**
+ * Render selected items with FIXED HORIZONTAL BUTTONS
+ */
 function renderBulkSelectedItems() {
   const container = document.getElementById('bulkSelectedItems');
   if (!container) return;
@@ -7529,19 +7532,21 @@ function renderBulkSelectedItems() {
           </div>
         </div>
         
-        <!-- Quantity Controls (responsive layout) -->
+        <!-- Quantity Controls (ALWAYS HORIZONTAL) -->
         <div style="
           display: flex;
           justify-content: space-between;
           align-items: center;
           gap: 8px;
+          flex-wrap: nowrap;
         ">
-          <!-- LEFT: Minus, Qty, Plus (stacked on mobile) -->
+          <!-- LEFT: Minus, Qty, Plus (HORIZONTAL) -->
           <div style="
             display: flex;
             align-items: center;
             gap: 4px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            min-width: 0;
           ">
             <!-- Minus Button -->
             <button type="button" class="bulk-qty-btn" 
@@ -7558,6 +7563,7 @@ function renderBulkSelectedItems() {
                       min-height: 40px;
                       font-weight: bold;
                       transition: background 0.2s;
+                      flex-shrink: 0;
                     "
                     onmouseover="this.style.background='#c82333'"
                     onmouseout="this.style.background='#dc3545'">
@@ -7575,6 +7581,7 @@ function renderBulkSelectedItems() {
                      font-weight: bold;
                      border: 1px solid #ddd;
                      border-radius: 4px;
+                     flex-shrink: 0;
                    "
                    onchange="updateBulkQtyDirect('${product.id}', this.value)">
             
@@ -7593,6 +7600,7 @@ function renderBulkSelectedItems() {
                       min-height: 40px;
                       font-weight: bold;
                       transition: background 0.2s;
+                      flex-shrink: 0;
                     "
                     onmouseover="this.style.background='#218838'"
                     onmouseout="this.style.background='#28a745'">
@@ -7609,6 +7617,7 @@ function renderBulkSelectedItems() {
                     min-width: 40px;
                     min-height: 40px;
                     cursor: pointer;
+                    flex-shrink: 0;
                   ">
             ✕
           </button>
@@ -7619,7 +7628,7 @@ function renderBulkSelectedItems() {
   
   container.innerHTML = html;
   updateBulkCounters();
-  console.log('✅ Rendered', selectedArray.length, 'selected items (responsive)');
+  console.log('✅ Rendered', selectedArray.length, 'selected items (horizontal buttons)');
 }
 
 /**
@@ -12129,6 +12138,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
