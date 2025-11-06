@@ -3791,79 +3791,7 @@ let productPhotoBase64 = null;
 let productPhotoFileName = null;
 
 
-    /**
- * ==========================================
- * LOCALSTORAGE CACHING SYSTEM
- * ==========================================
- */
-
-// Cache keys
-const CACHE_KEYS = {
-  PRODUCTS: 'inventory_products_cache',
-  SALES: 'inventory_sales_cache',
-  BRANDS: 'inventory_brands_cache',
-  CUSTOMERS: 'inventory_customers_cache',
-  CACHE_TIMESTAMP: 'inventory_cache_timestamp'
-};
-
-/**
- * Save data to localStorage
- */
-function saveToCache(key, data) {
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-    localStorage.setItem(CACHE_KEYS.CACHE_TIMESTAMP, Date.now().toString());
-    console.log('✅ Cached:', key);
-  } catch (error) {
-    console.warn('⚠️ Cache save failed:', error);
-  }
-}
-
-/**
- * Load data from localStorage
- */
-function loadFromCache(key) {
-  try {
-    const data = localStorage.getItem(key);
-    if (data) {
-      console.log('✅ Loaded from cache:', key);
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.warn('⚠️ Cache load failed:', error);
-  }
-  return null;
-}
-
-/**
- * Clear all cached data
- */
-function clearAllCache() {
-  try {
-    Object.values(CACHE_KEYS).forEach(key => {
-      localStorage.removeItem(key);
-    });
-    console.log('✅ All cache cleared');
-  } catch (error) {
-    console.warn('⚠️ Cache clear failed:', error);
-  }
-}
-
-/**
- * Get cache age (in minutes)
- */
-function getCacheAge() {
-  const timestamp = localStorage.getItem(CACHE_KEYS.CACHE_TIMESTAMP);
-  if (!timestamp) return null;
   
-  const cacheTime = parseInt(timestamp);
-  const now = Date.now();
-  const ageMs = now - cacheTime;
-  const ageMinutes = Math.floor(ageMs / 60000);
-  
-  return ageMinutes;
-}
-
     
 // ==========================================
 // BACKGROUND SAVE QUEUE
@@ -4310,59 +4238,24 @@ try {
 
 async function syncFromGoogleSheets() {
   if (!userEmail || !userHash) {
-    console.warn('⚠️ No credentials, checking localStorage...');
+    console.warn('Ã¢Å¡ Ã¯Â¸Â No credentials, checking localStorage...');
     const savedEmail = localStorage.getItem('userEmail');
     const savedHash = localStorage.getItem('userHash');
     if (savedEmail && savedHash) {
       userEmail = savedEmail;
       userHash = savedHash;
-      console.log('✅ Restored credentials from localStorage');
+      console.log('Ã¢Å“â€¦ Restored credentials from localStorage');
     } else {
-      console.log('❌ No credentials found');
+      console.log('Ã°Å¸â€˜Â¤ No credentials found');
       showAuthScreen();
       return;
     }
   }
 
-  // ✅ STEP 1: LOAD FROM CACHE FIRST (INSTANT)
-  console.log('📦 Step 1: Checking localStorage cache...');
-  let cachedProductsData = null;
-  let cachedSalesData = null;
+  showSyncIndicator('Refreshing...');
   
   try {
-    const productsStr = localStorage.getItem('inventory_products_cache');
-    const salesStr = localStorage.getItem('inventory_sales_cache');
-    
-    if (productsStr) cachedProductsData = JSON.parse(productsStr);
-    if (salesStr) cachedSalesData = JSON.parse(salesStr);
-    
-    if (cachedProductsData && cachedSalesData) {
-      console.log('✅ CACHE FOUND! Loading instantly...');
-      console.log('📊 Cached:', cachedProductsData.length, 'products,', cachedSalesData.length, 'sales');
-      
-      // Apply cache to global variables
-      cachedProducts = cachedProductsData;
-      cachedSales = cachedSalesData.filter(sale => !deletedSaleIds.includes(sale.id));
-      hasInitialLoaded = true;
-      
-      // Render immediately
-      renderProducts();
-      renderSales();
-      updateSummaryFromCache();
-      
-      console.log('✅ Cached data displayed instantly!');
-    } else {
-      console.log('❌ No cache found (first load)');
-    }
-  } catch (error) {
-    console.warn('⚠️ Cache load error:', error);
-  }
-
-  // ✅ STEP 2: SYNC WITH GOOGLE SHEETS IN BACKGROUND
-  console.log('🌐 Step 2: Syncing fresh data from Google Sheets...');
-  showSyncIndicator('Syncing...');
-  
-  try {
+    // Ã¢Å“â€¦ Send email + hash for authentication
     const url = `${GOOGLE_SCRIPT_URL}?action=getAll&email=${encodeURIComponent(userEmail)}&hash=${encodeURIComponent(userHash)}&t=${Date.now()}`;
 
     const res = await fetch(url);
@@ -4372,11 +4265,11 @@ async function syncFromGoogleSheets() {
     }
     
     const data = await res.json();
-    console.log('📥 Response received:', data);
     
     // Check for unauthorized response
     if (!data.success && data.error === 'unauthorized') {
-      console.error('❌ Email not authorized');
+      // Ã¢Å“â€¦ ONLY clear auth on real unauthorized error
+      console.error('Ã¢ÂÅ’ Email not authorized');
       clearAuth();
       alert('Access denied. Your email is not authorized. Please contact administrator.');
       showAuthScreen();
@@ -4386,16 +4279,15 @@ async function syncFromGoogleSheets() {
     
     // Verify successful response
     if (data && data.success) {
-      console.log('✅ Fresh data received from Google Sheets');
-      
-      // ✅ Update products
+      // Update products
       cachedProducts = data.products || [];
-      console.log('📦 Products:', cachedProducts.length);
       
-      // ✅ Update sales with filtering for deleted items
+      // Update sales with filtering for deleted items
       let allSales = data.sales || [];
+      
+      // Filter out manually deleted sales
       cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
-      console.log('📊 Sales:', cachedSales.length);
+      console.log(`Ã°Å¸â€œÅ  Loaded ${allSales.length} sales from server, showing ${cachedSales.length} (${allSales.length - cachedSales.length} deleted)`);
       
       // Sort sales by date (newest first)
       sortSalesByDateDescending();
@@ -4403,32 +4295,15 @@ async function syncFromGoogleSheets() {
       // Mark initial load complete
       hasInitialLoaded = true;
       
-      // ✅ SAVE TO CACHE IMMEDIATELY - GUARANTEED
-      console.log('💾 Saving to cache...');
-      try {
-        const productsJson = JSON.stringify(cachedProducts);
-        const salesJson = JSON.stringify(cachedSales);
-        
-        localStorage.setItem('inventory_products_cache', productsJson);
-        localStorage.setItem('inventory_sales_cache', salesJson);
-        localStorage.setItem('inventory_cache_timestamp', Date.now().toString());
-        
-        console.log('✅ CACHE SAVED! Size:', {
-          products: (productsJson.length / 1024).toFixed(2) + ' KB',
-          sales: (salesJson.length / 1024).toFixed(2) + ' KB'
-        });
-      } catch (cacheError) {
-        console.error('❌ CACHE SAVE FAILED:', cacheError);
-        console.error('Storage quota exceeded? Try clearing cache.');
-      }
-      
       // Render both products and sales
       renderProducts();
       renderSales();
       
       // Update dashboard metrics
       updateSummaryFromCache();
-      
+        // ✅ NEW: Sync product groups and variants
+  // await syncProductGroups();
+ // await syncAllVariants();
       showSyncIndicator('Synced!', 900);
       
     } else {
@@ -4436,15 +4311,12 @@ async function syncFromGoogleSheets() {
     }
     
   } catch (err) {
-    console.error('❌ Sync error:', err);
-    showSyncIndicator('Sync failed', 2000);
-    
-    // If cache exists, keep showing it
-    if (cachedProductsData || cachedSalesData) {
-      console.log('✅ Using cached data (sync failed)');
-    }
+    console.error('Ã¢Å¡ Ã¯Â¸Â Sync error (non-critical):', err);
+    // Ã¢Å“â€¦ Don't show alert or clear auth on network errors
+    hideSyncIndicator();
   }
 }
+
 
 
 
@@ -12538,6 +12410,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
