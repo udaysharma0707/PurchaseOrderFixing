@@ -4346,13 +4346,43 @@ async function syncFromGoogleSheets() {
     return '#6c757d';
   }
 
-  function stockBadgeHtml(stock, minStock){
-    minStock = (typeof minStock === 'number') ? minStock : Number(minStock)||5;
-    stock = Number(stock)||0;
-    if(stock === 0) return `<span class="stock-badge bg-danger text-white">Out of Stock</span>`;
-    if(stock <= minStock) return `<span class="stock-badge bg-warning text-dark">Low (${stock})</span>`;
-    return `<span class="stock-badge bg-success text-white">In Stock (${stock})</span>`;
+  /**
+ * Generate stock badge HTML - handles both TEXT status and exact quantities
+ */
+function stockBadgeHtml(stock, minStock){
+  console.log('📊 stockBadgeHtml called with stock:', stock, 'minStock:', minStock);
+  
+  // Check if stock is TEXT status (GOOD/MEDIUM/LOW/URGENT)
+  if (typeof stock === 'string') {
+    const statusUpper = stock.toUpperCase();
+    
+    if (statusUpper === 'GOOD') {
+      return `<span class="stock-badge" style="background: #28a745; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🟢 Good Stock</span>`;
+    }
+    if (statusUpper === 'MEDIUM') {
+      return `<span class="stock-badge" style="background: #ffc107; color: black; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🟡 Medium Stock</span>`;
+    }
+    if (statusUpper === 'LOW') {
+      return `<span class="stock-badge" style="background: #dc3545; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🔴 Low Stock</span>`;
+    }
+    if (statusUpper === 'URGENT') {
+      return `<span class="stock-badge" style="background: #6f42c1; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🔵 Urgent</span>`;
+    }
   }
+  
+  // ✅ Handle NUMERIC stock (exact quantities)
+  minStock = (typeof minStock === 'number') ? minStock : Number(minStock) || 5;
+  stock = Number(stock) || 0;
+  
+  if (stock === 0) {
+    return `<span class="stock-badge bg-danger text-white" style="padding: 6px 12px; border-radius: 20px; display: inline-block;">Out of Stock</span>`;
+  }
+  if (stock <= minStock) {
+    return `<span class="stock-badge bg-warning text-dark" style="padding: 6px 12px; border-radius: 20px; display: inline-block;">Low (${stock})</span>`;
+  }
+  return `<span class="stock-badge bg-success text-white" style="padding: 6px 12px; border-radius: 20px; display: inline-block;">In Stock (${stock})</span>`;
+}
+
 
   function renderProducts(){
     const tbody = document.getElementById('productsTableBody');
@@ -12458,6 +12488,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
