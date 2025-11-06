@@ -4287,6 +4287,11 @@ try {
   function generateId(){ return 'TMP_' + Date.now().toString(36) + Math.random().toString(36).substr(2); }
   function escapeHtml(s){ if (s===null||s===undefined) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
+
+
+
+
+    
 /**
  * Sync / Fetch from Google Sheets
  * Combines authentication check + complete data fetching + sales filtering
@@ -4995,29 +5000,79 @@ function toggleAdvancedOptions() {
    ***********************/
   let editingProductId = null;
   function showAddProduct(){ editingProductId=null; document.getElementById('modalTitle').textContent='Add New Product'; document.getElementById('productForm').reset(); document.getElementById('productId').value=''; new bootstrap.Modal(document.getElementById('productModal')).show(); }
-  function editProduct(id){
-    const p = (cachedProducts||[]).find(x=>x.id===id);
-    if(!p){ alert('ÃƒÂ¢Ã‚ÂÃ…â€™ Product not found'); return; }
-    editingProductId = id;
-    document.getElementById('modalTitle').textContent='Edit Product';
-    document.getElementById('productId').value = p.id;
-    document.getElementById('productName').value = p.name;
-    document.getElementById('category').value = p.category;
-    document.getElementById('brand').value = p.brand||'';
-    document.getElementById('size').value = p.size||'';
-    document.getElementById('unitType').value = p.unitType;
-    document.getElementById('piecesPerBox').value = p.piecesPerBox||1;
-    document.getElementById('sftPerBox').value = p.sftPerBox||'';
-    document.getElementById('price').value = p.price;
-    document.getElementById('stock').value = p.stock;
-    document.getElementById('minStock').value = p.minStock;
-
-  // âœ… CRITICAL: Preserve imageUrl when editing
-  // Store it in a hidden field or variable
-  window.editingProductImageUrl = p.imageUrl || '';
-    
-    new bootstrap.Modal(document.getElementById('productModal')).show();
+ function editProduct(id){
+  console.log('✏️ Editing product:', id);
+  
+  const p = (cachedProducts||[]).find(x=>x.id===id);
+  if(!p){ 
+    alert('❌ Product not found'); 
+    return; 
   }
+  
+  console.log('📦 Product data:', p);
+  
+  editingProductId = id;
+  
+  // ✅ SET FORM FIELDS
+  document.getElementById('modalTitle').textContent='Edit Product';
+  document.getElementById('productId').value = p.id;
+  document.getElementById('productName').value = p.name;
+  document.getElementById('category').value = p.category;
+  document.getElementById('brand').value = p.brand||'';
+  document.getElementById('size').value = p.size||'';
+  document.getElementById('unitType').value = p.unitType;
+  document.getElementById('piecesPerBox').value = p.piecesPerBox||1;
+  document.getElementById('sftPerBox').value = p.sftPerBox||'';
+  document.getElementById('price').value = p.price;
+  document.getElementById('minStock').value = p.minStock;
+  
+  // ✅ CRITICAL: Preserve imageUrl when editing
+  window.editingProductImageUrl = p.imageUrl || '';
+  
+  // ✅ NEW: Load stock status (if editing)
+  resetStockSelection(); // Clear previous selection
+  
+  console.log('📊 Stock Status:', p.stockStatus);
+  console.log('📊 Stock Value:', p.stockValue);
+  
+  if (p.stockStatus) {
+    console.log('✅ Loading stock status:', p.stockStatus);
+    
+    if (p.stockStatus === 'exact' && p.stockValue) {
+      // Exact quantity - fill the input
+      document.getElementById('productCurrentStock').value = p.stockValue;
+      console.log('✅ Set exact stock value:', p.stockValue);
+    } else if (['good', 'medium', 'low', 'urgent'].includes(p.stockStatus)) {
+      // Status selected - highlight the button
+      selectStockStatus(p.stockStatus);
+      console.log('✅ Selected status button:', p.stockStatus);
+    }
+  } else {
+    // Fallback for old products without stock status
+    console.log('⚠️ No stock status found, using medium as default');
+    selectStockStatus('medium'); 
+  }
+  
+  // ✅ LOAD PHOTO IF EXISTS
+  if (p.imageUrl) {
+    document.getElementById('productPhotoPreviewImage').src = p.imageUrl;
+    document.getElementById('productPhotoPreviewContainer').style.display = 'block';
+    document.getElementById('productPhotoUploadArea').style.display = 'none';
+    console.log('📷 Photo loaded');
+  } else {
+    document.getElementById('productPhotoPreviewContainer').style.display = 'none';
+    document.getElementById('productPhotoUploadArea').style.display = 'block';
+  }
+  
+  // ✅ RESET PHOTO VARIABLES
+  productPhotoBase64 = null;
+  productPhotoFileName = null;
+  
+  // ✅ OPEN MODAL
+  new bootstrap.Modal(document.getElementById('productModal')).show();
+  console.log('✅ Edit modal opened');
+}
+
 
 async function saveProduct() {
   console.log('💾 saveProduct called');
@@ -6268,6 +6323,39 @@ function getStockData() {
 }
 
 /**
+ * ==========================================
+ * HELPER FUNCTIONS - STOCK DISPLAY
+ * ==========================================
+ */
+
+/**
+ * Parse stock data from product (handles new & old formats)
+ */
+function parseProductStockData(product) {
+  // ✅ NEW FORMAT: Has stockStatus field
+  if (product.stockStatus) {
+    return {
+      stockStatus: product.stockStatus,
+      stockValue: product.stockValue || 0,
+      displayStatus: product.stockStatus
+    };
+  }
+  
+  // ✅ VERY OLD FORMAT: Only has stock number (fallback)
+  if (product.stock && !product.stockStatus) {
+    if (product.stock >= 100) return { stockStatus: 'good', stockValue: product.stock, displayStatus: 'good' };
+    if (product.stock >= 30) return { stockStatus: 'medium', stockValue: product.stock, displayStatus: 'medium' };
+    if (product.stock >= 5) return { stockStatus: 'low', stockValue: product.stock, displayStatus: 'low' };
+    return { stockStatus: 'urgent', stockValue: product.stock, displayStatus: 'urgent' };
+  }
+  
+  // Default
+  return { stockStatus: 'medium', stockValue: 0, displayStatus: 'medium' };
+}
+
+
+    
+/**
  * Convert stock status to display badge
  */
 function getStockBadge(stockStatus, stockValue) {
@@ -6281,10 +6369,30 @@ function getStockBadge(stockStatus, stockValue) {
   }
   
   const badges = {
-    'good': { icon: '🟢', text: 'Good Stock', color: '#28a745', bgColor: '#d4edda' },
-    'medium': { icon: '🟡', text: 'Medium Stock', color: '#856404', bgColor: '#fff3cd' },
-    'low': { icon: '🔴', text: 'Low Stock', color: '#dc3545', bgColor: '#f8d7da' },
-    'urgent': { icon: '🔵', text: 'Urgent', color: '#6f42c1', bgColor: '#e2d5f0' }
+    'good': { 
+      icon: '🟢', 
+      text: 'Good Stock', 
+      color: '#155724', 
+      bgColor: '#d4edda' 
+    },
+    'medium': { 
+      icon: '🟡', 
+      text: 'Medium Stock', 
+      color: '#856404', 
+      bgColor: '#fff3cd' 
+    },
+    'low': { 
+      icon: '🔴', 
+      text: 'Low Stock', 
+      color: '#721c24', 
+      bgColor: '#f8d7da' 
+    },
+    'urgent': { 
+      icon: '🔵', 
+      text: 'Urgent', 
+      color: '#664399', 
+      bgColor: '#e2d5f0' 
+    }
   };
   
   return badges[stockStatus] || { 
@@ -6307,7 +6415,6 @@ function resetStockSelection() {
     btn.style.opacity = '0.7';
   });
 }
-
 
 
 
@@ -6356,6 +6463,11 @@ function resetStockSelection() {
     displayProducts(filteredProducts);
 }
 
+/**
+ * ==========================================
+ * DISPLAY PRODUCTS - DESKTOP & MOBILE
+ * ==========================================
+ */
 function displayProducts(products) {
     const tbody = document.getElementById('productsTableBody');
     
@@ -6375,23 +6487,21 @@ function displayProducts(products) {
     products.forEach(product => {
         const iconColor = categoryIconColor(product.category);
         
-        // ✅ NEW: Get stock badge using stock status
-        const stockBadge = getStockBadge(product.stockStatus, product.stockValue);
-        let stockBadgeHtml = '';
+        // ✅ FIXED: Parse stock data properly
+        const stockData = parseProductStockData(product);
+        const stockBadge = getStockBadge(stockData.stockStatus, stockData.stockValue);
         
-        if (product.stockStatus === 'exact' || product.stock > 0) {
-          // Show exact quantity if available
-          stockBadgeHtml = `<span class="badge" style="background: ${stockBadge.bgColor}; color: ${stockBadge.color};">
+        const stockBadgeHtml = `
+          <span class="badge" style="
+            background: ${stockBadge.bgColor}; 
+            color: ${stockBadge.color};
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+          ">
             ${stockBadge.icon} ${stockBadge.text}
-          </span>`;
-        } else {
-          // Fallback for old data (no stock status)
-          const stockClass = product.stock > product.minStock ? 'In Stock' : 
-                            product.stock > 0 ? 'Low' : 'Out of Stock';
-          const stockBadgeClass = product.stock > product.minStock ? 'bg-success' : 
-                                 product.stock > 0 ? 'bg-warning' : 'bg-danger';
-          stockBadgeHtml = `<span class="badge ${stockBadgeClass}">${stockClass} (${product.stock})</span>`;
-        }
+          </span>
+        `;
         
         html += `
             <tr>
@@ -6416,7 +6526,7 @@ function displayProducts(products) {
     
     tbody.innerHTML = html;
     
-    // Also update mobile list
+    // ✅ ALSO UPDATE MOBILE LIST
     const container = document.getElementById('mobileProductsList');
     if (products.length === 0) {
         container.innerHTML = '<div class="mobile-item text-center text-muted">No products found</div>';
@@ -6427,8 +6537,10 @@ function displayProducts(products) {
     products.forEach(p => {
         const iconColor = categoryIconColor(p.category);
         
-        // ✅ NEW: Stock badge for mobile
-        const stockBadge = getStockBadge(p.stockStatus, p.stockValue);
+        // ✅ FIXED: Parse stock data properly
+        const stockData = parseProductStockData(p);
+        const stockBadge = getStockBadge(stockData.stockStatus, stockData.stockValue);
+        
         const mobileBadgeHtml = `
           <div style="
             background: ${stockBadge.bgColor};
@@ -6476,6 +6588,7 @@ function displayProducts(products) {
 function displayAllProducts() {
     displayProducts(cachedProducts);
 }
+
 
 
     // Open Clear Sales popup
@@ -12340,6 +12453,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
