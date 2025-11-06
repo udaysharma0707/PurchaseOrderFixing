@@ -4357,10 +4357,10 @@ function stockBadgeHtml(stock, minStock){
     const statusUpper = stock.toUpperCase();
     
     if (statusUpper === 'GOOD') {
-      return `<span class="stock-badge" style="background: #28a745; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🟢 Good Stock</span>`;
+      return `<span class="stock-badge" style="background: #28a745; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🟢 Good</span>`;
     }
     if (statusUpper === 'MEDIUM') {
-      return `<span class="stock-badge" style="background: #ffc107; color: black; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🟡 Medium Stock</span>`;
+      return `<span class="stock-badge" style="background: #ffc107; color: black; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🟡 Medium </span>`;
     }
     if (statusUpper === 'LOW') {
       return `<span class="stock-badge" style="background: #dc3545; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🔴 Low Stock</span>`;
@@ -4436,8 +4436,8 @@ function stockBadgeHtml(stock, minStock){
             <div style="width:36px;text-align:center;"><i class="bi bi-file-earmark-fill" style="font-size:1.25rem;color:${iconColor}"></i></div>
             <div>
               <div style="font-weight:600">${escapeHtml(p.name)}</div>
-              <div class="small-muted">${escapeHtml(p.category||'')} ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ${escapeHtml(p.brand||'')}</div>
-              <div class="small-muted"><strong>${escapeHtml(p.size||'')}</strong> ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ ₹${parseFloat(p.price||0).toFixed(2)}/${p.unitType}</div>
+              <div class="small-muted">${escapeHtml(p.category||'')} • ${escapeHtml(p.brand||'')}</div>
+              <div class="small-muted"><strong>${escapeHtml(p.size||'')}</strong> • ₹${parseFloat(p.price||0).toFixed(2)}/${p.unitType}</div>
             </div>
           </div>
           <div style="text-align:right;">
@@ -12488,6 +12488,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
