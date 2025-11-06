@@ -2980,8 +2980,8 @@ body.modal-open {
               <label class="form-label">Selling price *</label>
               <input id="price" class="form-control" type="number" step="0.01" required/>
             </div>
-           <!-- ✅ STOCK STATUS SELECTION (NEW) -->
-<div class="col-md-6">
+          <!-- ✅ STOCK STATUS SELECTION ONLY -->
+<div class="col-md-12">
   <label class="form-label">Stock Status *</label>
   <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
     <!-- Good -->
@@ -3021,20 +3021,12 @@ body.modal-open {
   <input type="hidden" id="selectedStockStatus" value="">
 </div>
 
-<!-- Exact Quantity OR Stock Status -->
-<div class="col-md-6">
-  <label class="form-label">OR Enter Exact Qty</label>
-  <input type="number" class="form-control" id="productCurrentStock" 
-         min="0" max="9999" placeholder="Optional"
-         style="padding: 8px;">
-  <small class="text-muted">Leave empty to use status</small>
+<!-- Minimum Stock -->
+<div class="col-md-12">
+  <label class="form-label">Minimum Stock</label>
+  <input id="minStock" class="form-control" type="number" value="5"/>
 </div>
 
-            <div class="col-md-3">
-              <label class="form-label">Minimum Stock</label>
-              <input id="minStock" class="form-control" type="number" value="5"/>
-            </div>
-          </div>
           
           <!-- ✅ ADVANCED OPTIONS (EXPANDABLE) -->
           <div style="margin-bottom: 15px;">
@@ -3773,8 +3765,8 @@ body.modal-open {
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJTzTQWKgcE6Br43STTfsLe1dCyBAuvPFWiM-FUlb4wAPekwTNr-3vlRkjmjNgQGRy/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxJTzTQWKgcE6Br43STTfsLe1dCyBAuvPFWiM-FUlb4wAPekwTNr-3vlRkjmjNgQGRy/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby08XpM28vwkGi1oS4k1snA9PlbdObaTxwY_ZaHMLUd3BjnF-_DntqMYr1MR8TypruF/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby08XpM28vwkGi1oS4k1snA9PlbdObaTxwY_ZaHMLUd3BjnF-_DntqMYr1MR8TypruF/exec'
   let cachedProducts = [];
   let cachedSales = [];
 
@@ -5054,7 +5046,7 @@ async function saveProduct() {
   const sftPerBox = parseFloat(document.getElementById('sftPerBox').value) || 0;
   const price = parseFloat(document.getElementById('price').value);
   
-  // ✅ NEW: Get stock data (status + optional exact value)
+  // ✅ NEW: Get stock status (TEXT ONLY: good/medium/low/urgent)
   const stockData = getStockData();
   if (!stockData) {
     return; // Error already shown by getStockData()
@@ -5062,7 +5054,7 @@ async function saveProduct() {
   
   const minStock = parseInt(document.getElementById('minStock').value) || 5;
   
-  console.log('🔍 Form data:', { name, category, brand, price, stockData });
+  console.log('🔍 Form data:', { name, category, brand, price, stockStatus: stockData.stockStatus });
   
   // ✅ VALIDATION
   if (!name || !category || isNaN(price)) {
@@ -5071,7 +5063,7 @@ async function saveProduct() {
     return;
   }
   
-  // ✅ CREATE PRODUCT OBJECT WITH STOCK STATUS
+  // ✅ CREATE PRODUCT OBJECT - STOCK IS NOW TEXT (GOOD/MEDIUM/LOW/URGENT)
   const product = {
     id: editingProductId || (Date.now().toString(36) + Math.random().toString(36).substr(2)),
     name: name,
@@ -5082,11 +5074,11 @@ async function saveProduct() {
     piecesPerBox: piecesPerBox,
     sftPerBox: sftPerBox,
     price: price,
-    stock: stockData.stockStatus === 'exact' ? stockData.stockValue : 0, // ✅ Use exact or 0
+    stock: stockData.stockStatus.toUpperCase(),  // ✅ SEND TEXT: "GOOD", "MEDIUM", "LOW", "URGENT"
     minStock: minStock,
     imageUrl: window.editingProductImageUrl || '',
-    stockStatus: stockData.stockStatus,  // ✅ NEW: Status (good/medium/low/urgent/exact)
-    stockValue: stockData.stockValue || '' // ✅ NEW: Exact value if chosen
+    stockStatus: stockData.stockStatus,
+    stockValue: null  // No exact value needed
   };
   
   console.log('📦 Product object:', product);
@@ -5106,7 +5098,7 @@ async function saveProduct() {
   // ✅ SAVE TO CACHE IMMEDIATELY
   try {
     localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-    console.log('✅ Product cached immediately with stock status');
+    console.log('✅ Product cached immediately with stock status:', stockData.stockStatus);
   } catch (error) {
     console.warn('⚠️ Cache save failed:', error);
   }
@@ -5140,13 +5132,13 @@ async function saveProduct() {
     }
   }
   
-  // ✅ SAVE PRODUCT TO SHEET (WITH STOCK STATUS)
+  // ✅ SAVE PRODUCT TO SHEET
   try {
     const resp = await saveProductToSheet(product, !!editingProductId);
     console.log('📥 saveProductToSheet response:', resp);
     
     if (resp && (resp.success || resp.ok)) {
-      console.log('✅ Product saved successfully with stock status:', product.stockStatus);
+      console.log('✅ Product saved successfully with stock status:', product.stock);
       
       if (resp.id) {
         const localIdx = cachedProducts.findIndex(p => p.id === product.id);
@@ -5162,14 +5154,13 @@ async function saveProduct() {
       }
       
       showSyncIndicator('Saved', 900);
-      resetStockSelection(); // ✅ NEW: Reset stock buttons after save
+      resetStockSelection(); // Reset stock buttons after save
     } else {
       console.error('⚠️ Save returned false:', resp);
       if (previous && idx !== -1) {
         cachedProducts[idx] = previous;
         renderProducts();
         
-        // ✅ REVERT CACHE
         try {
           localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
         } catch (error) {
@@ -5189,7 +5180,6 @@ async function saveProduct() {
       renderProducts();
     }
     
-    // ✅ REVERT CACHE
     try {
       localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
     } catch (error) {
@@ -5205,6 +5195,7 @@ async function saveProduct() {
   productPhotoBase64 = null;
   productPhotoFileName = null;
 }
+
 
 
 
@@ -6254,30 +6245,23 @@ function selectStockStatus(status) {
  * Get stock data before saving
  */
 function getStockData() {
-  const exactStock = document.getElementById('productCurrentStock')?.value || '';
   const statusSelected = document.getElementById('selectedStockStatus')?.value || '';
   
-  // If exact number entered, use it
-  if (exactStock && parseInt(exactStock) > 0) {
-    console.log('✅ Using exact stock:', exactStock);
-    return {
-      stockStatus: 'exact',
-      stockValue: parseInt(exactStock)
-    };
+  // Validation: Must select a status
+  if (!statusSelected) {
+    alert('⚠️ Please select a stock status (Good/Medium/Low/Urgent)');
+    return null;
   }
   
-  // Otherwise use status
-  if (statusSelected) {
-    console.log('✅ Using status:', statusSelected);
-    return {
-      stockStatus: statusSelected,
-      stockValue: ''
-    };
-  }
+  console.log('✅ Stock status selected:', statusSelected);
   
-  alert('⚠️ Please select a stock status or enter exact quantity');
-  return null;
+  return {
+    stockStatus: statusSelected,
+    stockValue: null  // No exact value needed
+  };
 }
+
+
 
 /**
  * ==========================================
@@ -6289,26 +6273,21 @@ function getStockData() {
  * Parse stock data from product (handles new & old formats)
  */
 function parseProductStockData(product) {
-  // ✅ NEW FORMAT: Has stockStatus field
-  if (product.stockStatus) {
+  // ✅ NEW: Column J has TEXT status directly
+  const stockText = (product.stock || 'MEDIUM').toString().toUpperCase();
+  
+  if (['GOOD', 'MEDIUM', 'LOW', 'URGENT'].includes(stockText)) {
     return {
-      stockStatus: product.stockStatus,
-      stockValue: product.stockValue || 0,
-      displayStatus: product.stockStatus
+      stockStatus: stockText.toLowerCase(),
+      stockValue: 0,
+      displayStatus: stockText.toLowerCase()
     };
   }
   
-  // ✅ VERY OLD FORMAT: Only has stock number (fallback)
-  if (product.stock && !product.stockStatus) {
-    if (product.stock >= 100) return { stockStatus: 'good', stockValue: product.stock, displayStatus: 'good' };
-    if (product.stock >= 30) return { stockStatus: 'medium', stockValue: product.stock, displayStatus: 'medium' };
-    if (product.stock >= 5) return { stockStatus: 'low', stockValue: product.stock, displayStatus: 'low' };
-    return { stockStatus: 'urgent', stockValue: product.stock, displayStatus: 'urgent' };
-  }
-  
-  // Default
+  // Fallback
   return { stockStatus: 'medium', stockValue: 0, displayStatus: 'medium' };
 }
+
 
 
     
@@ -12410,6 +12389,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
