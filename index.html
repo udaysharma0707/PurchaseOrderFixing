@@ -2966,66 +2966,74 @@ body.modal-open {
             </div>
           </div>
           
-          <!-- Unit Type, Price, Stock, Min Stock (ESSENTIAL) -->
-          <div class="row mb-3">
-            <div class="col-md-3">
-              <label class="form-label">Unit Type *</label>
-              <select id="unitType" class="form-select" required>
-                <option value="Box">Box</option>
-                <option value="Piece">Piece</option>
-                <option value="SFT">Square Feet</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Selling price *</label>
-              <input id="price" class="form-control" type="number" step="0.01" required/>
-            </div>
-          <!-- ✅ STOCK STATUS SELECTION ONLY -->
-<div class="col-md-12">
-  <label class="form-label">Stock Status *</label>
-  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
-    <!-- Good -->
-    <button type="button" class="btn stock-btn" 
-            id="stockBtn-good" 
-            onclick="selectStockStatus('good')"
-            style="background: #28a745; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
-      🟢 Good
-    </button>
-    
-    <!-- Medium -->
-    <button type="button" class="btn stock-btn" 
-            id="stockBtn-medium" 
-            onclick="selectStockStatus('medium')"
-            style="background: #ffc107; color: black; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
-      🟡 Medium
-    </button>
-    
-    <!-- Low -->
-    <button type="button" class="btn stock-btn" 
-            id="stockBtn-low" 
-            onclick="selectStockStatus('low')"
-            style="background: #dc3545; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
-      🔴 Low
-    </button>
-    
-    <!-- Urgent -->
-    <button type="button" class="btn stock-btn" 
-            id="stockBtn-urgent" 
-            onclick="selectStockStatus('urgent')"
-            style="background: #6f42c1; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
-      🔵 Urgent
-    </button>
+        <!-- Unit Type, Price, Current Stock (OPTIONAL) -->
+<div class="row mb-3">
+  <div class="col-md-3">
+    <label class="form-label">Unit Type *</label>
+    <select id="unitType" class="form-select" required>
+      <option value="Box">Box</option>
+      <option value="Piece">Piece</option>
+      <option value="SFT">Square Feet</option>
+    </select>
   </div>
-  
-  <!-- Hidden input to track selected status -->
-  <input type="hidden" id="selectedStockStatus" value="">
+  <div class="col-md-3">
+    <label class="form-label">Selling price *</label>
+    <input id="price" class="form-control" type="number" step="0.01" required/>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Current Stock (Optional)</label>
+    <input id="productCurrentStock" class="form-control" type="number" min="0" max="9999" placeholder="Leave empty"/>
+    <small class="text-muted">For exact quantity</small>
+  </div>
+  <div class="col-md-3">
+    <label class="form-label">Minimum Stock</label>
+    <input id="minStock" class="form-control" type="number" value="5"/>
+  </div>
 </div>
 
-<!-- Minimum Stock -->
-<div class="col-md-12">
-  <label class="form-label">Minimum Stock</label>
-  <input id="minStock" class="form-control" type="number" value="5"/>
+<!-- Stock Status Selection -->
+<div class="row mb-3">
+  <div class="col-md-12">
+    <label class="form-label">Stock Status *</label>
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;">
+      <!-- Good -->
+      <button type="button" class="btn stock-btn" 
+              id="stockBtn-good" 
+              onclick="selectStockStatus('good')"
+              style="background: #28a745; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
+        🟢 Good
+      </button>
+      
+      <!-- Medium -->
+      <button type="button" class="btn stock-btn" 
+              id="stockBtn-medium" 
+              onclick="selectStockStatus('medium')"
+              style="background: #ffc107; color: black; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
+        🟡 Medium
+      </button>
+      
+      <!-- Low -->
+      <button type="button" class="btn stock-btn" 
+              id="stockBtn-low" 
+              onclick="selectStockStatus('low')"
+              style="background: #dc3545; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
+        🔴 Low
+      </button>
+      
+      <!-- Urgent -->
+      <button type="button" class="btn stock-btn" 
+              id="stockBtn-urgent" 
+              onclick="selectStockStatus('urgent')"
+              style="background: #6f42c1; color: white; padding: 10px; border-radius: 6px; font-weight: bold; border: 2px solid transparent; font-size: 12px;">
+        🔵 Urgent
+      </button>
+    </div>
+    
+    <!-- Hidden input to track selected status -->
+    <input type="hidden" id="selectedStockStatus" value="">
+  </div>
 </div>
+
 
           
           <!-- ✅ ADVANCED OPTIONS (EXPANDABLE) -->
@@ -4957,8 +4965,6 @@ function editProduct(id){
   }
   
   console.log('📦 Product data:', p);
-  console.log('📊 Stock Status from cache:', p.stockStatus);
-  console.log('📊 Stock Value from cache:', p.stockValue);
   
   editingProductId = id;
   
@@ -4978,28 +4984,46 @@ function editProduct(id){
   // ✅ CRITICAL: Preserve imageUrl when editing
   window.editingProductImageUrl = p.imageUrl || '';
   
-  // ✅ LOAD STOCK STATUS (from cache, which should have been parsed)
+  // ✅ LOAD STOCK DATA (can be status OR exact quantity)
   resetStockSelection(); // Clear previous selection
   
-  // ✅ IMPORTANT: Check if stockStatus exists in cache
-  if (p.stockStatus && ['good', 'medium', 'low', 'urgent', 'exact'].includes(p.stockStatus)) {
-    console.log('✅ Loading stock status from cache:', p.stockStatus);
+  // Determine what type of stock data we have
+  const stockType = typeof p.stock;
+  
+  console.log('📊 Stock value from cache:', p.stock);
+  console.log('📊 Stock type:', stockType);
+  
+  if (stockType === 'number' && p.stock > 0) {
+    // ✅ EXACT QUANTITY (number)
+    console.log('✅ Loading exact stock quantity:', p.stock);
+    document.getElementById('productCurrentStock').value = p.stock;
     
-    if (p.stockStatus === 'exact' && p.stockValue) {
-      // Exact quantity - fill the input
-      document.getElementById('productCurrentStock').value = p.stockValue;
-      console.log('✅ Set exact stock value:', p.stockValue);
+  } else if (stockType === 'string') {
+    // ✅ STATUS TEXT (GOOD/MEDIUM/LOW/URGENT)
+    const statusLower = p.stock.toLowerCase();
+    console.log('📊 Stock is TEXT status:', statusLower);
+    
+    if (['good', 'medium', 'low', 'urgent'].includes(statusLower)) {
+      console.log('✅ Setting status button:', statusLower);
+      selectStockStatus(statusLower);
     } else {
-      // Status selected - highlight the button
-      selectStockStatus(p.stockStatus);
-      console.log('✅ Selected status button:', p.stockStatus);
-    }
-  } else {
-    console.warn('⚠️ No valid stock status in cache, using fallback');
-    // Only default if truly no status info
-    if (!p.stockStatus) {
+      console.warn('⚠️ Unknown status:', p.stock);
       selectStockStatus('medium');
     }
+    
+  } else if (p.stockStatus && ['good', 'medium', 'low', 'urgent', 'exact'].includes(p.stockStatus)) {
+    // ✅ FALLBACK: Use stockStatus field if available
+    console.log('✅ Using stockStatus field:', p.stockStatus);
+    
+    if (p.stockStatus === 'exact' && p.stockValue) {
+      document.getElementById('productCurrentStock').value = p.stockValue;
+    } else {
+      selectStockStatus(p.stockStatus);
+    }
+  } else {
+    // ✅ DEFAULT: No valid stock info
+    console.warn('⚠️ No valid stock info found, defaulting to medium');
+    selectStockStatus('medium');
   }
   
   // ✅ LOAD PHOTO IF EXISTS
@@ -5021,7 +5045,6 @@ function editProduct(id){
   new bootstrap.Modal(document.getElementById('productModal')).show();
   console.log('✅ Edit modal opened');
 }
-
 
 async function saveProduct() {
   console.log('💾 saveProduct called');
@@ -5046,7 +5069,7 @@ async function saveProduct() {
   const sftPerBox = parseFloat(document.getElementById('sftPerBox').value) || 0;
   const price = parseFloat(document.getElementById('price').value);
   
-  // ✅ NEW: Get stock status (TEXT ONLY: good/medium/low/urgent)
+  // ✅ GET STOCK DATA (status + optional exact quantity)
   const stockData = getStockData();
   if (!stockData) {
     return; // Error already shown by getStockData()
@@ -5054,7 +5077,7 @@ async function saveProduct() {
   
   const minStock = parseInt(document.getElementById('minStock').value) || 5;
   
-  console.log('🔍 Form data:', { name, category, brand, price, stockStatus: stockData.stockStatus });
+  console.log('🔍 Form data:', { name, category, brand, price, stockData });
   
   // ✅ VALIDATION
   if (!name || !category || isNaN(price)) {
@@ -5063,7 +5086,7 @@ async function saveProduct() {
     return;
   }
   
-  // ✅ CREATE PRODUCT OBJECT - STOCK IS NOW TEXT (GOOD/MEDIUM/LOW/URGENT)
+  // ✅ CREATE PRODUCT OBJECT - HANDLE BOTH EXACT & STATUS
   const product = {
     id: editingProductId || (Date.now().toString(36) + Math.random().toString(36).substr(2)),
     name: name,
@@ -5074,11 +5097,14 @@ async function saveProduct() {
     piecesPerBox: piecesPerBox,
     sftPerBox: sftPerBox,
     price: price,
-    stock: stockData.stockStatus.toUpperCase(),  // ✅ SEND TEXT: "GOOD", "MEDIUM", "LOW", "URGENT"
+    // ✅ KEY: If exact quantity, send number; if status, send TEXT
+    stock: stockData.stockStatus === 'exact' 
+      ? stockData.stockValue 
+      : stockData.stockStatus.toUpperCase(),
     minStock: minStock,
     imageUrl: window.editingProductImageUrl || '',
     stockStatus: stockData.stockStatus,
-    stockValue: null  // No exact value needed
+    stockValue: stockData.stockValue || null
   };
   
   console.log('📦 Product object:', product);
@@ -5098,7 +5124,7 @@ async function saveProduct() {
   // ✅ SAVE TO CACHE IMMEDIATELY
   try {
     localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-    console.log('✅ Product cached immediately with stock status:', stockData.stockStatus);
+    console.log('✅ Product cached immediately with stock:', product.stock);
   } catch (error) {
     console.warn('⚠️ Cache save failed:', error);
   }
@@ -5132,13 +5158,13 @@ async function saveProduct() {
     }
   }
   
-  // ✅ SAVE PRODUCT TO SHEET
+  // ✅ SAVE PRODUCT TO SHEET (WITH BOTH STATUS AND EXACT)
   try {
     const resp = await saveProductToSheet(product, !!editingProductId);
     console.log('📥 saveProductToSheet response:', resp);
     
     if (resp && (resp.success || resp.ok)) {
-      console.log('✅ Product saved successfully with stock status:', product.stock);
+      console.log('✅ Product saved successfully. Stock:', product.stock);
       
       if (resp.id) {
         const localIdx = cachedProducts.findIndex(p => p.id === product.id);
@@ -6241,24 +6267,67 @@ function selectStockStatus(status) {
   }
 }
 
+
+
+    /**
+ * Stock Status Selection Handler
+ */
+function selectStockStatus(status) {
+  console.log('📊 Selected stock status:', status);
+  
+  selectedStockStatus = status;
+  document.getElementById('selectedStockStatus').value = status;
+  
+  // Clear exact quantity when status selected
+  document.getElementById('productCurrentStock').value = '';
+  
+  // Update button styling
+  document.querySelectorAll('.stock-btn').forEach(btn => {
+    btn.style.border = '2px solid transparent';
+    btn.style.opacity = '0.7';
+  });
+  
+  // Highlight selected button
+  const selectedBtn = document.getElementById(`stockBtn-${status}`);
+  if (selectedBtn) {
+    selectedBtn.style.border = '2px solid white';
+    selectedBtn.style.opacity = '1';
+  }
+  
+  console.log('✅ Stock status set to:', status);
+}
+
 /**
  * Get stock data before saving
  */
+/**
+ * Get stock status - can be from buttons OR exact quantity
+ */
 function getStockData() {
   const statusSelected = document.getElementById('selectedStockStatus')?.value || '';
+  const exactStock = document.getElementById('productCurrentStock')?.value || '';
   
-  // Validation: Must select a status
-  if (!statusSelected) {
-    alert('⚠️ Please select a stock status (Good/Medium/Low/Urgent)');
-    return null;
+  // If exact number entered, use it
+  if (exactStock && parseInt(exactStock) > 0) {
+    console.log('✅ Using exact stock:', exactStock);
+    return {
+      stockStatus: 'exact',
+      stockValue: parseInt(exactStock)
+    };
   }
   
-  console.log('✅ Stock status selected:', statusSelected);
+  // Otherwise use status (must select one)
+  if (statusSelected) {
+    console.log('✅ Using status:', statusSelected);
+    return {
+      stockStatus: statusSelected,
+      stockValue: null
+    };
+  }
   
-  return {
-    stockStatus: statusSelected,
-    stockValue: null  // No exact value needed
-  };
+  // Error: No stock info provided
+  alert('⚠️ Please either:\n1. Select a stock status (Good/Medium/Low/Urgent)\n2. OR enter an exact quantity');
+  return null;
 }
 
 
@@ -12389,6 +12458,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
