@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.json">
 
 <!-- Theme Color -->
-<meta name="theme-color" content="#0d6efd">
+<meta name="theme-color" content="#1976D2">
 
 <!-- Apple Touch Icon -->
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -34,6 +34,61 @@
 
   <style>
     body{background:#f8f9fa;font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif}
+
+ /* ✅ ADD THIS NEW SECTION HERE */
+  /* ==========================================
+     TOP HEADER BAR - PROFESSIONAL BLUE
+     ========================================== */
+  .navbar,
+  .top-header,
+  .top-bar,
+  header,
+  .header-bar,
+  nav {
+    background: #1976D2 !important;
+    background-color: #1976D2 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  .navbar *,
+  .top-header *,
+  .top-bar *,
+  header *,
+  .header-bar *,
+  nav * {
+    color: #FFFFFF !important;
+  }
+
+  .navbar a,
+  .top-header a,
+  .top-bar a,
+  header a,
+  .header-bar a,
+  nav a,
+  .navbar button,
+  .top-header button,
+  header button,
+  .header-bar button {
+    color: #FFFFFF !important;
+  }
+
+  .navbar a:hover,
+  .top-header a:hover,
+  header a:hover,
+  .header-bar a:hover {
+    color: #E3F2FD !important;
+    text-decoration: none;
+  }
+
+  /* Hamburger menu icon */
+  .navbar-toggler-icon,
+  .menu-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+  }
+ 
+
+    
     .table-explorer { background:#fff; border-radius:6px; overflow:hidden; }
     .file-icon { font-size:1.15rem; display:inline-block; width:1.6rem; text-align:center; }
     .stock-badge{font-size:.85rem;padding:.25rem .5rem;border-radius:.5rem}
@@ -12521,6 +12576,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
