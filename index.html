@@ -5675,6 +5675,9 @@ function updateBulkCountersSale() {
 /**
  * Add all selected products to Record Sale Grid
  */
+/**
+ * Add all selected products to Record Sale
+ */
 function addBulkProductsToSale() {
   const selectedArray = Object.values(selectedBulkProductsSale);
   
@@ -5698,69 +5701,61 @@ function addBulkProductsToSale() {
     
     // Create new row element
     const tr = document.createElement('tr');
+    tr.className = 'product-row';
     tr.setAttribute('data-index', rowIndex);
     
     const displayName = product.size ? `${product.name} (${product.size})` : product.name;
     
-    // ✅ Build row HTML (matching your existing table structure)
+    // ✅ Build row HTML (MATCHING YOUR EXISTING TABLE STRUCTURE)
     tr.innerHTML = `
       <td class="grid-row-number">${rowIndex}</td>
       <td>
-        <input type="text" class="form-control form-control-sm" 
-               id="saleProduct-${rowIndex}"
-               value="${escapeHtml(displayName)}" 
-               placeholder="Product name"
-               style="padding: 8px; font-size: 0.9rem;">
+        <select class="form-select product-select" id="product-${rowIndex}" onchange="onProductSelect(${rowIndex})">
+          <option value="">-- Select Product --</option>
+        </select>
       </td>
-      <td>
-        <input type="text" class="form-control form-control-sm" 
-               id="saleSize-${rowIndex}"
-               value="${escapeHtml(product.size)}" 
-               placeholder="Size"
-               style="padding: 8px; font-size: 0.9rem;">
-      </td>
-      <td>
-        <input type="number" class="form-control form-control-sm text-center" 
-               id="saleQty-${rowIndex}"
-               value="${product.qty}" min="1" placeholder="1"
-               style="font-size: 0.9rem;"
-               oninput="calculateRecordSaleTotal();">
-      </td>
-      <td>
-        <input type="text" class="form-control form-control-sm" 
-               id="saleUnit-${rowIndex}"
-               value="Pcs" placeholder="Unit"
-               style="padding: 8px; font-size: 0.9rem;">
-      </td>
-      <td>
-        <input type="number" class="form-control form-control-sm text-end" 
-               id="salePrice-${rowIndex}"
-               value="${product.price}" min="0" step="0.01" placeholder="0.00"
-               style="font-size: 0.9rem;"
-               oninput="calculateRecordSaleTotal();">
-      </td>
-      <td class="text-end fw-bold" style="width: 140px; font-size: 0.9rem;">
-        <span id="saleRowTotal-${rowIndex}">₹${(product.qty * product.price).toFixed(2)}</span>
-      </td>
-      <td class="text-center">
-        <button type="button" class="btn btn-sm btn-link text-danger" 
-                onclick="deleteSaleRow(${rowIndex})"
-                style="padding: 2px 6px;">
-          ✕
-        </button>
-      </td>
+      <td><input type="text" class="form-control size-input readonly-input" id="size-${rowIndex}" readonly /></td>
+      <td><input type="number" class="form-control qty-input" id="qty-${rowIndex}" min="1" placeholder="Enter quantity" oninput="onQtyChange(${rowIndex})"></td>
+      <td><input type="text" class="form-control unit-input readonly-input" id="unit-${rowIndex}" readonly /></td>
+      <td><input type="number" class="form-control price-input readonly-input" id="price-${rowIndex}" readonly /></td>
+      <td><div id="total-${rowIndex}" class="fw-bold">₹0.00</div></td>
+      <td><button class="btn btn-sm btn-outline-danger" onclick="removeRow(this)"><i class="bi bi-x"></i></button></td>
     `;
     
     tbody.appendChild(tr);
     
+    // ✅ CRITICAL: Populate the product select dropdown FIRST
+    populateProductSelectForRow(rowIndex);
+    
+    // ✅ CRITICAL: Set the select value to the product ID
+    const select = document.getElementById(`product-${rowIndex}`);
+    if (select) {
+      select.value = product.id;
+      console.log('✅ Set product select value:', product.id);
+    }
+    
+    // ✅ NOW trigger onProductSelect to auto-fill all fields
+    onProductSelect(rowIndex);
+    
+    // ✅ Set quantity
+    const qtyInput = document.getElementById(`qty-${rowIndex}`);
+    if (qtyInput) {
+      qtyInput.value = product.qty;
+      console.log('✅ Set quantity:', product.qty);
+    }
+    
+    // ✅ Trigger calculation
+    onQtyChange(rowIndex);
+    
     console.log('✅ Added row', rowIndex, ':', displayName, 'x' + product.qty);
   });
   
-  // ✅ Calculate totals AFTER all rows added
+  // ✅ Calculate grand total AFTER all rows added
   setTimeout(() => {
-    calculateRecordSaleTotal();
+    updateGrandTotal();
+    updateRowNumbers();
     console.log('✅ Record Sale totals calculated');
-  }, 50);
+  }, 100);
   
   // Clear selections
   selectedBulkProductsSale = {};
@@ -11086,6 +11081,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
