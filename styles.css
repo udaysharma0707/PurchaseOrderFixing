@@ -2633,7 +2633,7 @@ table {
   .btn-group .btn, .button-group button {
     flex: 1 !important;
     min-width: 80px !important;
-  }
+  }}
 /* ============================================
    SIDEBAR MOBILE FIX (CORRECTED)
    ============================================ */
@@ -2676,6 +2676,7 @@ table {
 
 
     
+
 
 
 
