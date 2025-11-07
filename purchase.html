@@ -5344,7 +5344,7 @@ async function loadProductsForBulkPurchase() {
   try {
     // Call your Google Apps Script that returns products
     // Replace YOUR_SCRIPT_ID and YOUR_DEPLOYMENT_ID with your actual IDs
-    const scriptUrl = 'https://script.google.com/macros/d/YOUR_DEPLOYMENT_ID/usurp/exec?action=getProducts';
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbzJw3YFidhMHqTs4u4lFmQpwHRoTTdTh5YHguOspTlmArxNrKiVsmAYFiXm-obcrBuh/exec';
     
     const response = await fetch(scriptUrl);
     
@@ -5597,6 +5597,7 @@ document.addEventListener('DOMContentLoaded', loadProductsForBulkPurchase);
 
 </body>
 </html>
+
 
 
 
