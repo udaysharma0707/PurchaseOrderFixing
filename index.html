@@ -34,9 +34,8 @@
 
  <style>
   body{background:#FAFAFA;font-family:'Poppins','Nunito Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
-
 /* ==========================================
-   WHATSAPP-INSPIRED GREEN THEME (UPDATED)
+   WHATSAPP-INSPIRED GREEN THEME
    Fresh • Minimal • Welcoming
    ========================================== */
 
@@ -48,7 +47,6 @@
   --primary-light-green: #DCF8C6;
   --background: #FAFAFA;
   --surface-white: #FFFFFF;
-  --sidebar-bg: #F5F5F5;
   --border-light: #EDEDED;
   --text-primary: #111111;
   --text-secondary: #555555;
@@ -91,39 +89,6 @@ h1, h2, h3, h4, h5, h6 {
 p { color: var(--text-secondary) !important; margin: 0 !important; }
 small { color: var(--text-muted) !important; }
 
-/* ✅ SIDEBAR MENU - Off-White with Black Text */
-.sidebar-menu,
-.sidebar,
-.navbar-vertical,
-[class*="sidebar"] {
-  background: var(--sidebar-bg) !important;
-  color: var(--text-primary) !important;
-}
-
-.sidebar-item,
-.sidebar-link,
-.menu-item,
-.nav-item {
-  color: var(--text-primary) !important;
-  transition: all 0.2s ease !important;
-}
-
-.sidebar-item:hover,
-.sidebar-link:hover,
-.menu-item:hover,
-.nav-item:hover {
-  background: rgba(37, 211, 102, 0.1) !important;
-  color: var(--primary-green) !important;
-}
-
-.sidebar-section-title,
-.sidebar-title {
-  color: var(--text-secondary) !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  font-size: 12px !important;
-}
-
 /* ✅ HEADER/NAVBAR - Fresh Green */
 .navbar,
 .top-header,
@@ -159,40 +124,6 @@ nav {
 
 .navbar-toggler-icon {
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
-}
-
-/* ✅ REFRESH, BACKUP, RESTORE BUTTONS - Nav Green */
-button[onclick*="refresh"],
-button[onclick*="backup"],
-button[onclick*="restore"],
-button[title*="Refresh"],
-button[title*="Backup"],
-button[title*="Restore"],
-.btn-refresh,
-.btn-backup,
-.btn-restore,
-.refresh-btn,
-.backup-btn,
-.restore-btn {
-  background: linear-gradient(135deg, var(--primary-green) 0%, var(--accent-green) 100%) !important;
-  border: none !important;
-  color: #FFFFFF !important;
-  font-weight: 600 !important;
-  padding: 10px 18px !important;
-  border-radius: 10px !important;
-  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.2) !important;
-  transition: all 0.3s ease !important;
-}
-
-button[onclick*="refresh"]:hover,
-button[onclick*="backup"]:hover,
-button[onclick*="restore"]:hover,
-.btn-refresh:hover,
-.btn-backup:hover,
-.btn-restore:hover {
-  background: linear-gradient(135deg, var(--hover-green) 0%, var(--dark-green) 100%) !important;
-  box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3) !important;
-  transform: translateY(-1px) !important;
 }
 
 /* ✅ PRIMARY BUTTONS - Fresh Green */
@@ -305,19 +236,7 @@ button[onclick*="generateInvoice"]:hover {
   border-color: var(--primary-light-green) !important;
 }
 
-/* ✅ SUMMARY CARDS - WhatsApp Light Green Background */
-.summary-card,
-.dashboard-card {
-  background: linear-gradient(135deg, var(--primary-light-green) 0%, #E8F9E3 100%) !important;
-  border: 1px solid rgba(37, 211, 102, 0.2) !important;
-  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.1) !important;
-}
-
-.summary-card:hover,
-.dashboard-card:hover {
-  box-shadow: 0 8px 16px rgba(37, 211, 102, 0.15) !important;
-}
-
+/* ✅ SUMMARY CARDS - Highlight Numbers */
 .summary-card h3,
 .dashboard-card h3 {
   font-size: 32px !important;
@@ -347,7 +266,7 @@ button[onclick*="generateInvoice"]:hover {
 
 .table thead th,
 .grid-table thead th {
-  color: #111111 !important;
+  color: var(--accent-green) !important;
   font-weight: 700 !important;
   padding: 16px 12px !important;
   font-size: 13px !important;
@@ -535,12 +454,33 @@ button, a, .card, input, .badge {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
+/* ✅ MOBILE RESPONSIVE */
+@media (max-width: 768px) {
+  .navbar { padding: 14px 16px !important; }
+  .navbar h1, header h1 { font-size: 20px !important; }
+  .card, .mobile-item { padding: 18px !important; }
+  .btn-primary, .btn-secondary { padding: 10px 20px !important; font-size: 13px !important; }
+  h1 { font-size: 24px !important; }
+  h2 { font-size: 18px !important; }
+}
+
 /* ✅ EXISTING STYLES COMPATIBILITY */
 .table-explorer { background: var(--surface-white) !important; border-radius: 12px !important; overflow: hidden !important; }
 .file-icon { font-size: 1.15rem; display: inline-block; width: 1.6rem; text-align: center; }
 .mobile-list { display: none; }
 .btn-action-sm { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
 .sync-indicator { position: fixed; top: 70px; left: 20px; background: var(--surface-white) !important; padding: 8px 12px; border-radius: 20px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08); display: none; z-index: 1000; }
+
+@media (max-width: 768px) {
+  .desktop-table { display: none !important; }
+  .mobile-list { display: block !important; }
+  .grid-table thead { display: none; }
+  .grid-table tbody tr { display: block; margin-bottom: 12px; padding: 12px; border: 1px solid var(--border-light); border-radius: 8px; background: var(--surface-white) !important; }
+  .grid-table td { display: block; width: 100%; padding: 0.35rem 0; border: 0; }
+  .product-select, .qty-input, .price-input { width: 100% !important; font-size: 16px; height: 44px; }
+  .modal-dialog { margin: 0.5rem; max-width: calc(100% - 1rem); }
+  .modal-body { max-height: calc(100vh - 200px); overflow-y: auto; -webkit-overflow-scrolling: touch; }
+}
 
 /* ✅ MOBILE RESPONSIVE */
 @media (max-width: 768px) {
@@ -13160,6 +13100,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
