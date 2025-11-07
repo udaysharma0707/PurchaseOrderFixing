@@ -2634,10 +2634,50 @@ table {
     flex: 1 !important;
     min-width: 80px !important;
   }
+/* ============================================
+   SIDEBAR AUTO-CLOSE ON MOBILE
+   ============================================ */
+
+/* ✅ HIDE SIDEBAR BY DEFAULT ON MOBILE */
+@media (max-width: 768px) {
+  /* Close sidebar on page load for mobile */
+  .sidebar, .navbar-collapse, [class*="sidebar"], .offcanvas {
+    display: none !important;
+  }
+
+  /* Show sidebar only when explicitly opened */
+  .sidebar.show, .navbar-collapse.show, .offcanvas.show {
+    display: block !important;
+  }
+
+  /* ✅ ENSURE MENU BUTTON VISIBLE */
+  .navbar-toggler, .menu-toggle, [class*="toggle"] {
+    display: block !important;
+    z-index: 1001 !important;
+  }
+
+  /* ✅ MAIN CONTENT FULL WIDTH */
+  #mainApp, .page-container, .app-content {
+    width: 100% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
+/* ✅ DESKTOP: SIDEBAR ALWAYS VISIBLE */
+@media (min-width: 769px) {
+  .navbar-toggler {
+    display: none !important;
+  }
+
+  .sidebar, [class*="sidebar"] {
+    display: block !important;
+  }
 }
 
 
     
+
 
 
 
