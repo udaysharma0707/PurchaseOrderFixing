@@ -5328,7 +5328,7 @@ if (typeof addSubBtn !== 'undefined' && addSubBtn) {
 })();
 
 
-  </script>  <script>
+  </script> <script>
 /**
  * ==========================================
  * BULK ADD PRODUCTS FOR PURCHASE
@@ -5338,64 +5338,56 @@ if (typeof addSubBtn !== 'undefined' && addSubBtn) {
 let selectedBulkPurchase = {};
 let cachedProductsForPurchase = [];
 
-async function loadProductsForBulkPurchase() {
-  console.log('📦 Loading products from Google Sheets...');
+function loadProductsForBulkPurchase() {
+  console.log('📦 Loading products from inventory...');
   
+  // First try window object
+  if (window.cachedProducts && window.cachedProducts.length > 0) {
+    cachedProductsForPurchase = window.cachedProducts.map(p => ({
+      id: p.id || p.name,
+      name: p.name || 'Unknown',
+      size: p.size || '',
+      price: p.price || 0,
+      stock: p.stock || 0,
+      category: p.category || '',
+      brand: p.brand || ''
+    }));
+    console.log('✅ Loaded', cachedProductsForPurchase.length, 'products from window');
+    return;
+  }
+  
+  // Try localStorage
   try {
-    // Find your Apps Script endpoint from the deployed webapp
-    // It should be something like: https://script.google.com/macros/d/YOUR_ID/usurp/exec
-    // Replace this with your actual endpoint from index.html or purchase-order-fixing
-    
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbzJw3YFidhMHqTs4u4lFmQpwHRoTTdTh5YHguOspTlmArxNrKiVsmAYFiXm-obcrBuh/exec';
-    
-    const response = await fetch(scriptUrl + '?action=getAllProducts');
-    
-    if (response.ok) {
-      const data = await response.json();
-      
-      if (data && data.products && Array.isArray(data.products)) {
-        cachedProductsForPurchase = data.products.map(product => ({
-          id: product.id || product.name,
-          name: product.name || 'Unknown',
-          size: product.size || '',
-          price: product.price || 0,
-          stock: product.stock || 0,
-          category: product.category || '',
-          brand: product.brand || ''
+    const stored = localStorage.getItem('inventoryProducts');
+    if (stored) {
+      const products = JSON.parse(stored);
+      if (products && products.length > 0) {
+        cachedProductsForPurchase = products.map(p => ({
+          id: p.id || p.name,
+          name: p.name || 'Unknown',
+          size: p.size || '',
+          price: p.price || 0,
+          stock: p.stock || 0,
+          category: p.category || '',
+          brand: p.brand || ''
         }));
-        
-        console.log('✅ Loaded', cachedProductsForPurchase.length, 'products from Sheets');
+        console.log('✅ Loaded', cachedProductsForPurchase.length, 'products from localStorage');
         return;
       }
     }
-  } catch (error) {
-    console.log('ℹ️ Sheets API not available, using form extraction');
+  } catch (e) {
+    console.log('ℹ️ localStorage not available');
   }
   
-  // Fallback: Extract from purchase form
-  cachedProductsForPurchase = extractProductsFromForm();
-  console.log('✅ Extracted', cachedProductsForPurchase.length, 'products from form');
-}
-
-
-function extractProductsFromForm() {
-  const products = [];
-  document.querySelectorAll('.purchased').forEach(cb => {
-    if (cb.id && cb.id !== 'p_other') {
-      products.push({
-        id: cb.id,
-        name: cb.value || cb.parentElement?.textContent || cb.id
-      });
-    }
-  });
-  return products;
+  console.log('⚠️ No products available - open inventory app first');
+  cachedProductsForPurchase = [];
 }
 
 function openBulkAddModalPurchase() {
-  loadProductsForBulkPurchase().then(() => {
-    renderBulkProductsListPurchase('');
-    document.getElementById('bulkAddModalPurchase').style.display = 'flex';
-  });
+  console.log('🔓 Opening bulk add modal');
+  loadProductsForBulkPurchase();
+  renderBulkProductsListPurchase('');
+  document.getElementById('bulkAddModalPurchase').style.display = 'flex';
 }
 
 function closeBulkAddModalPurchase(event) {
@@ -5413,26 +5405,32 @@ function renderBulkProductsListPurchase(searchQuery) {
   
   let products = cachedProductsForPurchase || [];
   
+  if (products.length === 0) {
+    container.innerHTML = `<div style="padding: 16px; text-align: center; color: #999;">❌ No products loaded. Open inventory app first.</div>`;
+    return;
+  }
+  
   if (searchQuery && searchQuery.trim()) {
     const q = searchQuery.toLowerCase();
     products = products.filter(p => 
       (p.name || '').toLowerCase().includes(q) ||
-      (p.id || '').toLowerCase().includes(q)
+      (p.category || '').toLowerCase().includes(q) ||
+      (p.brand || '').toLowerCase().includes(q)
     );
   }
   
   if (products.length === 0) {
-    container.innerHTML = '<div style="padding: 16px; text-align: center; color: #999;">No products found</div>';
+    container.innerHTML = '<div style="padding: 16px; text-align: center; color: #999;">No matching products</div>';
     return;
   }
   
   let html = '';
   products.forEach(product => {
     const isSelected = selectedBulkPurchase[product.id];
-    const size = product.size ? ` (${product.size})` : '';
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
     
     html += `
-      <div onclick="toggleBulkProductSelectionPurchase('${product.id}', '${product.name}${size}', '${product.size || ''}')"
+      <div onclick="toggleBulkProductSelectionPurchase('${product.id}', '${displayName}', '${product.size || ''}')"
            style="
              padding: 10px;
              border-bottom: 1px solid #f0f0f0;
@@ -5443,7 +5441,10 @@ function renderBulkProductsListPurchase(searchQuery) {
            onmouseover="this.style.background='#f5f5f5'"
            onmouseout="this.style.background='${isSelected ? '#e3f2fd' : ''}'">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <strong>${product.name}${size}</strong>
+          <div style="flex: 1;">
+            <strong>${displayName}</strong>
+            <div style="font-size: 12px; color: #666;">₹${product.price || 0} • Stock: ${product.stock || 0}</div>
+          </div>
           <span>${isSelected ? '✓' : ''}</span>
         </div>
       </div>
@@ -5457,13 +5458,15 @@ function toggleBulkProductSelectionPurchase(productId, productName, productSize)
   if (selectedBulkPurchase[productId]) {
     delete selectedBulkPurchase[productId];
   } else {
+    const product = cachedProductsForPurchase.find(p => p.id === productId);
     selectedBulkPurchase[productId] = {
       id: productId,
       name: productName,
       size: productSize,
+      price: product?.price || 0,
       qty: 1,
-      rate: 0,
-      amount: 0
+      rate: product?.price || 0,
+      amount: product?.price || 0
     };
   }
   
@@ -5494,7 +5497,6 @@ function renderBulkSelectedPurchase() {
       ">
         <div style="font-weight: 600; margin-bottom: 8px;">${product.name}</div>
         
-        <!-- Qty -->
         <div style="margin-bottom: 6px; display: flex; gap: 4px; align-items: center;">
           <label style="width: 50px; font-size: 12px;">Qty:</label>
           <input type="number" value="${product.qty}" min="1" 
@@ -5502,7 +5504,6 @@ function renderBulkSelectedPurchase() {
                  style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
         </div>
         
-        <!-- Rate -->
         <div style="margin-bottom: 6px; display: flex; gap: 4px; align-items: center;">
           <label style="width: 50px; font-size: 12px;">Rate:</label>
           <input type="number" value="${product.rate}" min="0" step="0.01"
@@ -5510,13 +5511,11 @@ function renderBulkSelectedPurchase() {
                  style="flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
         </div>
         
-        <!-- Amount (Auto-calculated) -->
         <div style="margin-bottom: 8px; display: flex; gap: 4px; align-items: center; background: #f0f0f0; padding: 6px; border-radius: 4px;">
           <label style="width: 50px; font-size: 12px; font-weight: 600;">Amount:</label>
           <span style="flex: 1; font-weight: 600; color: #25d366;">₹${(product.qty * product.rate).toFixed(2)}</span>
         </div>
         
-        <!-- Remove -->
         <button onclick="toggleBulkProductSelectionPurchase('${product.id}', '${product.name}', '${product.size}')"
                 style="width: 100%; padding: 6px; background: #ffebee; color: #d32f2f; border: none; border-radius: 4px; cursor: pointer; font-weight: 600;">
           Remove
@@ -5551,6 +5550,10 @@ function addBulkProductsToPurchase() {
   }
   
   const container = document.getElementById('bulkProductRows');
+  if (!container) {
+    alert('❌ Container not found');
+    return;
+  }
   
   selectedArray.forEach((product, idx) => {
     const rowDiv = document.createElement('div');
@@ -5564,7 +5567,7 @@ function addBulkProductsToPurchase() {
       align-items: center;
     `;
     
-    const desc = `${product.qty} ${product.qty > 1 ? 'pieces' : 'piece'} ${product.name}`;
+    const desc = `${product.qty} pieces ${product.name}`;
     
     rowDiv.innerHTML = `
       <div style="flex: 1; font-size: 14px;">
@@ -5586,9 +5589,9 @@ function addBulkProductsToPurchase() {
   alert(`✅ ${selectedArray.length} products added!`);
 }
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', loadProductsForBulkPurchase);
 </script>
+
 
 
 
@@ -5602,6 +5605,7 @@ document.addEventListener('DOMContentLoaded', loadProductsForBulkPurchase);
 
 </body>
 </html>
+
 
 
 
