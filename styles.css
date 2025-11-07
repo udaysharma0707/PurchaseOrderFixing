@@ -2635,48 +2635,48 @@ table {
     min-width: 80px !important;
   }
 /* ============================================
-   SIDEBAR AUTO-CLOSE ON MOBILE
+   SIDEBAR MOBILE FIX (CORRECTED)
    ============================================ */
 
-/* ✅ HIDE SIDEBAR BY DEFAULT ON MOBILE */
+/* ✅ MOBILE ONLY: Hide sidebar by default */
 @media (max-width: 768px) {
-  /* Close sidebar on page load for mobile */
-  .sidebar, .navbar-collapse, [class*="sidebar"], .offcanvas {
+  /* Only force collapse on very first load */
+  .offcanvas:not(.show) {
     display: none !important;
   }
 
-  /* Show sidebar only when explicitly opened */
-  .sidebar.show, .navbar-collapse.show, .offcanvas.show {
+  /* When sidebar has .show class, SHOW IT */
+  .offcanvas.show {
     display: block !important;
   }
 
-  /* ✅ ENSURE MENU BUTTON VISIBLE */
-  .navbar-toggler, .menu-toggle, [class*="toggle"] {
+  /* Allow navbar toggler to work */
+  .navbar-toggler {
     display: block !important;
     z-index: 1001 !important;
   }
 
-  /* ✅ MAIN CONTENT FULL WIDTH */
-  #mainApp, .page-container, .app-content {
+  /* Ensure main content takes full width */
+  #mainApp, .page-container, .app-wrapper {
     width: 100% !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
   }
 }
 
-/* ✅ DESKTOP: SIDEBAR ALWAYS VISIBLE */
+/* ✅ DESKTOP: Always show sidebar */
 @media (min-width: 769px) {
+  .offcanvas {
+    display: block !important;
+  }
+
   .navbar-toggler {
     display: none !important;
   }
-
-  .sidebar, [class*="sidebar"] {
-    display: block !important;
-  }
 }
 
 
+
     
+
 
 
 
