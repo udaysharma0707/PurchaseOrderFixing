@@ -33,60 +33,245 @@
 
 
   <style>
-    body{background:#F8FAFC;font-family:Segoe UI, Tahoma, Geneva, Verdana, sans-serif}
+  body{background:#F8FAFC;font-family:'Roboto','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 
- /* ✅ ADD THIS NEW SECTION HERE */
-  /* ==========================================
-     TOP HEADER BAR - PROFESSIONAL BLUE
-     ========================================== */
-  .navbar,
-  .top-header,
-  .top-bar,
-  header,
-  .header-bar,
-  nav {
-    background: #1976D2 !important;
-    background-color: #1976D2 !important;
-    color: #FFFFFF !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  }
+    /* ==========================================
+       COMPREHENSIVE DESIGN SYSTEM
+       Blue Theme: #1E88E5 | Background: #F8FAFC
+       ========================================== */
 
-  .navbar *,
-  .top-header *,
-  .top-bar *,
-  header *,
-  .header-bar *,
-  nav * {
-    color: #FFFFFF !important;
-  }
+    /* ✅ FONT & TYPOGRAPHY */
+    * {
+      font-family: 'Roboto', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+    }
 
-  .navbar a,
-  .top-header a,
-  .top-bar a,
-  header a,
-  .header-bar a,
-  nav a,
-  .navbar button,
-  .top-header button,
-  header button,
-  .header-bar button {
-    color: #FFFFFF !important;
-  }
+    h1, h2, h3, h4, h5, h6 {
+      font-weight: 600 !important;
+      color: #37474F !important;
+      line-height: 1.4;
+    }
 
-  .navbar a:hover,
-  .top-header a:hover,
-  header a:hover,
-  .header-bar a:hover {
-    color: #E3F2FD !important;
-    text-decoration: none;
-  }
+    h1 { font-size: 28px; }
+    h2 { font-size: 22px; }
+    h3 { font-size: 18px; }
 
-  /* Hamburger menu icon */
-  .navbar-toggler-icon,
-  .menu-icon {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
-  }
- 
+    /* ✅ NAVBAR/HEADER */
+    .navbar,
+    .top-header,
+    .top-bar,
+    header,
+    .header-bar,
+    nav {
+      background: #1E88E5 !important;
+      padding: 16px 24px !important;
+      color: #FFFFFF !important;
+      box-shadow: 0 2px 8px rgba(30, 136, 229, 0.12) !important;
+    }
+
+    .navbar h1, .navbar h2, .navbar h3, header h1, header h2, header h3 {
+      color: #FFFFFF !important;
+      font-size: 24px !important;
+      font-weight: 700 !important;
+      margin: 0 !important;
+    }
+
+    .navbar *, .top-header *, .top-bar *, header *, .header-bar *, nav * {
+      color: #FFFFFF !important;
+    }
+
+    .navbar a, .top-header a, .top-bar a, header a, .header-bar a, nav a,
+    .navbar button, .top-header button, header button, .header-bar button {
+      color: #FFFFFF !important;
+    }
+
+    .navbar a:hover, .top-header a:hover, header a:hover, .header-bar a:hover {
+      color: #E3F2FD !important;
+      text-decoration: none;
+    }
+
+    .navbar-toggler-icon, .menu-icon {
+      background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(255, 255, 255, 1)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+    }
+
+    /* ✅ PRIMARY BUTTONS (Add Product) */
+    .btn-primary, .btn-success, button[onclick*="showAddProduct"] {
+      background: #1E88E5 !important;
+      border: none !important;
+      color: #FFFFFF !important;
+      font-weight: 600 !important;
+      padding: 12px 24px !important;
+      border-radius: 8px !important;
+      box-shadow: 0 2px 8px rgba(30, 136, 229, 0.2) !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .btn-primary:hover, .btn-success:hover, button[onclick*="showAddProduct"]:hover {
+      background: #1565C0 !important;
+      box-shadow: 0 4px 12px rgba(30, 136, 229, 0.3) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    /* ✅ SECONDARY BUTTONS (Record Sale, Product by Photo) */
+    .btn-info, .btn-secondary, button[onclick*="openSalesModal"],
+    button[onclick*="PhotoProduct"], button[onclick*="generateInvoice"] {
+      background: #90CAF9 !important;
+      border: none !important;
+      color: #1E88E5 !important;
+      font-weight: 600 !important;
+      padding: 12px 24px !important;
+      border-radius: 8px !important;
+      transition: all 0.3s ease !important;
+    }
+
+    .btn-info:hover, .btn-secondary:hover, button[onclick*="openSalesModal"]:hover,
+    button[onclick*="PhotoProduct"]:hover, button[onclick*="generateInvoice"]:hover {
+      background: #64B5F6 !important;
+      color: #1565C0 !important;
+      transform: translateY(-2px) !important;
+    }
+
+    /* ✅ EDIT BUTTON */
+    .btn-edit, button[onclick*="edit"] {
+      background: #1E88E5 !important;
+      border: none !important;
+      color: #FFFFFF !important;
+      padding: 8px 16px !important;
+      font-size: 14px !important;
+      border-radius: 6px !important;
+    }
+
+    .btn-edit:hover { background: #1565C0 !important; }
+
+    /* ✅ DELETE BUTTON */
+    .btn-danger, .btn-delete, button[onclick*="delete"] {
+      background: #E53935 !important;
+      border: none !important;
+      color: #FFFFFF !important;
+      padding: 8px 16px !important;
+      font-size: 14px !important;
+      border-radius: 6px !important;
+    }
+
+    .btn-danger:hover, .btn-delete:hover { background: #C62828 !important; }
+
+    /* ✅ CARDS & CONTAINERS */
+    .card, .table-explorer, .mobile-item, .form-section {
+      background: #FFFFFF !important;
+      border: 1px solid #ECEFF1 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important;
+      transition: all 0.2s ease !important;
+      padding: 20px !important;
+    }
+
+    .card:hover, .mobile-item:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    /* ✅ TABLE STYLING */
+    .table thead, .grid-table thead {
+      background: #F1F5F9 !important;
+      border-bottom: 2px solid #ECEFF1 !important;
+    }
+
+    .table thead th, .grid-table thead th {
+      color: #37474F !important;
+      font-weight: 600 !important;
+      padding: 16px 12px !important;
+      font-size: 13px !important;
+    }
+
+    .table tbody tr {
+      border-bottom: 1px solid #ECEFF1 !important;
+      transition: background-color 0.2s ease !important;
+    }
+
+    .table tbody tr:nth-child(even) { background: #FAFAFA !important; }
+    .table tbody tr:hover { background: #F1F5F9 !important; }
+
+    .table tbody td {
+      padding: 14px 12px !important;
+      color: #455A64 !important;
+      font-size: 14px !important;
+    }
+
+    /* ✅ BADGES */
+    .badge, .stock-badge {
+      border-radius: 20px !important;
+      font-weight: 600 !important;
+      padding: 6px 12px !important;
+      font-size: 12px !important;
+    }
+
+    .badge-success { background: #E8F5E9 !important; color: #2E7D32 !important; }
+    .badge-warning { background: #FFF3E0 !important; color: #FB8C00 !important; }
+    .badge-danger { background: #FFEBEE !important; color: #E53935 !important; }
+    .badge-info { background: #E3F2FD !important; color: #1E88E5 !important; }
+
+    /* ✅ FORMS */
+    input, textarea, select {
+      border: 1px solid #ECEFF1 !important;
+      border-radius: 6px !important;
+      padding: 12px !important;
+      font-size: 14px !important;
+      transition: all 0.2s ease !important;
+      font-family: inherit !important;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none !important;
+      border-color: #1E88E5 !important;
+      box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.1) !important;
+      background: #F8FAFC !important;
+    }
+
+    label {
+      font-weight: 500 !important;
+      color: #37474F !important;
+      margin-bottom: 8px !important;
+      font-size: 14px !important;
+    }
+
+    /* ✅ MODALS */
+    .modal-content {
+      border: 1px solid #ECEFF1 !important;
+      border-radius: 8px !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .modal-header {
+      background: #F1F5F9 !important;
+      border-bottom: 1px solid #ECEFF1 !important;
+      padding: 20px !important;
+    }
+
+    .modal-header h5, .modal-title {
+      font-weight: 700 !important;
+      color: #37474F !important;
+    }
+
+    .modal-body { padding: 24px !important; }
+    .modal-footer {
+      background: #F1F5F9 !important;
+      border-top: 1px solid #ECEFF1 !important;
+      padding: 16px 24px !important;
+    }
+
+    /* ✅ TEXT COLORS */
+    .text-muted { color: #90A4AE !important; }
+    .text-primary { color: #1E88E5 !important; }
+    .text-danger { color: #E53935 !important; }
+
+    /* ✅ SPACING */
+    .mb-4, .my-4, .py-4 { margin-bottom: 24px !important; }
+    .mb-3, .my-3, .py-3 { margin-bottom: 16px !important; }
+    .gap-3 { gap: 24px !important; }
+
+    /* ✅ UTILITIES */
+    .rounded { border-radius: 8px !important; }
+    .shadow-sm { box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06) !important; }
+    .shadow { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important; }
 
     
     .table-explorer { background:#fff; border-radius:6px; overflow:hidden; }
@@ -2058,78 +2243,7 @@ body.modal-open {
   }
 }
 
-/* ==========================================
-   TOP ACTION BUTTONS - MATCH NAVBAR COLOR
-   ========================================== */
 
-/* All 4 top buttons: Same blue as navbar */
-#btnAddProduct,
-.btn-add-product,
-button[onclick*="openProductModal"],
-#btnProductByPhoto,
-.btn-product-photo,
-button[onclick*="PhotoProduct"],
-#btnRecordSale,
-.btn-record-sale,
-button[onclick*="recordSale"],
-#btnGenerateInvoice,
-.btn-generate-invoice,
-button[onclick*="Invoice"] {
-  background: #1976D2 !important; /* Same as navbar */
-  border-color: #1976D2 !important;
-  color: #FFFFFF !important;
-  font-weight: 600;
-  border-radius: 8px;
-  padding: 10px 20px;
-  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.2);
-  transition: all 0.2s ease;
-}
-
-/* Hover effect - slightly darker */
-#btnAddProduct:hover,
-.btn-add-product:hover,
-button[onclick*="openProductModal"]:hover,
-#btnProductByPhoto:hover,
-.btn-product-photo:hover,
-button[onclick*="PhotoProduct"]:hover,
-#btnRecordSale:hover,
-.btn-record-sale:hover,
-button[onclick*="recordSale"]:hover,
-#btnGenerateInvoice:hover,
-.btn-generate-invoice:hover,
-button[onclick*="Invoice"]:hover {
-  background: #1565C0 !important; /* Darker blue on hover */
-  border-color: #1565C0 !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-}
-
-/* Icon colors white */
-#btnAddProduct i,
-#btnProductByPhoto i,
-#btnRecordSale i,
-#btnGenerateInvoice i,
-.btn-add-product i,
-.btn-product-photo i,
-.btn-record-sale i,
-.btn-generate-invoice i {
-  color: #FFFFFF !important;
-}
-
-/* Edit & Delete buttons keep their original colors */
-.btn-primary:not(#btnAddProduct):not(#btnProductByPhoto):not(#btnRecordSale):not(#btnGenerateInvoice),
-.btn-edit {
-  background: #1E88E5 !important;
-  border-color: #1E88E5 !important;
-  color: #FFFFFF !important;
-}
-
-.btn-danger,
-.btn-delete {
-  background: #E53935 !important;
-  border-color: #E53935 !important;
-  color: #FFFFFF !important;
-}
 
 
     
@@ -12646,6 +12760,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
