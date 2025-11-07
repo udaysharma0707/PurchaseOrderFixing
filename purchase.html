@@ -5342,11 +5342,13 @@ async function loadProductsForBulkPurchase() {
   console.log('📦 Loading products from Google Sheets...');
   
   try {
-    // Call your Google Apps Script that returns products
-    // Replace YOUR_SCRIPT_ID and YOUR_DEPLOYMENT_ID with your actual IDs
+    // Find your Apps Script endpoint from the deployed webapp
+    // It should be something like: https://script.google.com/macros/d/YOUR_ID/usurp/exec
+    // Replace this with your actual endpoint from index.html or purchase-order-fixing
+    
     const scriptUrl = 'https://script.google.com/macros/s/AKfycbzJw3YFidhMHqTs4u4lFmQpwHRoTTdTh5YHguOspTlmArxNrKiVsmAYFiXm-obcrBuh/exec';
     
-    const response = await fetch(scriptUrl);
+    const response = await fetch(scriptUrl + '?action=getAllProducts');
     
     if (response.ok) {
       const data = await response.json();
@@ -5354,20 +5356,23 @@ async function loadProductsForBulkPurchase() {
       if (data && data.products && Array.isArray(data.products)) {
         cachedProductsForPurchase = data.products.map(product => ({
           id: product.id || product.name,
-          name: product.name,
+          name: product.name || 'Unknown',
           size: product.size || '',
           price: product.price || 0,
-          stock: product.stock || 0
+          stock: product.stock || 0,
+          category: product.category || '',
+          brand: product.brand || ''
         }));
+        
         console.log('✅ Loaded', cachedProductsForPurchase.length, 'products from Sheets');
         return;
       }
     }
   } catch (error) {
-    console.error('❌ Error loading from Sheets:', error);
+    console.log('ℹ️ Sheets API not available, using form extraction');
   }
   
-  // Fallback: Extract from current form
+  // Fallback: Extract from purchase form
   cachedProductsForPurchase = extractProductsFromForm();
   console.log('✅ Extracted', cachedProductsForPurchase.length, 'products from form');
 }
@@ -5597,6 +5602,7 @@ document.addEventListener('DOMContentLoaded', loadProductsForBulkPurchase);
 
 </body>
 </html>
+
 
 
 
