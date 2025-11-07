@@ -2582,10 +2582,64 @@ button[onclick*="restore"]:hover,
   box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3) !important;
 }
 
+/* ============================================
+   SUMMARY CARDS - Green Border Styling
+   ============================================ */
+
+/* ✅ SUMMARY CARDS - Add Green Border Like Search Bar */
+.card {
+  border: 2px solid #C8E6C9 !important;
+  border-left: 4px solid var(--primary-green) !important;
+}
+
+/* ✅ SPECIFIC STYLING FOR SUMMARY CARDS */
+.summary-card, .dashboard-card {
+  border: 2px solid #C8E6C9 !important;
+  border-left: 4px solid var(--primary-green) !important;
+  background: linear-gradient(135deg, #E8F5E9 0%, #F1F8F4 100%) !important;
+  box-shadow: 0 2px 8px rgba(18, 140, 126, 0.1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.summary-card:hover, .dashboard-card:hover {
+  border-color: var(--primary-green) !important;
+  box-shadow: 0 6px 16px rgba(18, 140, 126, 0.15) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* ✅ SEARCH BAR BORDER (For Reference) */
+input[type="search"],
+input[type="text"],
+textarea {
+  border: 2px solid #C8E6C9 !important;
+  transition: all 0.25s ease !important;
+}
+
+input[type="search"]:focus,
+input[type="text"]:focus,
+textarea:focus {
+  border-color: var(--primary-green) !important;
+  box-shadow: 0 0 0 3px rgba(18, 140, 126, 0.08) !important;
+}
+
+/* ✅ MOBILE: Summary Cards With Border */
+@media (max-width: 768px) {
+  .card {
+    border: 2px solid #C8E6C9 !important;
+    border-left: 4px solid var(--primary-green) !important;
+    margin-bottom: 4px !important;
+  }
+
+  .summary-card, .dashboard-card {
+    border: 2px solid #C8E6C9 !important;
+    border-left: 4px solid var(--primary-green) !important;
+  }
+}
 
 
 
     
+
 
 
 
