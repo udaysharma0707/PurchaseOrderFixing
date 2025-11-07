@@ -5339,16 +5339,39 @@ let selectedBulkPurchase = {};
 let cachedProductsForPurchase = [];
 
 async function loadProductsForBulkPurchase() {
+  console.log('📦 Loading products from Google Sheets...');
+  
   try {
-    const response = await fetch(window.location.origin + '/api/products');
+    // Call your Google Apps Script that returns products
+    // Replace YOUR_SCRIPT_ID and YOUR_DEPLOYMENT_ID with your actual IDs
+    const scriptUrl = 'https://script.google.com/macros/d/YOUR_DEPLOYMENT_ID/usurp/exec?action=getProducts';
+    
+    const response = await fetch(scriptUrl);
+    
     if (response.ok) {
-      cachedProductsForPurchase = await response.json();
+      const data = await response.json();
+      
+      if (data && data.products && Array.isArray(data.products)) {
+        cachedProductsForPurchase = data.products.map(product => ({
+          id: product.id || product.name,
+          name: product.name,
+          size: product.size || '',
+          price: product.price || 0,
+          stock: product.stock || 0
+        }));
+        console.log('✅ Loaded', cachedProductsForPurchase.length, 'products from Sheets');
+        return;
+      }
     }
-  } catch (e) {
-    console.error('Failed to load products:', e);
-    cachedProductsForPurchase = extractProductsFromForm();
+  } catch (error) {
+    console.error('❌ Error loading from Sheets:', error);
   }
+  
+  // Fallback: Extract from current form
+  cachedProductsForPurchase = extractProductsFromForm();
+  console.log('✅ Extracted', cachedProductsForPurchase.length, 'products from form');
 }
+
 
 function extractProductsFromForm() {
   const products = [];
@@ -5574,6 +5597,7 @@ document.addEventListener('DOMContentLoaded', loadProductsForBulkPurchase);
 
 </body>
 </html>
+
 
 
 
