@@ -2404,16 +2404,28 @@ body.modal-open {
       </div>
     </div>
 
-    <!-- Products table (desktop) & mobile list -->
-    <div class="row mb-4">
-      <div class="col-12 desktop-table">
-        <div class="table-explorer">
-          <table class="table table-sm table-striped mb-0">
-            <thead><tr><th style="width:50px">Icon</th><th>Photo</th><th>Product</th><th>Category</th><th>Brand</th><th>Size</th><th style="width:120px">Stock</th><th style="width:140px">Price</th><th style="width:150px">Actions</th></tr></thead>
-            <tbody id="productsTableBody"></tbody>
-          </table>
-        </div>
-      </div>
+  <!-- Products table (desktop) & mobile list -->
+<div class="row mb-4">
+  <div class="col-12 desktop-table">
+    <div class="table-explorer">
+      <table class="table table-sm table-striped mb-0">
+        <thead>
+          <tr>
+            <th style="width:80px">Photo</th>
+            <th>Product</th>
+            <th>Category</th>
+            <th>Brand</th>
+            <th>Size</th>
+            <th style="width:140px">Stock</th>
+            <th style="width:140px">Price</th>
+            <th style="width:150px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="productsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
 
       <div class="col-12 mobile-list" id="mobileProductsList" style="margin-top:6px;"></div>
     </div>
@@ -6535,33 +6547,27 @@ function displayProducts(products) {
     
     let html = '';
     products.forEach(product => {
-        const iconColor = categoryIconColor(product.category);
+        // ✅ Get stock badge using stockBadgeHtml function
+        const stockBadge = stockBadgeHtml(product.stock, product.minStock);
         
-        // ✅ FIXED: Parse stock data properly
-        const stockData = parseProductStockData(product);
-        const stockBadge = getStockBadge(stockData.stockStatus, stockData.stockValue);
-        
-        const stockBadgeHtml = `
-          <span class="badge" style="
-            background: ${stockBadge.bgColor}; 
-            color: ${stockBadge.color};
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-weight: bold;
-          ">
-            ${stockBadge.icon} ${stockBadge.text}
-          </span>
-        `;
+        // ✅ PHOTO COLUMN (first column now) - shows actual product photo or placeholder
+        const photoHtml = product.imageUrl 
+            ? `<img src="${product.imageUrl}" alt="${escapeHtml(product.name)}" 
+                    style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" 
+                    onclick="viewProductImage('${product.imageUrl}')">`
+            : `<div style="width: 60px; height: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <i class="bi bi-image" style="font-size: 1.8rem; color: white;"></i>
+               </div>`;
         
         html += `
             <tr>
-                <td><i class="bi bi-file-earmark-fill" style="color:${iconColor}"></i></td>
-                <td>${escapeHtml(product.name)}</td>
+                <td>${photoHtml}</td>
+                <td><strong>${escapeHtml(product.name)}</strong></td>
                 <td>${escapeHtml(product.category)}</td>
                 <td>${escapeHtml(product.brand) || '-'}</td>
                 <td><strong>${escapeHtml(product.size) || 'N/A'}</strong></td>
-                <td>${stockBadgeHtml}</td>
-                <td>₹${product.price.toFixed(2)}/${product.unitType}</td>
+                <td>${stockBadge}</td>
+                <td><strong>₹${product.price.toFixed(2)}</strong>/${product.unitType}</td>
                 <td>
                     <button class="btn btn-sm btn-primary btn-action-sm me-1" onclick="editProduct('${product.id}')">
                         <i class="bi bi-pencil"></i> Edit
@@ -6576,7 +6582,7 @@ function displayProducts(products) {
     
     tbody.innerHTML = html;
     
-    // ✅ ALSO UPDATE MOBILE LIST
+    // ✅ MOBILE LIST (with product photos)
     const container = document.getElementById('mobileProductsList');
     if (products.length === 0) {
         container.innerHTML = '<div class="mobile-item text-center text-muted">No products found</div>';
@@ -6585,47 +6591,38 @@ function displayProducts(products) {
     
     let mobileHtml = '';
     products.forEach(p => {
-        const iconColor = categoryIconColor(p.category);
+        const stockBadge = stockBadgeHtml(p.stock, p.minStock);
         
-        // ✅ FIXED: Parse stock data properly
-        const stockData = parseProductStockData(p);
-        const stockBadge = getStockBadge(stockData.stockStatus, stockData.stockValue);
-        
-        const mobileBadgeHtml = `
-          <div style="
-            background: ${stockBadge.bgColor};
-            color: ${stockBadge.color};
-            padding: 6px 10px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 12px;
-            display: inline-block;
-            margin-bottom: 8px;
-          ">
-            ${stockBadge.icon} ${stockBadge.text}
-          </div>
-        `;
+        // ✅ MOBILE PHOTO - larger for mobile
+        const mobilePhoto = p.imageUrl 
+            ? `<img src="${p.imageUrl}" alt="${escapeHtml(p.name)}" 
+                    style="width: 70px; height: 70px; object-fit: cover; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" 
+                    onclick="viewProductImage('${p.imageUrl}')">`
+            : `<div style="width: 70px; height: 70px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                <i class="bi bi-image" style="font-size: 2.2rem; color: white;"></i>
+               </div>`;
         
         mobileHtml += `
-            <div class="mobile-item d-flex align-items-start justify-content-between">
-                <div style="display:flex;gap:.8rem;align-items:flex-start">
-                    <div style="width:36px;text-align:center;flex-shrink:0;">
-                        <i class="bi bi-file-earmark-fill" style="font-size:1.25rem;color:${iconColor}"></i>
+            <div class="mobile-item d-flex align-items-start justify-content-between" style="gap: 1rem;">
+                <div style="display:flex;gap:1rem;align-items:flex-start;flex:1;">
+                    <div style="flex-shrink:0;">
+                        ${mobilePhoto}
                     </div>
-                    <div>
-                        <div style="font-weight:600">${escapeHtml(p.name)}</div>
-                        <div class="small-muted">${escapeHtml(p.category)} ${escapeHtml(p.brand)}</div>
-                        <div class="small-muted"><strong>${escapeHtml(p.size)}</strong> ₹${parseFloat(p.price || 0).toFixed(2)}/${p.unitType}</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:600;font-size:1rem;margin-bottom:4px;">${escapeHtml(p.name)}</div>
+                        <div class="small-muted">${escapeHtml(p.category)} · ${escapeHtml(p.brand) || 'No Brand'}</div>
+                        <div class="small-muted"><strong>${escapeHtml(p.size) || 'N/A'}</strong></div>
+                        <div style="margin-top:8px;"><strong>₹${parseFloat(p.price || 0).toFixed(2)}</strong>/${p.unitType}</div>
+                        <div style="margin-top:8px;">${stockBadge}</div>
                     </div>
                 </div>
                 <div style="text-align:right;flex-shrink:0;">
-                    ${mobileBadgeHtml}
-                    <div style="margin-top:.5rem">
-                        <button class="btn btn-sm btn-primary btn-action-sm me-1" onclick="editProduct('${p.id}')">
-                            <i class="bi bi-pencil"></i>
+                    <div style="display:flex;flex-direction:column;gap:8px;">
+                        <button class="btn btn-sm btn-primary btn-action-sm" onclick="editProduct('${p.id}')" style="white-space:nowrap;">
+                            <i class="bi bi-pencil"></i> Edit
                         </button>
-                        <button class="btn btn-sm btn-danger btn-action-sm" onclick="deleteProduct('${p.id}')">
-                            <i class="bi bi-trash"></i>
+                        <button class="btn btn-sm btn-danger btn-action-sm" onclick="deleteProduct('${p.id}')" style="white-space:nowrap;">
+                            <i class="bi bi-trash"></i> Delete
                         </button>
                     </div>
                 </div>
@@ -6638,7 +6635,6 @@ function displayProducts(products) {
 function displayAllProducts() {
     displayProducts(cachedProducts);
 }
-
 
 
     // Open Clear Sales popup
@@ -12503,6 +12499,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
