@@ -8,6 +8,85 @@ html, body {
   width: 100% !important;
   max-width: 100% !important;
 }
+/* ============================================
+   MODAL HEADERS - Green Gradient Like Navbar
+   ============================================ */
+
+/* ✅ MODAL HEADER - Green Gradient */
+.modal-header {
+  background: var(--gradient-green) !important;
+  border-bottom: none !important;
+  padding: 20px 24px !important;
+  border-radius: 14px 14px 0 0 !important;
+}
+
+.modal-header h5,
+.modal-header .modal-title {
+  color: #FFFFFF !important;
+  font-weight: 700 !important;
+  font-size: 18px !important;
+  letter-spacing: -0.3px !important;
+  margin: 0 !important;
+}
+
+.modal-header .btn-close {
+  filter: brightness(0) invert(1) !important;
+  opacity: 0.7 !important;
+}
+
+.modal-header .btn-close:hover {
+  opacity: 1 !important;
+}
+
+/* ✅ ALL MODAL CONTENT */
+.modal-content {
+  border: none !important;
+  border-radius: 14px !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden !important;
+}
+
+.modal-body {
+  padding: 28px !important;
+  background: #FFFFFF !important;
+}
+
+.modal-footer {
+  background: #F9F9F9 !important;
+  border-top: 1px solid #E8E8E8 !important;
+  padding: 16px 24px !important;
+}
+
+/* ✅ DIALOG HEADERS (If using different classes) */
+.dialog-header,
+.popup-header,
+[class*="header"][class*="modal"],
+[class*="title"][class*="modal"] {
+  background: var(--gradient-green) !important;
+  color: #FFFFFF !important;
+  padding: 18px 24px !important;
+  border-radius: 12px 12px 0 0 !important;
+  font-weight: 700 !important;
+}
+
+/* ✅ FORM TITLES INSIDE MODALS */
+.modal-body h2,
+.modal-body h3,
+.modal-body h4 {
+  color: var(--text-primary) !important;
+}
+
+/* ✅ SPECIFIC MODAL TITLES */
+.modal-header h5 {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+.modal-header i {
+  color: #FFFFFF !important;
+}
+
 
 /* ==========================================
    PREMIUM PROFESSIONAL DESIGN SYSTEM
@@ -2656,6 +2735,7 @@ textarea:focus {
 
 
     
+
 
 
 
