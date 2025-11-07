@@ -1,4 +1,13 @@
  body{background:#F8F9F8;font-family:'Inter','Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+/* ============================================
+   PREVENT HORIZONTAL SCROLL - Mobile
+   ============================================ */
+
+html, body {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
 
 /* ==========================================
    PREMIUM PROFESSIONAL DESIGN SYSTEM
@@ -2647,6 +2656,7 @@ textarea:focus {
 
 
     
+
 
 
 
