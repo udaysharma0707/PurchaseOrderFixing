@@ -2059,115 +2059,78 @@ body.modal-open {
 }
 
 /* ==========================================
-   BUTTON COLOR UPDATES (TOP SECTION)
+   TOP ACTION BUTTONS - MATCH NAVBAR COLOR
    ========================================== */
 
-/* 1. Add Product Button - Calmer Success Green */
+/* All 4 top buttons: Same blue as navbar */
 #btnAddProduct,
 .btn-add-product,
-button[onclick*="openProductModal"] {
-  background: #43A047 !important; /* Calmer green */
-  border-color: #43A047 !important;
-  color: #FFFFFF !important;
-}
-
-#btnAddProduct:hover,
-.btn-add-product:hover {
-  background: #388E3C !important;
-  border-color: #388E3C !important;
-}
-
-/* 2. Product by Photo Button - Blue (matches theme) */
+button[onclick*="openProductModal"],
 #btnProductByPhoto,
 .btn-product-photo,
-button[onclick*="PhotoProduct"] {
-  background: #1E88E5 !important; /* Blue to match theme */
-  border-color: #1E88E5 !important;
-  color: #FFFFFF !important;
-}
-
-#btnProductByPhoto:hover,
-.btn-product-photo:hover {
-  background: #1976D2 !important;
-  border-color: #1976D2 !important;
-}
-
-/* 3. Record Sale Button - Keep Same Blue */
+button[onclick*="PhotoProduct"],
 #btnRecordSale,
 .btn-record-sale,
-button[onclick*="recordSale"] {
-  background: #1E88E5 !important;
-  border-color: #1E88E5 !important;
-  color: #FFFFFF !important;
-}
-
-#btnRecordSale:hover,
-.btn-record-sale:hover {
-  background: #1976D2 !important;
-  border-color: #1976D2 !important;
-}
-
-/* 4. Generate Invoice Button - Muted Orange */
+button[onclick*="recordSale"],
 #btnGenerateInvoice,
 .btn-generate-invoice,
 button[onclick*="Invoice"] {
-  background: #FB8C00 !important; /* Muted orange */
-  border-color: #FB8C00 !important;
+  background: #1976D2 !important; /* Same as navbar */
+  border-color: #1976D2 !important;
+  color: #FFFFFF !important;
+  font-weight: 600;
+  border-radius: 8px;
+  padding: 10px 20px;
+  box-shadow: 0 2px 6px rgba(25, 118, 210, 0.2);
+  transition: all 0.2s ease;
+}
+
+/* Hover effect - slightly darker */
+#btnAddProduct:hover,
+.btn-add-product:hover,
+button[onclick*="openProductModal"]:hover,
+#btnProductByPhoto:hover,
+.btn-product-photo:hover,
+button[onclick*="PhotoProduct"]:hover,
+#btnRecordSale:hover,
+.btn-record-sale:hover,
+button[onclick*="recordSale"]:hover,
+#btnGenerateInvoice:hover,
+.btn-generate-invoice:hover,
+button[onclick*="Invoice"]:hover {
+  background: #1565C0 !important; /* Darker blue on hover */
+  border-color: #1565C0 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
+}
+
+/* Icon colors white */
+#btnAddProduct i,
+#btnProductByPhoto i,
+#btnRecordSale i,
+#btnGenerateInvoice i,
+.btn-add-product i,
+.btn-product-photo i,
+.btn-record-sale i,
+.btn-generate-invoice i {
   color: #FFFFFF !important;
 }
 
-#btnGenerateInvoice:hover,
-.btn-generate-invoice:hover {
-  background: #F57C00 !important;
-  border-color: #F57C00 !important;
-}
-
-/* 5. Edit Button - Blue (unified action tone) */
-.btn-primary,
-.btn-edit,
-button.btn-sm.btn-primary {
+/* Edit & Delete buttons keep their original colors */
+.btn-primary:not(#btnAddProduct):not(#btnProductByPhoto):not(#btnRecordSale):not(#btnGenerateInvoice),
+.btn-edit {
   background: #1E88E5 !important;
   border-color: #1E88E5 !important;
   color: #FFFFFF !important;
 }
 
-.btn-primary:hover,
-.btn-edit:hover {
-  background: #1976D2 !important;
-  border-color: #1976D2 !important;
-}
-
-/* 6. Delete Button - Professional Error Red */
 .btn-danger,
-.btn-delete,
-button.btn-sm.btn-danger {
+.btn-delete {
   background: #E53935 !important;
   border-color: #E53935 !important;
   color: #FFFFFF !important;
 }
 
-.btn-danger:hover,
-.btn-delete:hover {
-  background: #C62828 !important;
-  border-color: #C62828 !important;
-}
-
-/* Text on all buttons */
-.btn,
-button {
-  color: #FFFFFF !important;
-  font-weight: 500;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-/* Hover effect - 10% darker */
-.btn:hover,
-button:hover {
-  filter: brightness(0.9);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
 
     
   </style>
@@ -12686,6 +12649,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
