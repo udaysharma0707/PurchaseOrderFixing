@@ -1223,11 +1223,19 @@
 
 
       
-      <!-- ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ NEW: Buttons at TOP -->
+      <!-- NEW: Buttons at TOP -->
   <div class="mb-3 text-end">
     <button class="btn btn-outline-primary btn-sm me-2" onclick="addMoreRows()">
       <i class="bi bi-plus-circle"></i> Add More Rows
     </button>
+
+
+    <!-- ✅ NEW: Add Products in Bulk Button (EXACTLY LIKE INVOICE) -->
+  <button class="btn btn-outline-success btn-sm" onclick="openBulkAddModalForSale()">
+    <i class="bi bi-collection"></i> Add Products in Bulk
+  </button>
+
+    
     <button class="btn btn-outline-success btn-sm" onclick="openCustomProductPopup()">
       <i class="bi bi-pencil-square"></i> Add Custom Product
     </button>
@@ -5358,6 +5366,479 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 
+/**
+ * ==========================================
+ * BULK ADD PRODUCTS FOR RECORD SALE
+ * ==========================================
+ */
+
+// Global variable to store selected products for sale
+let selectedBulkProductsSale = {};
+
+/**
+ * Open Bulk Add Modal for Sale
+ */
+function openBulkAddModalForSale() {
+  console.log('📦 Opening Bulk Add Modal for Sale');
+  
+  // Reset search and selections
+  document.getElementById('bulkSearchInputSale').value = '';
+  selectedBulkProductsSale = {};
+  
+  // Render all products
+  renderBulkProductsListSale('');
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('bulkAddModalForSale'));
+  modal.show();
+}
+
+/**
+ * Filter products by search query
+ */
+function filterBulkProductsSale(query) {
+  console.log('🔍 Filtering bulk products for sale:', query);
+  renderBulkProductsListSale(query);
+}
+
+/**
+ * Render products list on left side
+ */
+function renderBulkProductsListSale(searchQuery) {
+  const container = document.getElementById('bulkProductsListSale');
+  if (!container) return;
+  
+  const products = cachedProducts || [];
+  let filtered = products;
+  
+  // Filter by search query
+  if (searchQuery && searchQuery.trim().length > 0) {
+    const query = searchQuery.toLowerCase();
+    filtered = products.filter(product => {
+      const name = product.name.toLowerCase();
+      const brand = (product.brand || '').toLowerCase();
+      const category = (product.category || '').toLowerCase();
+      
+      return name.includes(query) || brand.includes(query) || category.includes(query);
+    });
+  }
+  
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No products found</div>';
+    return;
+  }
+  
+  let html = '';
+  filtered.forEach(product => {
+    const isSelected = selectedBulkProductsSale[product.id];
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
+    const rateText = product.price ? `₹${product.price.toFixed(2)}` : 'N/A';
+    const stockText = product.stock ? `Stock: ${product.stock}` : '';
+    
+    html += `
+      <div onclick="toggleBulkProductSelectionSale('${product.id}', '${escapeHtml(product.name)}', '${escapeHtml(product.size || '')}', ${product.price || 0})"
+           style="
+             padding: 12px;
+             border-bottom: 1px solid #f0f0f0;
+             cursor: pointer;
+             transition: background-color 0.2s;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             ${isSelected ? 'background-color: #e3f2fd;' : 'background-color: white;'}
+           "
+           onmouseover="this.style.backgroundColor='#f5f5f5'"
+           onmouseout="this.style.backgroundColor='${isSelected ? '#e3f2fd' : 'white'}'"
+      >
+        <div style="flex: 1;">
+          <strong>${escapeHtml(displayName)}</strong>
+          <div style="font-size: 0.85rem; color: #666;">
+            ${rateText} ${stockText ? '• ' + stockText : ''}
+          </div>
+        </div>
+        <div style="
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-left: 10px;
+        ">
+          ${isSelected ? '✓' : ''}
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  console.log('✅ Rendered', filtered.length, 'products for sale');
+}
+
+/**
+ * Toggle product selection for sale
+ */
+function toggleBulkProductSelectionSale(productId, productName, productSize, productPrice) {
+  console.log('✓ Toggle product for sale:', productName);
+  
+  if (selectedBulkProductsSale[productId]) {
+    // Remove if already selected
+    delete selectedBulkProductsSale[productId];
+    console.log('❌ Removed:', productName);
+  } else {
+    // Add if not selected
+    selectedBulkProductsSale[productId] = {
+      id: productId,
+      name: productName,
+      size: productSize,
+      price: productPrice,
+      qty: 1
+    };
+    console.log('✅ Added:', productName);
+  }
+  
+  // Refresh both panels
+  renderBulkProductsListSale(document.getElementById('bulkSearchInputSale').value);
+  renderBulkSelectedItemsSale();
+}
+
+/**
+ * Render selected items with horizontal buttons
+ */
+function renderBulkSelectedItemsSale() {
+  const container = document.getElementById('bulkSelectedItemsSale');
+  if (!container) return;
+  
+  const selectedArray = Object.values(selectedBulkProductsSale);
+  
+  if (selectedArray.length === 0) {
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No items selected</div>';
+    updateBulkCountersSale();
+    return;
+  }
+  
+  let html = '';
+  selectedArray.forEach((product, idx) => {
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
+    
+    html += `
+      <div style="
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+      ">
+        <!-- Product Info (always on top) -->
+        <div style="margin-bottom: 8px;">
+          <strong style="display: block; font-size: 14px; margin-bottom: 4px;">
+            ${escapeHtml(displayName)}
+          </strong>
+          <div style="font-size: 0.85rem; color: #666;">
+            ₹${product.price.toFixed(2)}
+          </div>
+        </div>
+        
+        <!-- Quantity Controls (ALWAYS HORIZONTAL) -->
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: nowrap;
+        ">
+          <!-- LEFT: Minus, Qty, Plus (HORIZONTAL) -->
+          <div style="
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: nowrap;
+            min-width: 0;
+          ">
+            <!-- Minus Button -->
+            <button type="button" class="bulk-qty-btn" 
+                    onclick="updateBulkQtySale('${product.id}', -1)"
+                    style="
+                      padding: 6px 10px;
+                      font-size: 16px;
+                      background: #dc3545;
+                      color: white;
+                      border: none;
+                      border-radius: 4px;
+                      cursor: pointer;
+                      min-width: 40px;
+                      min-height: 40px;
+                      font-weight: bold;
+                      transition: background 0.2s;
+                      flex-shrink: 0;
+                    "
+                    onmouseover="this.style.background='#c82333'"
+                    onmouseout="this.style.background='#dc3545'">
+              −
+            </button>
+            
+            <!-- Quantity Input -->
+            <input type="number" value="${product.qty}" 
+                   class="bulk-qty-input"
+                   style="
+                     width: 50px;
+                     padding: 6px;
+                     text-align: center;
+                     font-size: 14px;
+                     font-weight: bold;
+                     border: 1px solid #ddd;
+                     border-radius: 4px;
+                     flex-shrink: 0;
+                   "
+                   onchange="updateBulkQtyDirectSale('${product.id}', this.value)">
+            
+            <!-- Plus Button -->
+            <button type="button" class="bulk-qty-btn" 
+                    onclick="updateBulkQtySale('${product.id}', 1)"
+                    style="
+                      padding: 6px 10px;
+                      font-size: 16px;
+                      background: #28a745;
+                      color: white;
+                      border: none;
+                      border-radius: 4px;
+                      cursor: pointer;
+                      min-width: 40px;
+                      min-height: 40px;
+                      font-weight: bold;
+                      transition: background 0.2s;
+                      flex-shrink: 0;
+                    "
+                    onmouseover="this.style.background='#218838'"
+                    onmouseout="this.style.background='#28a745'">
+              +
+            </button>
+          </div>
+          
+          <!-- RIGHT: Remove Button -->
+          <button type="button" class="btn btn-sm btn-link text-danger bulk-remove-btn" 
+                  onclick="toggleBulkProductSelectionSale('${product.id}', '${escapeHtml(product.name)}', '${product.size}', ${product.price})"
+                  style="
+                    padding: 6px 10px;
+                    font-size: 16px;
+                    min-width: 40px;
+                    min-height: 40px;
+                    cursor: pointer;
+                    flex-shrink: 0;
+                  ">
+            ✕
+          </button>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  updateBulkCountersSale();
+  console.log('✅ Rendered', selectedArray.length, 'selected items for sale');
+}
+
+/**
+ * Update quantity (increment/decrement)
+ */
+function updateBulkQtySale(productId, change) {
+  if (selectedBulkProductsSale[productId]) {
+    const newQty = Math.max(1, selectedBulkProductsSale[productId].qty + change);
+    selectedBulkProductsSale[productId].qty = newQty;
+    renderBulkSelectedItemsSale();
+    console.log('📊 Updated qty:', newQty);
+  }
+}
+
+/**
+ * Update quantity (direct input)
+ */
+function updateBulkQtyDirectSale(productId, value) {
+  if (selectedBulkProductsSale[productId]) {
+    const newQty = Math.max(1, parseInt(value) || 1);
+    selectedBulkProductsSale[productId].qty = newQty;
+    renderBulkSelectedItemsSale();
+    console.log('📊 Updated qty directly:', newQty);
+  }
+}
+
+/**
+ * Update counters (selected count, total qty)
+ */
+function updateBulkCountersSale() {
+  const selectedArray = Object.values(selectedBulkProductsSale);
+  const selectedCount = selectedArray.length;
+  const totalQty = selectedArray.reduce((sum, p) => sum + p.qty, 0);
+  
+  document.getElementById('bulkSelectedCountSale').textContent = selectedCount;
+  document.getElementById('bulkTotalQtySale').textContent = totalQty;
+  
+  console.log('📊 Counters: Selected=' + selectedCount + ', TotalQty=' + totalQty);
+}
+
+/**
+ * Add all selected products to Record Sale Grid
+ */
+function addBulkProductsToSale() {
+  const selectedArray = Object.values(selectedBulkProductsSale);
+  
+  if (selectedArray.length === 0) {
+    alert('❌ Please select at least one product');
+    return;
+  }
+  
+  console.log('📦 Adding', selectedArray.length, 'products to Record Sale');
+  
+  const tbody = document.getElementById('product-grid-body');
+  if (!tbody) {
+    console.error('❌ Record Sale table body not found');
+    return;
+  }
+  
+  // Add each product as a new row
+  selectedArray.forEach((product, index) => {
+    // Get current number of rows
+    const rowIndex = tbody.querySelectorAll('tr').length + 1;
+    
+    // Create new row element
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-index', rowIndex);
+    
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
+    
+    // ✅ Build row HTML (matching your existing table structure)
+    tr.innerHTML = `
+      <td class="grid-row-number">${rowIndex}</td>
+      <td>
+        <input type="text" class="form-control form-control-sm" 
+               id="saleProduct-${rowIndex}"
+               value="${escapeHtml(displayName)}" 
+               placeholder="Product name"
+               style="padding: 8px; font-size: 0.9rem;">
+      </td>
+      <td>
+        <input type="text" class="form-control form-control-sm" 
+               id="saleSize-${rowIndex}"
+               value="${escapeHtml(product.size)}" 
+               placeholder="Size"
+               style="padding: 8px; font-size: 0.9rem;">
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm text-center" 
+               id="saleQty-${rowIndex}"
+               value="${product.qty}" min="1" placeholder="1"
+               style="font-size: 0.9rem;"
+               oninput="calculateRecordSaleTotal();">
+      </td>
+      <td>
+        <input type="text" class="form-control form-control-sm" 
+               id="saleUnit-${rowIndex}"
+               value="Pcs" placeholder="Unit"
+               style="padding: 8px; font-size: 0.9rem;">
+      </td>
+      <td>
+        <input type="number" class="form-control form-control-sm text-end" 
+               id="salePrice-${rowIndex}"
+               value="${product.price}" min="0" step="0.01" placeholder="0.00"
+               style="font-size: 0.9rem;"
+               oninput="calculateRecordSaleTotal();">
+      </td>
+      <td class="text-end fw-bold" style="width: 140px; font-size: 0.9rem;">
+        <span id="saleRowTotal-${rowIndex}">₹${(product.qty * product.price).toFixed(2)}</span>
+      </td>
+      <td class="text-center">
+        <button type="button" class="btn btn-sm btn-link text-danger" 
+                onclick="deleteSaleRow(${rowIndex})"
+                style="padding: 2px 6px;">
+          ✕
+        </button>
+      </td>
+    `;
+    
+    tbody.appendChild(tr);
+    
+    console.log('✅ Added row', rowIndex, ':', displayName, 'x' + product.qty);
+  });
+  
+  // ✅ Calculate totals AFTER all rows added
+  setTimeout(() => {
+    calculateRecordSaleTotal();
+    console.log('✅ Record Sale totals calculated');
+  }, 50);
+  
+  // Clear selections
+  selectedBulkProductsSale = {};
+  
+  // Close modal
+  const modal = bootstrap.Modal.getInstance(document.getElementById('bulkAddModalForSale'));
+  if (modal) {
+    modal.hide();
+  }
+  
+  console.log('✅ All', selectedArray.length, 'products added successfully!');
+}
+
+/**
+ * Calculate Record Sale totals
+ */
+function calculateRecordSaleTotal() {
+  const tbody = document.getElementById('product-grid-body');
+  if (!tbody) return;
+  
+  let subtotal = 0;
+  const rows = tbody.querySelectorAll('tr');
+  
+  rows.forEach((row, index) => {
+    const qtyInput = row.querySelector(`input[id^="saleQty-"]`);
+    const priceInput = row.querySelector(`input[id^="salePrice-"]`);
+    const totalSpan = row.querySelector(`span[id^="saleRowTotal-"]`);
+    
+    if (qtyInput && priceInput) {
+      const qty = parseInt(qtyInput.value) || 0;
+      const price = parseFloat(priceInput.value) || 0;
+      const rowTotal = qty * price;
+      
+      if (totalSpan) {
+        totalSpan.textContent = `₹${rowTotal.toFixed(2)}`;
+      }
+      
+      subtotal += rowTotal;
+    }
+  });
+  
+  // Update totals
+  const subtotalSpan = document.getElementById('subtotal');
+  const grandTotalSpan = document.getElementById('grandTotal');
+  
+  if (subtotalSpan) {
+    subtotalSpan.textContent = `₹${subtotal.toFixed(2)}`;
+  }
+  if (grandTotalSpan) {
+    grandTotalSpan.textContent = `₹${subtotal.toFixed(2)}`;
+  }
+}
+
+/**
+ * Delete sale row
+ */
+function deleteSaleRow(rowIndex) {
+  const tbody = document.getElementById('product-grid-body');
+  if (!tbody) return;
+  
+  const row = tbody.querySelector(`tr[data-index="${rowIndex}"]`);
+  if (row) {
+    row.remove();
+    calculateRecordSaleTotal();
+  }
+}
+
+
+
+
+
+
+
+
+
+
+    
+
   /**
  * ==========================================
  * INVOICE GENERATOR (UPDATED - NO PRODUCT REQUIRED)
@@ -5893,18 +6374,7 @@ function toggleBulkProductSelection(productId, productName, productSize, product
   renderBulkSelectedItems();
 }
 
-/**
- * Render selected items on right side
- */
-/**
- * Render selected items on right side (WITH BIGGER BUTTONS FOR MOBILE)
- */
-/**
- * Render selected items with RESPONSIVE BUTTONS
- */
-/**
- * Render selected items with RESPONSIVE LAYOUT (vertical on mobile)
- */
+
 /**
  * Render selected items with FIXED HORIZONTAL BUTTONS
  */
@@ -10521,6 +10991,77 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 
+<!-- ✅ BULK ADD PRODUCTS MODAL FOR RECORD SALE -->
+<div class="modal fade" id="bulkAddModalForSale" tabindex="-1" backdrop="static">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-collection"></i> Add Items in Bulk
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Search Input -->
+        <input type="text" class="form-control mb-3" id="bulkSearchInputSale" 
+               placeholder="Type to search products..."
+               oninput="filterBulkProductsSale(this.value)">
+        
+        <!-- Two Column Layout -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-height: 400px;">
+          
+          <!-- LEFT: All Products List -->
+          <div>
+            <h6 class="border-bottom pb-2"><i class="bi bi-box"></i> Products</h6>
+            <div id="bulkProductsListSale" style="
+              overflow-y: auto;
+              max-height: 350px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              background: white;
+            ">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+          
+          <!-- RIGHT: Selected Items -->
+          <div>
+            <h6 class="border-bottom pb-2">
+              <i class="bi bi-check-circle"></i> Selected Items 
+              <span class="badge bg-primary" id="bulkSelectedCountSale">0</span>
+            </h6>
+            <div style="
+              font-size: 0.9rem;
+              color: #666;
+              margin-bottom: 10px;
+            ">
+              Total Quantity: <strong id="bulkTotalQtySale">0</strong>
+            </div>
+            <div id="bulkSelectedItemsSale" style="
+              overflow-y: auto;
+              max-height: 320px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              background: #f9f9f9;
+            ">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-success" onclick="addBulkProductsToSale()">
+          <i class="bi bi-plus-circle"></i> Add Items
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
   
 <script>
@@ -10545,6 +11086,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
