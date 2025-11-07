@@ -3785,8 +3785,8 @@ body.modal-open {
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby08XpM28vwkGi1oS4k1snA9PlbdObaTxwY_ZaHMLUd3BjnF-_DntqMYr1MR8TypruF/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby08XpM28vwkGi1oS4k1snA9PlbdObaTxwY_ZaHMLUd3BjnF-_DntqMYr1MR8TypruF/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJw3YFidhMHqTs4u4lFmQpwHRoTTdTh5YHguOspTlmArxNrKiVsmAYFiXm-obcrBuh/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJw3YFidhMHqTs4u4lFmQpwHRoTTdTh5YHguOspTlmArxNrKiVsmAYFiXm-obcrBuh/exec'
   let cachedProducts = [];
   let cachedSales = [];
 
@@ -5023,9 +5023,8 @@ function editProduct(id){
   }
   
   console.log('📦 Product data:', p);
-  console.log('📊 p.stock:', p.stock);
-  console.log('📊 p.stockStatus:', p.stockStatus);
-  console.log('📊 p.stockValue:', p.stockValue);
+  console.log('📊 p.stock type:', typeof p.stock);
+  console.log('📊 p.stock value:', p.stock);
   
   editingProductId = id;
   
@@ -5045,58 +5044,49 @@ function editProduct(id){
   // ✅ CRITICAL: Preserve imageUrl when editing
   window.editingProductImageUrl = p.imageUrl || '';
   
-  // ✅ LOAD STOCK DATA (can be status OR exact quantity)
-  resetStockSelection(); // Clear previous selection
+  // ✅ RESET STOCK FIELDS (clear both)
+  resetStockSelection(); // Clear status buttons
+  document.getElementById('productCurrentStock').value = ''; // Clear quantity field
   
-  // Determine what type of stock data we have
+  // ✅ LOAD STOCK DATA - Check type carefully
   const stockValue = p.stock;
   const stockType = typeof stockValue;
   
-  console.log('📊 Stock value:', stockValue);
-  console.log('📊 Stock type:', stockType);
+  console.log('📊 Analyzing stock - Type:', stockType, 'Value:', stockValue);
   
-  // ✅ PRIORITY 1: Check if stock is NUMERIC (EXACT QUANTITY)
-  if (stockType === 'number' && stockValue > 0 && !isNaN(stockValue)) {
-    console.log('✅ Loading exact stock quantity (number):', stockValue);
+  // ✅ PRIORITY 1: NUMERIC (exact quantity like 30)
+  if (stockType === 'number' && !isNaN(stockValue) && stockValue >= 0) {
+    console.log('✅ Loading NUMERIC stock:', stockValue);
     document.getElementById('productCurrentStock').value = stockValue;
-    // Don't select any status button - leave it empty
+    // Don't select any status button
   } 
-  // ✅ PRIORITY 2: Check if stock is STRING (TEXT STATUS: GOOD/MEDIUM/LOW/URGENT)
+  // ✅ PRIORITY 2: STRING (status like "GOOD" or "30")
   else if (stockType === 'string' && stockValue) {
-    const statusLower = stockValue.toString().toLowerCase().trim();
-    console.log('📊 Stock is TEXT status:', statusLower);
+    // Try to parse as number first
+    const parsedNumber = parseFloat(stockValue);
     
-    if (['good', 'medium', 'low', 'urgent'].includes(statusLower)) {
-      console.log('✅ Setting status button:', statusLower);
-      selectStockStatus(statusLower);
-      // Clear quantity field
-      document.getElementById('productCurrentStock').value = '';
+    if (!isNaN(parsedNumber) && parsedNumber >= 0) {
+      // It's a number stored as string (like "30")
+      console.log('✅ Loading NUMERIC stock (from string):', parsedNumber);
+      document.getElementById('productCurrentStock').value = parsedNumber;
     } else {
-      console.warn('⚠️ Unknown status:', stockValue);
-      selectStockStatus('medium');
-      document.getElementById('productCurrentStock').value = '';
+      // It's a status text
+      const statusLower = stockValue.toString().toLowerCase().trim();
+      console.log('📊 Stock is TEXT status:', statusLower);
+      
+      if (['good', 'medium', 'low', 'urgent'].includes(statusLower)) {
+        console.log('✅ Setting status button:', statusLower);
+        selectStockStatus(statusLower);
+      } else {
+        console.warn('⚠️ Unknown status:', stockValue);
+        // DON'T default to anything - leave empty
+      }
     }
   }
-  // ✅ PRIORITY 3: Fallback to stockStatus/stockValue fields (old format)
-  else if (p.stockStatus) {
-    console.log('✅ Using stockStatus field:', p.stockStatus);
-    
-    if (p.stockStatus === 'exact' && p.stockValue) {
-      console.log('✅ Exact value from stockValue:', p.stockValue);
-      document.getElementById('productCurrentStock').value = p.stockValue;
-      document.getElementById('selectedStockStatus').value = '';
-    } else if (['good', 'medium', 'low', 'urgent'].includes(p.stockStatus)) {
-      console.log('✅ Status from stockStatus:', p.stockStatus);
-      selectStockStatus(p.stockStatus);
-      document.getElementById('productCurrentStock').value = '';
-    }
-  }
-  // ✅ PRIORITY 4: Default (no stock info found)
+  // ✅ PRIORITY 3: No stock info
   else {
-    console.warn('⚠️ No valid stock info found, leaving empty');
-    // Don't default to anything - let user choose
-    document.getElementById('productCurrentStock').value = '';
-    document.getElementById('selectedStockStatus').value = '';
+    console.warn('⚠️ No valid stock info found - leaving empty');
+    // Don't set any default - user must choose
   }
   
   // ✅ LOAD PHOTO IF EXISTS
@@ -5118,6 +5108,7 @@ function editProduct(id){
   new bootstrap.Modal(document.getElementById('productModal')).show();
   console.log('✅ Edit modal opened');
 }
+
 
 async function saveProduct() {
   console.log('💾 saveProduct called');
@@ -6376,21 +6367,35 @@ function selectStockStatus(status) {
 /**
  * Get stock status - can be from buttons OR exact quantity
  */
+/**
+ * Get stock data - MANDATORY: user must choose either exact quantity OR status
+ */
 function getStockData() {
   const statusSelected = document.getElementById('selectedStockStatus')?.value || '';
-  const exactStock = document.getElementById('productCurrentStock')?.value || '';
+  const exactStockInput = document.getElementById('productCurrentStock')?.value || '';
   
-  // If exact number entered, use it
-  if (exactStock && parseInt(exactStock) > 0) {
-    console.log('✅ Using exact stock:', exactStock);
-    return {
-      stockStatus: 'exact',
-      stockValue: parseInt(exactStock)
-    };
+  console.log('🔍 getStockData called');
+  console.log('📊 Status selected:', statusSelected);
+  console.log('📊 Exact stock input:', exactStockInput);
+  
+  // ✅ CHECK 1: If exact number entered, use it
+  if (exactStockInput && exactStockInput.trim() !== '') {
+    const exactStock = parseInt(exactStockInput);
+    
+    if (!isNaN(exactStock) && exactStock >= 0) {
+      console.log('✅ Using exact stock:', exactStock);
+      return {
+        stockStatus: 'exact',
+        stockValue: exactStock
+      };
+    } else {
+      alert('⚠️ Invalid stock quantity. Please enter a valid number (0 or greater).');
+      return null;
+    }
   }
   
-  // Otherwise use status (must select one)
-  if (statusSelected) {
+  // ✅ CHECK 2: If status button selected, use it
+  if (statusSelected && ['good', 'medium', 'low', 'urgent'].includes(statusSelected)) {
     console.log('✅ Using status:', statusSelected);
     return {
       stockStatus: statusSelected,
@@ -6398,10 +6403,11 @@ function getStockData() {
     };
   }
   
-  // Error: No stock info provided
-  alert('⚠️ Please either:\n1. Select a stock status (Good/Medium/Low/Urgent)\n2. OR enter an exact quantity');
+  // ❌ ERROR: User didn't choose anything
+  alert('⚠️ Stock information required!\n\nPlease either:\n1️⃣ Enter an exact quantity (e.g., 30)\n2️⃣ OR select a status (Good/Medium/Low/Urgent)');
   return null;
 }
+
 
 
 
@@ -12515,6 +12521,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
