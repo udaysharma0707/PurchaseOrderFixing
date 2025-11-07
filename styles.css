@@ -56,34 +56,7 @@ h1, h2, h3, h4, h5, h6 {
 p { color: var(--text-secondary) !important; margin: 0 !important; font-size: 15px; }
 small { color: var(--text-muted) !important; font-size: 13px; }
 
-/* ✅ SIDEBAR - Off-White with Black Text */
-.sidebar-menu, .sidebar, [class*="sidebar"] {
-  background: #F5F5F5 !important;
-  color: var(--text-primary) !important;
-}
 
-.sidebar-item, .sidebar-link, .menu-item {
-  color: var(--text-primary) !important;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  padding: 12px 16px !important;
-  border-radius: 8px !important;
-  margin-bottom: 4px !important;
-}
-
-.sidebar-item:hover, .sidebar-link:hover {
-  background: rgba(37, 211, 102, 0.08) !important;
-  color: var(--deep-green) !important;
-  transform: translateX(2px) !important;
-}
-
-.sidebar-section-title {
-  color: var(--text-muted) !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  font-size: 11px !important;
-  letter-spacing: 0.8px !important;
-  padding: 12px 16px !important;
-}
 
 /* ✅ HEADER/NAVBAR - Deep Green Gradient */
 .navbar, .top-header, header, .header-bar, nav {
@@ -442,23 +415,7 @@ button, a, .card, input, .badge {
 .btn-action-sm { padding: 0.25rem 0.5rem; font-size: 0.85rem; }
 .sync-indicator { position: fixed; top: 70px; left: 20px; background: var(--surface-white) !important; padding: 8px 12px; border-radius: 20px; box-shadow: var(--card-shadow); display: none; z-index: 1000; }
 
-/* ✅ DESKTOP RESPONSIVE */
-@media (min-width: 769px) {
-  .summary-card, .dashboard-card {
-    margin-bottom: 24px !important;
-  }
-}
-
-/* ✅ TABLET RESPONSIVE */
-@media (min-width: 601px) and (max-width: 768px) {
-  .navbar { padding: 14px 20px !important; }
-  .navbar h1, header h1 { font-size: 20px !important; }
-  .card, .mobile-item { padding: 18px !important; }
-  .summary-card, .dashboard-card { padding: 14px !important; margin-bottom: 8px !important; }
-  .summary-card h3, .dashboard-card h3 { font-size: 28px !important; }
-}
-
-/* ✅ MOBILE RESPONSIVE - Optimized Spacing */
+/* ✅ CARDS CLOSER TOGETHER ON MOBILE */
 @media (max-width: 600px) {
   .navbar { padding: 12px 14px !important; }
   .navbar h1, header h1 { font-size: 18px !important; }
@@ -470,16 +427,16 @@ button, a, .card, input, .badge {
   .card, .mobile-item { padding: 14px !important; }
   .btn-primary, .btn-secondary { padding: 10px 16px !important; font-size: 13px !important; }
   
-  /* ✅ MOBILE: Cards Closer Together */
+  /* ✅ CARDS MUCH CLOSER - Reduced margins */
   .summary-card, .dashboard-card {
     padding: 12px !important;
-    margin-bottom: 6px !important;
+    margin-bottom: 2px !important;  /* ← Changed from 6px to 2px */
     border-radius: 10px !important;
   }
 
   .summary-card h3, .dashboard-card h3 {
     font-size: 24px !important;
-    margin: 6px 0 4px 0 !important;
+    margin: 4px 0 2px 0 !important;  /* ← Reduced margins */
   }
 
   .summary-card p, .dashboard-card p {
@@ -487,11 +444,11 @@ button, a, .card, input, .badge {
     margin: 0 !important;
   }
 
-  /* ✅ MOBILE: Tables */
+  /* ✅ TABLES */
   .desktop-table { display: none !important; }
   .mobile-list { display: block !important; }
   .grid-table thead { display: none; }
-  .grid-table tbody tr { display: block; margin-bottom: 8px; padding: 12px; border: 1px solid var(--border-light); border-radius: 10px; background: var(--surface-white) !important; box-shadow: var(--card-shadow); }
+  .grid-table tbody tr { display: block; margin-bottom: 6px; padding: 12px; border: 1px solid var(--border-light); border-radius: 10px; background: var(--surface-white) !important; box-shadow: var(--card-shadow); }
   .grid-table td { display: block; width: 100%; padding: 0.3rem 0; border: 0; }
   .product-select, .qty-input, .price-input { width: 100% !important; font-size: 16px; height: 44px; }
   .modal-dialog { margin: 0.5rem; max-width: calc(100% - 1rem); }
@@ -2565,4 +2522,5 @@ button[onclick*="restore"]:hover,
 
 
     
+
 
