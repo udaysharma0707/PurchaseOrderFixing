@@ -10566,6 +10566,15 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('✅ Share Invoice dropdown initialized');
 });
 
+// ✅ EXPOSE PRODUCTS FOR OTHER PAGES
+window.cachedProducts = cachedProducts || [];
+localStorage.setItem('inventoryProducts', JSON.stringify(cachedProducts || []));
+
+// Update whenever products change
+document.addEventListener('productsUpdated', () => {
+  window.cachedProducts = cachedProducts || [];
+  localStorage.setItem('inventoryProducts', JSON.stringify(cachedProducts || []));
+});
 
 
     
@@ -11058,6 +11067,9 @@ document.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
+
+
+  
   
 <script>
 // Register service worker for PWA
@@ -11081,6 +11093,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
