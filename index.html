@@ -4346,19 +4346,19 @@ async function syncFromGoogleSheets() {
   }
   async function manualRefresh(){ const btn = document.getElementById('refreshBtn'); const icon=document.getElementById('refreshIcon'); btn.disabled=true; icon.className='bi bi-arrow-clockwise spinner-border spinner-border-sm'; await syncFromGoogleSheets(); icon.className='bi bi-arrow-clockwise'; btn.disabled=false; }
 
-  /***********************
-   * Rendering
-   ***********************/
-  function categoryIconColor(cat){
-    if(!cat) return '#6c757d';
-    const c = cat.toLowerCase();
-    if(c.includes('tile')) return '#0d6efd';
-    if(c.includes('sanitary')) return '#198754';
-    if(c.includes('access')) return '#fd7e14';
-    return '#6c757d';
-  }
+/***********************
+ * Rendering
+ ***********************/
+function categoryIconColor(cat){
+  if(!cat) return '#6c757d';
+  const c = cat.toLowerCase();
+  if(c.includes('tile')) return '#0d6efd';
+  if(c.includes('sanitary')) return '#198754';
+  if(c.includes('access')) return '#fd7e14';
+  return '#6c757d';
+}
 
-  /**
+/**
  * Generate stock badge HTML - handles both TEXT status and exact quantities
  */
 function stockBadgeHtml(stock, minStock){
@@ -4372,7 +4372,7 @@ function stockBadgeHtml(stock, minStock){
       return `<span class="stock-badge" style="background: #28a745; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🟢 Good</span>`;
     }
     if (statusUpper === 'MEDIUM') {
-      return `<span class="stock-badge" style="background: #ffc107; color: black; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🟡 Medium </span>`;
+      return `<span class="stock-badge" style="background: #ffc107; color: black; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🟡 Medium</span>`;
     }
     if (statusUpper === 'LOW') {
       return `<span class="stock-badge" style="background: #dc3545; color: white; padding: 6px 12px; border-radius: 20px; font-weight: bold; display: inline-block;">🔴 Low Stock</span>`;
@@ -4395,77 +4395,93 @@ function stockBadgeHtml(stock, minStock){
   return `<span class="stock-badge bg-success text-white" style="padding: 6px 12px; border-radius: 20px; display: inline-block;">In Stock (${stock})</span>`;
 }
 
-
-  function renderProducts(){
-    const tbody = document.getElementById('productsTableBody');
-    if(!hasInitialLoaded){
-      tbody.innerHTML = `<tr><td colspan="9" class="text-center py-4"><div class="spinner-border"></div><div class="mt-2 text-muted">Loading inventoryÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</div></td></tr>`;
-    } else if(!cachedProducts || cachedProducts.length===0){
-      tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No products yet</td></tr>`;
-    } else {
-      let html = '';
-      cachedProducts.forEach(p => {
-        const iconColor = categoryIconColor(p.category);
-        const priceText = (p.price!==undefined && p.price!==null) ? `₹${parseFloat(p.price).toFixed(2)}/${p.unitType}` : '-';
-        html += `<tr>
-          <td><i class="bi bi-file-earmark-fill" style="color:${iconColor}"></i></td>   
-<!-- âœ… Photo Thumbnail Column -->
-  <td style="text-align: center;">
-    ${p.imageUrl && p.imageUrl !== '' && p.imageUrl !== 'uploading...' ? 
-      `<img src="${p.imageUrl}" 
-           class="photo-thumbnail-small" 
-           alt="Photo" 
-           onclick="viewPhotoProduct('${p.id}')"
-           style="cursor:pointer; width:40px; height:40px; object-fit:cover; border-radius:4px; border:2px solid #e0e0e0;"
-           onerror="this.onerror=null; this.src='s://via.placeholder.com/40?text=No+Img'; console.error('Image load failed for product: ${escapeHtml(p.name)}');">` : 
-      `<i class="bi bi-image text-muted"></i>`}
-  </td>
-          
-          <td>${escapeHtml(p.name)}</td>
-          <td>${escapeHtml(p.category||'')}</td>
-          <td>${escapeHtml(p.brand||'')}</td>
-          <td><strong>${escapeHtml(p.size||'')}</strong></td>
-          <td>${stockBadgeHtml(p.stock,p.minStock)}</td>
-          <td>${priceText}</td>
-          <td>
-            <button class="btn btn-sm btn-primary btn-action-sm me-1" onclick="editProduct('${p.id}')"><i class="bi bi-pencil"></i> Edit</button>
-            <button class="btn btn-sm btn-danger btn-action-sm" onclick="deleteProduct('${p.id}')"><i class="bi bi-trash"></i> Delete</button>
-          </td>
-        </tr>`;
-      });
-      tbody.innerHTML = html;
-    }
-    // mobile list
-    const container = document.getElementById('mobileProductsList');
-    if(!hasInitialLoaded){ container.innerHTML=`<div class="mobile-item text-center"><div class="spinner-border"></div><div class="mt-2 text-muted">Loading inventoryÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¦</div></div>`; }
-    else if(!cachedProducts || cachedProducts.length===0){ container.innerHTML=`<div class="mobile-item text-center text-muted">No products yet</div>`; }
-    else {
-      let html = '';
-      cachedProducts.forEach(p => {
-        const iconColor = categoryIconColor(p.category);
-        html += `<div class="mobile-item d-flex align-items-start justify-content-between">
-          <div style="display:flex;gap:.8rem;align-items:center;">
-            <div style="width:36px;text-align:center;"><i class="bi bi-file-earmark-fill" style="font-size:1.25rem;color:${iconColor}"></i></div>
-            <div>
-              <div style="font-weight:600">${escapeHtml(p.name)}</div>
-              <div class="small-muted">${escapeHtml(p.category||'')} • ${escapeHtml(p.brand||'')}</div>
-              <div class="small-muted"><strong>${escapeHtml(p.size||'')}</strong> • ₹${parseFloat(p.price||0).toFixed(2)}/${p.unitType}</div>
-            </div>
-          </div>
-          <div style="text-align:right;">
-            <div>${stockBadgeHtml(p.stock,p.minStock)}</div>
-            <div style="margin-top:.5rem">
-              <button class="btn btn-sm btn-primary btn-action-sm me-1" onclick="editProduct('${p.id}')"><i class="bi bi-pencil"></i></button>
-              <button class="btn btn-sm btn-danger btn-action-sm" onclick="deleteProduct('${p.id}')"><i class="bi bi-trash"></i></button>
-            </div>
-          </div>
-        </div>`;
-      });
-      container.innerHTML = html;
-    }
-    updateSummaryFromCache();
-    loadProductsForSaleFromCache();
+function renderProducts(){
+  const tbody = document.getElementById('productsTableBody');
+  if(!hasInitialLoaded){
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4"><div class="spinner-border"></div><div class="mt-2 text-muted">Loading inventory…</div></td></tr>`;
+  } else if(!cachedProducts || cachedProducts.length===0){
+    tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No products yet</td></tr>`;
+  } else {
+    let html = '';
+    cachedProducts.forEach(p => {
+      const priceText = (p.price!==undefined && p.price!==null) ? `₹${parseFloat(p.price).toFixed(2)}/${p.unitType}` : '-';
+      
+      // ✅ Photo thumbnail HTML
+      const photoHtml = (p.imageUrl && p.imageUrl !== '' && p.imageUrl !== 'uploading...') ? 
+        `<img src="${p.imageUrl}" 
+             class="photo-thumbnail-small" 
+             alt="Photo" 
+             onclick="viewPhotoProduct('${p.id}')"
+             style="cursor:pointer; width:60px; height:60px; object-fit:cover; border-radius:8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"
+             onerror="this.onerror=null; this.src='https://via.placeholder.com/60?text=No+Img'; console.error('Image load failed for product: ${escapeHtml(p.name)}');">` : 
+        `<div style="width:60px; height:60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          <i class="bi bi-image" style="font-size:1.8rem; color:white;"></i>
+         </div>`;
+      
+      html += `<tr>
+        <td style="text-align: center;">${photoHtml}</td>
+        <td><strong>${escapeHtml(p.name)}</strong></td>
+        <td>${escapeHtml(p.category||'')}</td>
+        <td>${escapeHtml(p.brand||'')}</td>
+        <td><strong>${escapeHtml(p.size||'')}</strong></td>
+        <td>${stockBadgeHtml(p.stock,p.minStock)}</td>
+        <td><strong>${priceText}</strong></td>
+        <td>
+          <button class="btn btn-sm btn-primary btn-action-sm me-1" onclick="editProduct('${p.id}')"><i class="bi bi-pencil"></i> Edit</button>
+          <button class="btn btn-sm btn-danger btn-action-sm" onclick="deleteProduct('${p.id}')"><i class="bi bi-trash"></i> Delete</button>
+        </td>
+      </tr>`;
+    });
+    tbody.innerHTML = html;
   }
+  
+  // ✅ MOBILE LIST
+  const container = document.getElementById('mobileProductsList');
+  if(!hasInitialLoaded){ 
+    container.innerHTML=`<div class="mobile-item text-center"><div class="spinner-border"></div><div class="mt-2 text-muted">Loading inventory…</div></div>`; 
+  }
+  else if(!cachedProducts || cachedProducts.length===0){ 
+    container.innerHTML=`<div class="mobile-item text-center text-muted">No products yet</div>`; 
+  }
+  else {
+    let html = '';
+    cachedProducts.forEach(p => {
+      // ✅ Mobile photo HTML
+      const mobilePhoto = (p.imageUrl && p.imageUrl !== '' && p.imageUrl !== 'uploading...') ? 
+        `<img src="${p.imageUrl}" 
+             alt="Photo" 
+             onclick="viewPhotoProduct('${p.id}')"
+             style="cursor:pointer; width:70px; height:70px; object-fit:cover; border-radius:12px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"
+             onerror="this.onerror=null; this.src='https://via.placeholder.com/70?text=No+Img';">` : 
+        `<div style="width:70px; height:70px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius:12px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+          <i class="bi bi-image" style="font-size:2.2rem; color:white;"></i>
+         </div>`;
+      
+      html += `<div class="mobile-item d-flex align-items-start justify-content-between" style="gap:1rem;">
+        <div style="display:flex;gap:1rem;align-items:flex-start;flex:1;">
+          <div style="flex-shrink:0;">${mobilePhoto}</div>
+          <div style="flex:1;">
+            <div style="font-weight:600;font-size:1rem;margin-bottom:4px;">${escapeHtml(p.name)}</div>
+            <div class="small-muted">${escapeHtml(p.category||'')} • ${escapeHtml(p.brand||'')}</div>
+            <div class="small-muted"><strong>${escapeHtml(p.size||'')}</strong></div>
+            <div style="margin-top:8px;"><strong>₹${parseFloat(p.price||0).toFixed(2)}</strong>/${p.unitType}</div>
+            <div style="margin-top:8px;">${stockBadgeHtml(p.stock,p.minStock)}</div>
+          </div>
+        </div>
+        <div style="text-align:right;flex-shrink:0;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <button class="btn btn-sm btn-primary btn-action-sm" onclick="editProduct('${p.id}')" style="white-space:nowrap;"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="btn btn-sm btn-danger btn-action-sm" onclick="deleteProduct('${p.id}')" style="white-space:nowrap;"><i class="bi bi-trash"></i> Delete</button>
+          </div>
+        </div>
+      </div>`;
+    });
+    container.innerHTML = html;
+  }
+  
+  updateSummaryFromCache();
+  loadProductsForSaleFromCache();
+}
 
   function renderSales(){
     const tbody = document.getElementById('salesList');
@@ -12499,6 +12515,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
