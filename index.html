@@ -494,6 +494,44 @@ onmouseout="this.style.background='#28a745'">
     </div>
   </div>
 
+<!-- Recent Purchases -->
+<div class="row mt-4">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">Recent Purchases</h4>
+      <button class="btn btn-outline-success btn-sm" onclick="loadRecentPurchases()">
+        <i class="bi bi-arrow-clockwise"></i> Refresh
+      </button>
+    </div>
+    <div class="table-responsive">
+      <table class="table table-striped table-hover">
+        <thead class="table-success">
+          <tr>
+            <th>Serial No.</th>
+            <th>Date & Time</th>
+            <th>Photo</th>
+            <th>Products</th>
+            <th>Vendor</th>
+            <th>Total Amount</th>
+            <th>Payment Mode</th>
+            <th>Other Info</th>
+          </tr>
+        </thead>
+        <tbody id="purchasesList">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 20px; color: #999;">
+              <i class="bi bi-hourglass-split"></i> Loading purchases...
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+  
+
 <!-- ✅ NEW: All Products Page -->
 <div class="page-view" id="allProductsPage">
   <div class="page-header">
@@ -1837,8 +1875,8 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOzemxo6pCBAvbhkOuLj7I1m7yAqhyg-GRZYPpy9KZ9Z5QlP9pYfpfcEbSSfnSFB5i/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOzemxo6pCBAvbhkOuLj7I1m7yAqhyg-GRZYPpy9KZ9Z5QlP9pYfpfcEbSSfnSFB5i/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqORnxNeHRMpu5N6hFJ9mxSm9k5_knh3rOASpZ9f1gCSjgKvJkY8tIkRwr6G87MrlA/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzqORnxNeHRMpu5N6hFJ9mxSm9k5_knh3rOASpZ9f1gCSjgKvJkY8tIkRwr6G87MrlA/exec'
   let cachedProducts = [];
   let cachedSales = [];
 
@@ -3844,23 +3882,28 @@ document.addEventListener('DOMContentLoaded', function() {
 /**
  * Update submit function (payment optional)
  */
+/**
+ * Submit purchase entry to Google Sheets
+ */
 async function submitPurchaseEntry() {
-  console.log('📤 Submitting purchase...');
+  console.log('📤 Submitting purchase entry...');
   
+  // Validate vendor name
   const vendorName = document.getElementById('purchaseVendorName').value.trim();
   if (!vendorName) {
     alert('❌ Please enter vendor name');
     return;
   }
   
-  const rows = document.querySelectorAll('.purchase-product-row');
-  if (rows.length === 0) {
+  // Get products
+  const productRows = document.querySelectorAll('.purchase-product-row');
+  if (productRows.length === 0) {
     alert('❌ Please add at least one product');
     return;
   }
   
   const products = [];
-  for (const row of rows) {
+  for (const row of productRows) {
     const name = row.querySelector('[data-field="name"]').value.trim();
     const qty = parseFloat(row.querySelector('[data-field="qty"]').value) || 0;
     const rate = parseFloat(row.querySelector('[data-field="rate"]').value) || 0;
@@ -3868,22 +3911,29 @@ async function submitPurchaseEntry() {
     const amount = parseFloat(row.querySelector('[data-field="amount"]').value) || 0;
     
     if (name && qty > 0) {
-      products.push({ name, qty, rate, unit, amount });
+      products.push({ 
+        name, 
+        qty, 
+        rate, 
+        unit, 
+        amount: amount.toFixed(2)
+      });
     }
   }
   
   if (products.length === 0) {
-    alert('❌ Please add valid products');
+    alert('❌ Please add valid products with quantities');
     return;
   }
   
+  // Validate total amount
   const totalAmount = parseFloat(document.getElementById('purchaseTotalAmount').value) || 0;
   if (totalAmount <= 0) {
     alert('❌ Please enter total amount');
     return;
   }
   
-  // Payment modes (optional)
+  // Get payment modes (optional)
   const paymentModes = {};
   if (document.getElementById('purchasePaymentCash').checked) {
     paymentModes.cash = parseFloat(document.getElementById('purchasePaymentCashAmount').value) || 0;
@@ -3895,23 +3945,298 @@ async function submitPurchaseEntry() {
     paymentModes.credit = parseFloat(document.getElementById('purchasePaymentCreditAmount').value) || 0;
   }
   
+  // Get other info
   const otherInfo = document.getElementById('purchaseOtherInfo').value.trim();
   
-  const data = {
-    vendorName,
-    products,
-    totalAmount,
-    paymentModes,
-    otherInfo,
-    photoBase64: purchasePhotoBase64,
-    timestamp: new Date().getTime()
+  // Prepare data
+  const purchaseData = {
+    action: 'recordPurchase',
+    vendorName: vendorName,
+    products: products,
+    totalAmount: totalAmount,
+    paymentModes: paymentModes,
+    otherInfo: otherInfo,
+    photoBase64: purchasePhotoBase64 || ''
   };
   
-  console.log('📦 Data:', data);
+  console.log('📦 Purchase data:', purchaseData);
   
-  // TODO: Send to backend
-  alert('✅ Purchase recorded!');
-  closeRecordPurchaseModal();
+  // Show loading
+  const submitBtn = event.target;
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Submitting...';
+  
+  try {
+    // Send to Google Apps Script
+    const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(purchaseData)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('✅ Purchase recorded successfully!');
+      console.log('✅ Purchase ID:', result.purchaseId);
+      
+      // Close modal
+      closeRecordPurchaseModal();
+      
+      // Reload purchases list
+      await loadRecentPurchases();
+      
+    } else {
+      throw new Error(result.error || 'Failed to record purchase');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Failed to record purchase: ' + error.message);
+    
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="bi bi-check"></i> Submit';
+  }
+}
+
+
+    
+/**
+ * Load recent purchases from Google Sheets
+ */
+async function loadRecentPurchases() {
+  console.log('📦 Loading recent purchases...');
+  
+  const tbody = document.getElementById('purchasesList');
+  tbody.innerHTML = `
+    <tr>
+      <td colspan="8" style="text-align: center; padding: 20px; color: #999;">
+        <span class="spinner-border spinner-border-sm"></span> Loading purchases...
+      </td>
+    </tr>
+  `;
+  
+  try {
+    const response = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getPurchases`);
+    const result = await response.json();
+    
+    if (result.success) {
+      displayPurchases(result.purchases);
+    } else {
+      throw new Error(result.error || 'Failed to load purchases');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error loading purchases:', error);
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 20px; color: #dc3545;">
+          <i class="bi bi-exclamation-triangle"></i> Failed to load purchases
+        </td>
+      </tr>
+    `;
+  }
+}
+
+/**
+ * Display purchases in table
+ */
+function displayPurchases(purchases) {
+  const tbody = document.getElementById('purchasesList');
+  
+  if (!purchases || purchases.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" style="text-align: center; padding: 20px; color: #999;">
+          <i class="bi bi-inbox"></i> No purchases yet. Click "Record Purchase" to add one!
+        </td>
+      </tr>
+    `;
+    return;
+  }
+  
+  let html = '';
+  
+  purchases.forEach((purchase, index) => {
+    html += `
+      <tr onclick="viewPurchaseDetail(${index})" style="cursor: pointer;">
+        <td style="text-align: center; font-weight: 600;">${purchase.serialNo}</td>
+        <td style="white-space: nowrap;">${purchase.dateTime}</td>
+        <td style="text-align: center;">
+          ${purchase.photoLink ? `
+            <a href="${purchase.photoLink}" target="_blank" onclick="event.stopPropagation()">
+              <img src="${purchase.photoLink}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" alt="Photo">
+            </a>
+          ` : '<span style="color: #999;">-</span>'}
+        </td>
+        <td>${purchase.products}</td>
+        <td>${purchase.vendorName}</td>
+        <td style="font-weight: 600; color: #28a745;">₹${purchase.totalAmount.toFixed(2)}</td>
+        <td style="font-size: 0.9rem;">${purchase.paymentMode || '-'}</td>
+        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${purchase.otherInfo || '-'}</td>
+      </tr>
+    `;
+  });
+  
+  tbody.innerHTML = html;
+  
+  // Store for detail view
+  window.currentPurchases = purchases;
+  
+  console.log('✅ Displayed', purchases.length, 'purchases');
+}
+
+/**
+ * View purchase detail in modal
+ */
+function viewPurchaseDetail(index) {
+  const purchase = window.currentPurchases[index];
+  if (!purchase) return;
+  
+  let html = `
+    <div style="padding: 15px;">
+      
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <strong>Serial No.:</strong> ${purchase.serialNo}
+        </div>
+        <div class="col-md-6">
+          <strong>Date & Time:</strong> ${purchase.dateTime}
+        </div>
+      </div>
+      
+      ${purchase.photoLink ? `
+        <div class="text-center mb-3">
+          <img src="${purchase.photoLink}" style="max-width: 100%; max-height: 300px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" alt="Purchase Photo">
+        </div>
+      ` : ''}
+      
+      <div class="card mb-3">
+        <div class="card-header bg-success text-white">
+          <strong>Vendor Information</strong>
+        </div>
+        <div class="card-body">
+          <h5>${purchase.vendorName}</h5>
+        </div>
+      </div>
+      
+      <div class="card mb-3">
+        <div class="card-header bg-success text-white">
+          <strong>Products Purchased</strong>
+        </div>
+        <div class="card-body">
+          <p style="white-space: pre-wrap; margin: 0;">${purchase.products}</p>
+        </div>
+      </div>
+      
+      <div class="card mb-3">
+        <div class="card-header bg-success text-white">
+          <strong>Payment Details</strong>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <strong>Total Amount:</strong>
+              <div style="font-size: 1.5rem; color: #28a745; font-weight: 700;">₹${purchase.totalAmount.toFixed(2)}</div>
+            </div>
+            <div class="col-md-6">
+              <strong>Payment Mode:</strong>
+              <div>${purchase.paymentMode || 'Not specified'}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      ${purchase.otherInfo ? `
+        <div class="card">
+          <div class="card-header bg-warning">
+            <strong>Additional Information</strong>
+          </div>
+          <div class="card-body">
+            <p style="white-space: pre-wrap; margin: 0;">${purchase.otherInfo}</p>
+          </div>
+        </div>
+      ` : ''}
+      
+      <div class="text-center mt-3">
+        <button class="btn btn-danger" onclick="confirmDeletePurchase('${purchase.purchaseId}')">
+          <i class="bi bi-trash"></i> Delete Purchase
+        </button>
+      </div>
+      
+    </div>
+  `;
+  
+  // Create modal if not exists
+  let modal = document.getElementById('purchaseDetailModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.className = 'modal fade';
+    modal.id = 'purchaseDetailModal';
+    modal.innerHTML = `
+      <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title">
+              <i class="bi bi-receipt"></i> Purchase Details
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="purchaseDetailContent"></div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+  
+  document.getElementById('purchaseDetailContent').innerHTML = html;
+  
+  const bsModal = new bootstrap.Modal(modal);
+  bsModal.show();
+}
+
+/**
+ * Confirm delete purchase
+ */
+async function confirmDeletePurchase(purchaseId) {
+  if (!confirm('Are you sure you want to delete this purchase? This cannot be undone.')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'deletePurchase',
+        purchaseId: purchaseId
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('✅ Purchase deleted successfully!');
+      
+      // Close detail modal
+      const modal = bootstrap.Modal.getInstance(document.getElementById('purchaseDetailModal'));
+      if (modal) modal.hide();
+      
+      // Reload list
+      await loadRecentPurchases();
+      
+    } else {
+      throw new Error(result.error || 'Failed to delete purchase');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error deleting purchase:', error);
+    alert('❌ Failed to delete purchase: ' + error.message);
+  }
 }
 
 
@@ -6044,7 +6369,10 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 
-
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('📦 Page loaded, loading purchases...');
+  loadRecentPurchases();
+});
 /**
  * ==========================================
  * BULK ADD PRODUCTS FOR RECORD SALE
@@ -11788,9 +12116,7 @@ document.addEventListener('productsUpdated', () => {
         </div>
         <input type="file" id="purchasePhotoInput" accept="image/*" style="display: none;" onchange="handlePurchasePhotoUpload(this)">
         <div style="margin-top: 3px; display: flex; gap: 4px;">
-          <button type="button" class="btn btn-sm btn-outline-success" onclick="openPurchaseCamera()">
-            <i class="bi bi-camera"></i> Camera
-          </button>
+          
           <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearPurchasePhoto()" id="clearPurchasePhotoBtn" style="display: none;">
             <i class="bi bi-x"></i> Remove
           </button>
@@ -11972,6 +12298,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
