@@ -4115,6 +4115,9 @@ async function loadRecentPurchases() {
 /**
  * Display purchases in table (WITH BIGGER CLICKABLE PHOTOS)
  */
+/**
+ * Display purchases in table (FIXED PHOTO CLICK)
+ */
 function displayPurchases(purchases) {
   const tbody = document.getElementById('purchasesList');
   
@@ -4140,12 +4143,13 @@ function displayPurchases(purchases) {
           ${purchase.photoLink ? `
             <img 
               src="${purchase.photoLink}" 
-              onclick="event.stopPropagation(); openPhotoLightbox('${purchase.photoLink}', '${purchase.vendorName}')" 
+              onclick="event.stopPropagation(); openPhotoLightbox(${index})" 
               style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" 
               onmouseover="this.style.transform='scale(1.05)'" 
               onmouseout="this.style.transform='scale(1)'"
               alt="Purchase Photo"
-              title="Click to view full size">
+              title="Click to view full size"
+              onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=color:#999>No photo</span>'">
           ` : '<span style="color: #999;">-</span>'}
         </td>
         <td>${purchase.products}</td>
@@ -4165,11 +4169,25 @@ function displayPurchases(purchases) {
   console.log('✅ Displayed', purchases.length, 'purchases');
 }
 
+
 /**
  * Open photo in lightbox modal (like your PS5 example)
  */
-function openPhotoLightbox(photoUrl, title) {
-  console.log('📸 Opening photo lightbox');
+/**
+ * Open photo in lightbox modal (FIXED VERSION)
+ */
+function openPhotoLightbox(purchaseIndex) {
+  const purchase = window.currentPurchases[purchaseIndex];
+  
+  if (!purchase || !purchase.photoLink) {
+    alert('❌ No photo available for this purchase');
+    return;
+  }
+  
+  const photoUrl = purchase.photoLink;
+  const title = purchase.vendorName || 'Purchase Photo';
+  
+  console.log('📸 Opening photo:', photoUrl);
   
   // Create or get lightbox modal
   let lightbox = document.getElementById('photoLightboxModal');
@@ -4178,21 +4196,27 @@ function openPhotoLightbox(photoUrl, title) {
     lightbox = document.createElement('div');
     lightbox.id = 'photoLightboxModal';
     lightbox.className = 'modal fade';
+    lightbox.setAttribute('tabindex', '-1');
     lightbox.innerHTML = `
       <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="background: transparent; border: none;">
+        <div class="modal-content" style="background: #f8f9fa;">
           <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
             <h5 class="modal-title" id="photoLightboxTitle">
               <i class="bi bi-image"></i> Purchase Photo
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
           </div>
-          <div class="modal-body text-center" style="background: #f8f9fa; padding: 0;">
+          <div class="modal-body text-center" style="padding: 0; background: #fff;">
             <img 
               id="photoLightboxImg" 
               src="" 
-              style="width: 100%; max-height: 70vh; object-fit: contain; border-radius: 0 0 8px 8px;" 
-              alt="Purchase Photo">
+              style="width: 100%; max-height: 70vh; object-fit: contain;" 
+              alt="Purchase Photo"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div id="photoLoadError" style="display:none; padding: 40px; color: #dc3545;">
+              <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
+              <p>Failed to load photo</p>
+            </div>
           </div>
         </div>
       </div>
@@ -4202,13 +4226,27 @@ function openPhotoLightbox(photoUrl, title) {
   
   // Update modal content
   document.getElementById('photoLightboxTitle').innerHTML = `
-    <i class="bi bi-image"></i> ${title || 'Purchase Photo'}
+    <i class="bi bi-image"></i> ${escapeHtml(title)}
   `;
-  document.getElementById('photoLightboxImg').src = photoUrl;
+  
+  const imgElement = document.getElementById('photoLightboxImg');
+  imgElement.style.display = 'block';
+  imgElement.src = photoUrl;
+  
+  document.getElementById('photoLoadError').style.display = 'none';
   
   // Show modal
   const bsLightbox = new bootstrap.Modal(lightbox);
   bsLightbox.show();
+}
+/**
+ * Escape HTML to prevent XSS
+ */
+function escapeHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
 }
 
 
@@ -12387,6 +12425,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
