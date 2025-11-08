@@ -5338,52 +5338,84 @@ if (typeof addSubBtn !== 'undefined' && addSubBtn) {
 let selectedBulkPurchase = {};
 let cachedProductsForPurchase = [];
 
-// ✅ UPDATED: Direct fetch from Google Apps Script
 async function loadProductsForBulkPurchase() {
-  console.log('📦 Loading products from Google Apps Script...');
+  console.log('📦 Loading products directly from Google Sheets CSV...');
+  cachedProductsForPurchase = [];
   
   try {
-    // REPLACE THIS WITH YOUR ACTUAL DEPLOYMENT ID
-    const scriptUrl = 'https://script.google.com/macros/s/AKfycbyrHkCUDwjDM9fAJxxfynXn0nBb-2sgFzD-ChTVW4sf6_OQxkciyKjo6M4mOMf8OjCy/exec';
+    // Your Google Sheets ID - Replace with your actual SPREADSHEET_ID
+    // Format: https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/export?format=csv&gid=SHEET_GID
     
-    const response = await fetch(scriptUrl + '?action=getProducts');
+    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1OVKJyG08DfZ1YoD8KMGUXOfc1YlfaIUwSFP_zYXh9wo/export?format=csv&gid=0';
     
-    if (response.ok) {
-      const data = await response.json();
-      
-      if (data && Array.isArray(data) && data.length > 0) {
-        cachedProductsForPurchase = data.map(p => ({
-          id: p.id || p.name,
-          name: p.name || 'Unknown',
-          size: p.size || '',
-          price: Number(p.price) || 0,
-          stock: p.stock || 0,
-          category: p.category || '',
-          brand: p.brand || '',
-          unitType: p.unitType || 'Piece',
-          imageUrl: p.imageUrl || ''
-        }));
-        
-        console.log('✅ Loaded', cachedProductsForPurchase.length, 'products from Apps Script');
-        localStorage.setItem('inventoryProducts', JSON.stringify(cachedProductsForPurchase));
-        return;
-      }
+    console.log('🔗 Fetching from Google Sheets:', sheetUrl);
+    
+    const response = await fetch(sheetUrl);
+    
+    if (!response.ok) {
+      console.error('❌ HTTP error:', response.status);
+      throw new Error('HTTP ' + response.status);
     }
+    
+    const csv = await response.text();
+    console.log('📄 CSV received, parsing...');
+    
+    const lines = csv.split('\n');
+    if (lines.length < 2) {
+      console.error('❌ CSV has no data');
+      return;
+    }
+    
+    // Parse header row
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    console.log('📋 Headers:', headers);
+    
+    // Find column indexes
+    const idIdx = headers.findIndex(h => h === 'id');
+    const nameIdx = headers.findIndex(h => h === 'name');
+    const sizeIdx = headers.findIndex(h => h === 'size');
+    const priceIdx = headers.findIndex(h => h === 'price');
+    const stockIdx = headers.findIndex(h => h === 'stock');
+    const categoryIdx = headers.findIndex(h => h === 'category');
+    const brandIdx = headers.findIndex(h => h === 'brand');
+    const unitTypeIdx = headers.findIndex(h => h.includes('unit'));
+    
+    console.log('🔍 Column indexes:', { idIdx, nameIdx, sizeIdx, priceIdx, stockIdx, categoryIdx, brandIdx, unitTypeIdx });
+    
+    // Parse data rows
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue; // Skip empty lines
+      
+      const cols = line.split(',').map(c => c.trim());
+      
+      if (cols.length === 0 || !cols[nameIdx]) continue; // Skip if no name
+      
+      cachedProductsForPurchase.push({
+        id: cols[idIdx] || `prod_${i}`,
+        name: cols[nameIdx] || 'Unknown',
+        size: cols[sizeIdx] || '',
+        price: parseFloat(cols[priceIdx]) || 0,
+        stock: cols[stockIdx] || 0,
+        category: cols[categoryIdx] || '',
+        brand: cols[brandIdx] || '',
+        unitType: cols[unitTypeIdx] || 'Piece',
+        imageUrl: ''
+      });
+    }
+    
+    console.log('✅ Loaded', cachedProductsForPurchase.length, 'products from Google Sheets');
+    
+    // Cache in localStorage
+    localStorage.setItem('inventoryProducts', JSON.stringify(cachedProductsForPurchase));
+    
   } catch (error) {
-    console.error('❌ Fetch error:', error);
+    console.error('❌ Error loading from Sheets:', error.message);
+    console.error('Stack:', error.stack);
   }
   
-  // Fallback
-  try {
-    const stored = localStorage.getItem('inventoryProducts');
-    if (stored) {
-      cachedProductsForPurchase = JSON.parse(stored);
-      console.log('✅ Using cached products');
-    }
-  } catch (e) {}
-  
   if (cachedProductsForPurchase.length === 0) {
-    console.log('⚠️ No products available');
+    console.log('⚠️ No products loaded');
   }
 }
 
@@ -5610,6 +5642,7 @@ document.addEventListener('DOMContentLoaded', loadProductsForBulkPurchase);
 
 </body>
 </html>
+
 
 
 
