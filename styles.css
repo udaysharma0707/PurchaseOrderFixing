@@ -2732,9 +2732,49 @@ textarea:focus {
   }
 }
 
+/* Purchase table styles */
+#purchasesList tr {
+  transition: background-color 0.2s;
+}
+
+#purchasesList tr:hover {
+  background-color: #e8f5e9 !important;
+}
+
+.table-success th {
+  background-color: #28a745 !important;
+  color: white !important;
+  border-color: #28a745 !important;
+}
+
+/* Photo thumbnail */
+#purchasesList img {
+  transition: transform 0.2s;
+}
+
+#purchasesList img:hover {
+  transform: scale(1.1);
+}
+
+/* Responsive table */
+@media (max-width: 767px) {
+  .table-responsive {
+    font-size: 0.85rem;
+  }
+  
+  #purchasesList td {
+    padding: 8px 4px;
+  }
+  
+  #purchasesList img {
+    width: 40px;
+    height: 40px;
+  }
+}
 
 
     
+
 
 
 
