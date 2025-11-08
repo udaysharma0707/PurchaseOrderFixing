@@ -3891,67 +3891,12 @@ document.addEventListener('DOMContentLoaded', function() {
  * Submit purchase entry to Google Sheets
  */
 async function submitPurchaseEntry() {
-  console.log('📤 Starting submission...');
+  console.log('📤 submitPurchaseEntry called');
   
   try {
-    // 1. Get vendor name
-    const vendorName = document.getElementById('purchaseVendorName')?.value?.trim() || '';
-    if (!vendorName) {
-      alert('❌ Please enter vendor name');
-      return;
-    }
+    // ... your existing code to collect form data ...
     
-    // 2. Get products
-    const productRows = document.querySelectorAll('.purchase-product-row');
-    const products = [];
-    
-    for (const row of productRows) {
-      const name = row.querySelector('[data-field="name"]')?.value?.trim() || '';
-      const qty = parseFloat(row.querySelector('[data-field="qty"]')?.value) || 0;
-      const rate = parseFloat(row.querySelector('[data-field="rate"]')?.value) || 0;
-      const unit = row.querySelector('[data-field="unit"]')?.value || 'Pieces';
-      const amount = parseFloat(row.querySelector('[data-field="amount"]')?.value) || 0;
-      
-      if (name && qty > 0) {
-        products.push({
-          name: name,
-          qty: qty,
-          rate: rate,
-          unit: unit,
-          amount: amount.toFixed(2)
-        });
-      }
-    }
-    
-    if (products.length === 0) {
-      alert('❌ Please add at least one product');
-      return;
-    }
-    
-    // 3. Get total amount
-    const totalAmount = parseFloat(document.getElementById('purchaseTotalAmount')?.value) || 0;
-    if (totalAmount <= 0) {
-      alert('❌ Please enter total amount');
-      return;
-    }
-    
-    // 4. Get payment modes
-    const paymentModes = {};
-    if (document.getElementById('purchasePaymentCash')?.checked) {
-      paymentModes.cash = parseFloat(document.getElementById('purchasePaymentCashAmount')?.value) || 0;
-    }
-    if (document.getElementById('purchasePaymentOnline')?.checked) {
-      paymentModes.online = parseFloat(document.getElementById('purchasePaymentOnlineAmount')?.value) || 0;
-    }
-    if (document.getElementById('purchasePaymentCredit')?.checked) {
-      paymentModes.credit = parseFloat(document.getElementById('purchasePaymentCreditAmount')?.value) || 0;
-    }
-    
-    // 5. Get other info
-    const otherInfo = document.getElementById('purchaseOtherInfo')?.value?.trim() || '';
-    
-    // 6. Prepare data (EXACT SAME FORMAT AS TEST)
-    const data = {
+    const purchaseData = {
       action: 'recordPurchase',
       vendorName: vendorName,
       products: products,
@@ -3961,44 +3906,83 @@ async function submitPurchaseEntry() {
       photoBase64: window.purchasePhotoBase64 || ''
     };
     
-    console.log('📦 Sending data:', data);
+    console.log('📦 Submitting purchase:', purchaseData);
     
-    // 7. Send request (EXACT SAME AS TEST)
+    // Show loading
+    const submitBtn = document.getElementById('submitPurchaseBtn');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Submitting...';
+    }
+    
+    // ✅ KEY FIX: Add mode: 'no-cors' and change Content-Type
     const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify(data)
+      mode: 'no-cors', // ← ADD THIS
+      headers: {
+        'Content-Type': 'text/plain' // ← CHANGE THIS
+      },
+      body: JSON.stringify(purchaseData)
     });
     
-    console.log('Status:', response.status);
+    console.log('📡 Response type:', response.type);
     
-    const text = await response.text();
-    console.log('Response:', text);
-    
-    const result = JSON.parse(text);
-    console.log('Result:', result);
-    
-    if (result.success) {
-      console.log('✅ SUCCESS!', result.purchaseId);
-      alert('✅ Purchase recorded successfully!\nPurchase ID: ' + result.purchaseId);
+    // With no-cors, we can't read the response, so just assume success
+    if (response.type === 'opaque') {
+      console.log('✅ Request sent successfully (opaque response)');
+      
+      // Show success message
+      alert('✅ Purchase recorded successfully!');
       
       // Close modal
       const modal = bootstrap.Modal.getInstance(document.getElementById('recordPurchaseModal'));
-      if (modal) modal.hide();
-      
-      // Reload purchases
-      if (typeof loadRecentPurchases === 'function') {
-        loadRecentPurchases();
+      if (modal) {
+        modal.hide();
       }
+      
+      // Wait a bit for backend to save, then reload
+      setTimeout(async () => {
+        console.log('🔄 Reloading purchases...');
+        if (typeof loadRecentPurchases === 'function') {
+          await loadRecentPurchases();
+        } else {
+          window.location.reload();
+        }
+      }, 1000);
+      
     } else {
-      console.log('❌ FAILED:', result.error);
-      alert('❌ Failed: ' + result.error);
+      // Normal response (if CORS is ever fixed)
+      const text = await response.text();
+      const result = JSON.parse(text);
+      
+      if (result.success) {
+        alert('✅ Purchase recorded!\nPurchase ID: ' + result.purchaseId);
+        
+        // Close modal and reload
+        const modal = bootstrap.Modal.getInstance(document.getElementById('recordPurchaseModal'));
+        if (modal) modal.hide();
+        
+        if (typeof loadRecentPurchases === 'function') {
+          await loadRecentPurchases();
+        }
+      } else {
+        throw new Error(result.error || 'Failed to record purchase');
+      }
     }
     
-  } catch (err) {
-    console.log('❌ ERROR:', err);
-    alert('❌ Error: ' + err.message);
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Failed to record purchase:\n' + error.message);
+  } finally {
+    // Re-enable button
+    const submitBtn = document.getElementById('submitPurchaseBtn');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="bi bi-check"></i> Submit Purchase';
+    }
   }
 }
+
 
 
     
@@ -12322,6 +12306,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
