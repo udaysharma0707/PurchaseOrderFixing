@@ -1875,8 +1875,8 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1uFFfN7dvryoyQ3MkPF3xYkO6NPxCh3FF01fGF1T4hq_aAlxn8aad3JGykyuorVYT/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw1uFFfN7dvryoyQ3MkPF3xYkO6NPxCh3FF01fGF1T4hq_aAlxn8aad3JGykyuorVYT/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYl9qKLgtGyQ4XijtUwaJF2EH-W2s0QcLANoBSSF9APZkgRG3GDzpNkU1-perMmWk/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwYl9qKLgtGyQ4XijtUwaJF2EH-W2s0QcLANoBSSF9APZkgRG3GDzpNkU1-perMmWk/exec'
 
     
   let cachedProducts = [];
@@ -4338,36 +4338,60 @@ function calculatePurchaseRowAmount(rowId) {
   amountInput.value = amount.toFixed(2);
 }
 
-/**
- * Photo upload handler
- */
 function handlePurchasePhotoUpload(input) {
   const file = input.files[0];
-  if (!file) return;
   
+  if (!file) {
+    console.log('⚠️ No file selected');
+    return;
+  }
+  
+  console.log('📷 Photo selected:', file.name, file.size, 'bytes');
+  
+  // Check file size (max 5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    alert('❌ Photo is too large! Please select a photo under 5MB.');
+    input.value = '';
+    return;
+  }
+  
+  // Check file type
   if (!file.type.startsWith('image/')) {
-    alert('❌ Please select an image file');
+    alert('❌ Please select an image file.');
+    input.value = '';
     return;
   }
   
   const reader = new FileReader();
+  
   reader.onload = function(e) {
-    purchasePhotoBase64 = e.target.result;
+    const base64 = e.target.result;
+    window.purchasePhotoBase64 = base64;
+    
+    console.log('✅ Photo loaded as base64');
+    console.log('   Length:', base64.length);
+    console.log('   Preview:', base64.substring(0, 50));
     
     // Show preview
-    const img = document.getElementById('purchasePhotoImg');
-    img.src = e.target.result;
-    img.style.display = 'block';
+    const preview = document.getElementById('purchasePhotoPreview');
+    if (preview) {
+      preview.src = base64;
+      preview.style.display = 'block';
+    }
     
-    // Hide placeholder
-    document.querySelector('#purchasePhotoPreview p').style.display = 'none';
-    document.querySelector('#purchasePhotoPreview i').style.display = 'none';
-    
-    // Show remove button
-    document.getElementById('clearPurchasePhotoBtn').style.display = 'inline-block';
-    
-    console.log('✅ Photo uploaded');
+    // Show success message
+    const label = input.nextElementSibling || input.parentElement.querySelector('label');
+    if (label) {
+      label.textContent = '✅ Photo selected: ' + file.name;
+      label.style.color = '#28a745';
+    }
   };
+  
+  reader.onerror = function(error) {
+    console.error('❌ Error reading photo:', error);
+    alert('❌ Failed to read photo. Please try again.');
+  };
+  
   reader.readAsDataURL(file);
 }
 
@@ -12306,6 +12330,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
