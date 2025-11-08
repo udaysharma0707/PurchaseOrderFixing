@@ -1668,12 +1668,12 @@ Clear word
   <script>
 
     // --- Config / server endpoint detection ---
-    const SERVER_ENDPOINT = window.ENDPOINT || "https://script.google.com/macros/s/AKfycbyrHkCUDwjDM9fAJxxfynXn0nBb-2sgFzD-ChTVW4sf6_OQxkciyKjo6M4mOMf8OjCy/exec";
+    const SERVER_ENDPOINT = window.ENDPOINT || "https://script.google.com/macros/s/AKfycbzz_gJjLgr2-Mi5jly9y_40rq1bYBE0NESwgIhPvC5ki7iWac11wAPVEZ9PvezYUz8/exec";
     const SERVER_TOKEN = window.SHARED_TOKEN || "shopSecret2025";
 
 
     // Replace with your Google Apps Script Web App URL
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyrHkCUDwjDM9fAJxxfynXn0nBb-2sgFzD-ChTVW4sf6_OQxkciyKjo6M4mOMf8OjCy/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzz_gJjLgr2-Mi5jly9y_40rq1bYBE0NESwgIhPvC5ki7iWac11wAPVEZ9PvezYUz8/exec';
 
 
 // ========== NAVIGATION ==========
@@ -5337,87 +5337,65 @@ if (typeof addSubBtn !== 'undefined' && addSubBtn) {
 
 let selectedBulkPurchase = {};
 let cachedProductsForPurchase = [];
-
 async function loadProductsForBulkPurchase() {
-  console.log('📦 Loading products directly from Google Sheets CSV...');
+  console.log('📦 Loading products via Apps Script proxy...');
   cachedProductsForPurchase = [];
   
   try {
-    // Your Google Sheets ID - Replace with your actual SPREADSHEET_ID
-    // Format: https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/export?format=csv&gid=SHEET_GID
+    // ✅ REPLACE THIS WITH YOUR ACTUAL DEPLOYMENT ID FROM index.html
+    const scriptUrl = 'https://script.google.com/macros/s/AKfycbzz_gJjLgr2-Mi5jly9y_40rq1bYBE0NESwgIhPvC5ki7iWac11wAPVEZ9PvezYUz8/exec';
     
-    const sheetUrl = 'https://docs.google.com/spreadsheets/d/1OVKJyG08DfZ1YoD8KMGUXOfc1YlfaIUwSFP_zYXh9wo/export?format=csv&gid=0';
+    console.log('🔗 Fetching from:', scriptUrl);
     
-    console.log('🔗 Fetching from Google Sheets:', sheetUrl);
-    
-    const response = await fetch(sheetUrl);
+    const response = await fetch(scriptUrl + '?action=getProducts');
     
     if (!response.ok) {
       console.error('❌ HTTP error:', response.status);
       throw new Error('HTTP ' + response.status);
     }
     
-    const csv = await response.text();
-    console.log('📄 CSV received, parsing...');
+    const data = await response.json();
+    console.log('📋 Response:', data);
     
-    const lines = csv.split('\n');
-    if (lines.length < 2) {
-      console.error('❌ CSV has no data');
+    if (data && data.success && data.products && Array.isArray(data.products)) {
+      cachedProductsForPurchase = data.products.map(p => ({
+        id: p.id || p.name,
+        name: p.name || 'Unknown',
+        size: p.size || '',
+        price: Number(p.price) || 0,
+        stock: p.stock || 0,
+        category: p.category || '',
+        brand: p.brand || '',
+        unitType: p.unitType || 'Piece',
+        imageUrl: p.imageUrl || ''
+      }));
+      
+      console.log('✅ Loaded', cachedProductsForPurchase.length, 'products');
+      localStorage.setItem('inventoryProducts', JSON.stringify(cachedProductsForPurchase));
       return;
+    } else {
+      console.error('❌ Error:', data && data.error ? data.error : 'Invalid response');
     }
-    
-    // Parse header row
-    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
-    console.log('📋 Headers:', headers);
-    
-    // Find column indexes
-    const idIdx = headers.findIndex(h => h === 'id');
-    const nameIdx = headers.findIndex(h => h === 'name');
-    const sizeIdx = headers.findIndex(h => h === 'size');
-    const priceIdx = headers.findIndex(h => h === 'price');
-    const stockIdx = headers.findIndex(h => h === 'stock');
-    const categoryIdx = headers.findIndex(h => h === 'category');
-    const brandIdx = headers.findIndex(h => h === 'brand');
-    const unitTypeIdx = headers.findIndex(h => h.includes('unit'));
-    
-    console.log('🔍 Column indexes:', { idIdx, nameIdx, sizeIdx, priceIdx, stockIdx, categoryIdx, brandIdx, unitTypeIdx });
-    
-    // Parse data rows
-    for (let i = 1; i < lines.length; i++) {
-      const line = lines[i].trim();
-      if (!line) continue; // Skip empty lines
-      
-      const cols = line.split(',').map(c => c.trim());
-      
-      if (cols.length === 0 || !cols[nameIdx]) continue; // Skip if no name
-      
-      cachedProductsForPurchase.push({
-        id: cols[idIdx] || `prod_${i}`,
-        name: cols[nameIdx] || 'Unknown',
-        size: cols[sizeIdx] || '',
-        price: parseFloat(cols[priceIdx]) || 0,
-        stock: cols[stockIdx] || 0,
-        category: cols[categoryIdx] || '',
-        brand: cols[brandIdx] || '',
-        unitType: cols[unitTypeIdx] || 'Piece',
-        imageUrl: ''
-      });
-    }
-    
-    console.log('✅ Loaded', cachedProductsForPurchase.length, 'products from Google Sheets');
-    
-    // Cache in localStorage
-    localStorage.setItem('inventoryProducts', JSON.stringify(cachedProductsForPurchase));
-    
   } catch (error) {
-    console.error('❌ Error loading from Sheets:', error.message);
-    console.error('Stack:', error.stack);
+    console.error('❌ Fetch error:', error.message);
   }
   
-  if (cachedProductsForPurchase.length === 0) {
-    console.log('⚠️ No products loaded');
+  // Fallback to localStorage
+  try {
+    const stored = localStorage.getItem('inventoryProducts');
+    if (stored) {
+      cachedProductsForPurchase = JSON.parse(stored);
+      console.log('✅ Using cached', cachedProductsForPurchase.length, 'products');
+      return;
+    }
+  } catch (e) {
+    console.error('localStorage error:', e);
   }
+  
+  console.log('⚠️ No products loaded');
+  cachedProductsForPurchase = [];
 }
+
 
 function openBulkAddModalPurchase() {
   console.log('🔓 Opening bulk add modal');
@@ -5642,6 +5620,7 @@ document.addEventListener('DOMContentLoaded', loadProductsForBulkPurchase);
 
 </body>
 </html>
+
 
 
 
