@@ -3715,7 +3715,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
     const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbw1uFFfN7dvryoyQ3MkPF3xYkO6NPxCh3FF01fGF1T4hq_aAlxn8aad3JGykyuorVYT/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwYl9qKLgtGyQ4XijtUwaJF2EH-W2s0QcLANoBSSF9APZkgRG3GDzpNkU1-perMmWk/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -4112,6 +4112,9 @@ async function loadRecentPurchases() {
 /**
  * Display purchases in table
  */
+/**
+ * Display purchases in table (WITH BIGGER CLICKABLE PHOTOS)
+ */
 function displayPurchases(purchases) {
   const tbody = document.getElementById('purchasesList');
   
@@ -4135,9 +4138,14 @@ function displayPurchases(purchases) {
         <td style="white-space: nowrap;">${purchase.dateTime}</td>
         <td style="text-align: center;">
           ${purchase.photoLink ? `
-            <a href="${purchase.photoLink}" target="_blank" onclick="event.stopPropagation()">
-              <img src="${purchase.photoLink}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" alt="Photo">
-            </a>
+            <img 
+              src="${purchase.photoLink}" 
+              onclick="event.stopPropagation(); openPhotoLightbox('${purchase.photoLink}', '${purchase.vendorName}')" 
+              style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" 
+              onmouseover="this.style.transform='scale(1.05)'" 
+              onmouseout="this.style.transform='scale(1)'"
+              alt="Purchase Photo"
+              title="Click to view full size">
           ` : '<span style="color: #999;">-</span>'}
         </td>
         <td>${purchase.products}</td>
@@ -4156,6 +4164,55 @@ function displayPurchases(purchases) {
   
   console.log('✅ Displayed', purchases.length, 'purchases');
 }
+
+/**
+ * Open photo in lightbox modal (like your PS5 example)
+ */
+function openPhotoLightbox(photoUrl, title) {
+  console.log('📸 Opening photo lightbox');
+  
+  // Create or get lightbox modal
+  let lightbox = document.getElementById('photoLightboxModal');
+  
+  if (!lightbox) {
+    lightbox = document.createElement('div');
+    lightbox.id = 'photoLightboxModal';
+    lightbox.className = 'modal fade';
+    lightbox.innerHTML = `
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content" style="background: transparent; border: none;">
+          <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
+            <h5 class="modal-title" id="photoLightboxTitle">
+              <i class="bi bi-image"></i> Purchase Photo
+            </h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body text-center" style="background: #f8f9fa; padding: 0;">
+            <img 
+              id="photoLightboxImg" 
+              src="" 
+              style="width: 100%; max-height: 70vh; object-fit: contain; border-radius: 0 0 8px 8px;" 
+              alt="Purchase Photo">
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(lightbox);
+  }
+  
+  // Update modal content
+  document.getElementById('photoLightboxTitle').innerHTML = `
+    <i class="bi bi-image"></i> ${title || 'Purchase Photo'}
+  `;
+  document.getElementById('photoLightboxImg').src = photoUrl;
+  
+  // Show modal
+  const bsLightbox = new bootstrap.Modal(lightbox);
+  bsLightbox.show();
+}
+
+
+    
 
 /**
  * View purchase detail in modal
@@ -12330,6 +12387,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
