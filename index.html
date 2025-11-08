@@ -11567,305 +11567,236 @@ document.addEventListener('productsUpdated', () => {
   </div>
 </div>
 
-<!-- ✅ BULK ADD PRODUCTS MODAL (RESPONSIVE) -->
-<div class="modal fade" id="bulkAddModal" tabindex="-1" backdrop="static">
-  <div class="modal-dialog modal-dialog-centered" style="max-width: 800px; width: 95%; margin: auto;">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">
-          <i class="bi bi-collection"></i> Add Items in Bulk
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-
-      
-      <div class="modal-body">
-        <!-- Search Input -->
-        <input type="text" class="form-control mb-3" id="bulkSearchInput" 
-               placeholder="Type to search products..."
-               oninput="filterBulkProducts(this.value)">
-        
-        <!-- Two Column Layout -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-height: 400px;">
-          
-          <!-- LEFT: All Products List -->
-          <div>
-            <h6 class="border-bottom pb-2"><i class="bi bi-box"></i> Products</h6>
-            <div id="bulkProductsList" style="
-              overflow-y: auto;
-              max-height: 350px;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              background: white;
-            ">
-              <!-- Populated by JavaScript -->
-            </div>
-          </div>
-          
-          <!-- RIGHT: Selected Items -->
-          <div>
-            <h6 class="border-bottom pb-2">
-              <i class="bi bi-check-circle"></i> Selected Items 
-              <span class="badge bg-primary" id="bulkSelectedCount">0</span>
-            </h6>
-            <div style="
-              font-size: 0.9rem;
-              color: #666;
-              margin-bottom: 10px;
-            ">
-              Total Quantity: <strong id="bulkTotalQty">0</strong>
-            </div>
-            <div id="bulkSelectedItems" style="
-              overflow-y: auto;
-              max-height: 320px;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              background: #f9f9f9;
-            ">
-              <!-- Populated by JavaScript -->
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Cancel
-        </button>
-        <button type="button" class="btn btn-success" onclick="addBulkProductsToInvoice()">
-          <i class="bi bi-plus-circle"></i> Add Items
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- ✅ BULK ADD PRODUCTS MODAL FOR RECORD SALE -->
-<div class="modal fade" id="bulkAddModalForSale" tabindex="-1" backdrop="static">
-  <div class="modal-dialog modal-lg">
-    <div class="modal-content">
-      <div class="modal-header bg-success text-white">
-        <h5 class="modal-title">
-          <i class="bi bi-collection"></i> Add Items in Bulk
-        </h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      
-      <div class="modal-body">
-        <!-- Search Input -->
-        <input type="text" class="form-control mb-3" id="bulkSearchInputSale" 
-               placeholder="Type to search products..."
-               oninput="filterBulkProductsSale(this.value)">
-        
-        <!-- Two Column Layout -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-height: 400px;">
-          
-          <!-- LEFT: All Products List -->
-          <div>
-            <h6 class="border-bottom pb-2"><i class="bi bi-box"></i> Products</h6>
-            <div id="bulkProductsListSale" style="
-              overflow-y: auto;
-              max-height: 350px;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              background: white;
-            ">
-              <!-- Populated by JavaScript -->
-            </div>
-          </div>
-          
-          <!-- RIGHT: Selected Items -->
-          <div>
-            <h6 class="border-bottom pb-2">
-              <i class="bi bi-check-circle"></i> Selected Items 
-              <span class="badge bg-primary" id="bulkSelectedCountSale">0</span>
-            </h6>
-            <div style="
-              font-size: 0.9rem;
-              color: #666;
-              margin-bottom: 10px;
-            ">
-              Total Quantity: <strong id="bulkTotalQtySale">0</strong>
-            </div>
-            <div id="bulkSelectedItemsSale" style="
-              overflow-y: auto;
-              max-height: 320px;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              background: #f9f9f9;
-            ">
-              <!-- Populated by JavaScript -->
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Cancel
-        </button>
-        <button type="button" class="btn btn-success" onclick="addBulkProductsToSale()">
-          <i class="bi bi-plus-circle"></i> Add Items
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <!-- ==========================================
-     RECORD PURCHASE MODAL (FLAT COMPACT)
+     RECORD PURCHASE MODAL (ULTRA COMPACT)
      ========================================== -->
 <div class="modal fade" id="recordPurchaseModal" tabindex="-1" backdrop="static" keyboard="false">
   <div class="modal-dialog modal-fullscreen">
     <div class="modal-content">
       
-      <!-- Compact Header -->
-      <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 10px 15px;">
-        <h5 class="modal-title" style="font-size: 1rem; font-weight: 600;">
+      <!-- Ultra Compact Header -->
+      <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 8px 12px;">
+        <h6 class="modal-title" style="font-size: 0.95rem; font-weight: 600; margin: 0;">
           📦 Record Purchase
-        </h5>
-        <button type="button" class="btn-close btn-close-white btn-sm" onclick="closeRecordPurchaseModal()"></button>
+        </h6>
+        <button type="button" class="btn-close btn-close-white btn-sm" onclick="closeRecordPurchaseModal()" style="padding: 4px;"></button>
       </div>
       
-      <!-- Flat Compact Body -->
-      <div class="modal-body" style="background: #fff; padding: 12px; overflow-y: auto;">
+      <!-- Ultra Compact Body -->
+      <div class="modal-body" style="background: #fff; padding: 10px; overflow-y: auto; max-height: calc(100vh - 100px);">
         
         <!-- Compact Styles -->
         <style>
+          /* Global compact styles */
+          #recordPurchaseModal * {
+            box-sizing: border-box;
+          }
+          
           #recordPurchaseModal .form-label {
-            font-size: 13px;
-            font-weight: 600;
+            font-size: 12px;
+            font-weight: 700;
             color: #333;
-            margin-bottom: 4px;
+            margin: 0 0 3px 0;
             display: block;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
           }
           
           #recordPurchaseModal .form-control,
           #recordPurchaseModal .form-select {
             font-size: 14px;
-            padding: 6px 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            padding: 5px 8px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            height: 32px;
           }
           
           #recordPurchaseModal .form-control:focus,
           #recordPurchaseModal .form-select:focus {
             border-color: #28a745;
-            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.15);
+            box-shadow: 0 0 0 0.15rem rgba(40, 167, 69, 0.2);
+            outline: none;
           }
           
           #recordPurchaseModal .input-group-text {
-            font-size: 14px;
-            padding: 6px 10px;
-          }
-          
-          #recordPurchaseModal .btn {
             font-size: 13px;
-            padding: 6px 12px;
+            padding: 5px 8px;
+            background: #f5f5f5;
+            border: 1px solid #ccc;
           }
           
-          #recordPurchaseModal .section-divider {
-            height: 1px;
-            background: #e0e0e0;
-            margin: 12px 0;
+          #recordPurchaseModal .btn-sm {
+            font-size: 12px;
+            padding: 4px 10px;
+            height: 28px;
+            line-height: 1.5;
           }
           
-          /* Photo upload compact */
+          #recordPurchaseModal .section-gap {
+            height: 10px;
+          }
+          
+          #recordPurchaseModal textarea {
+            resize: none;
+          }
+          
+          /* Photo upload - ultra compact */
           #purchasePhotoPreview {
-            border: 2px dashed #ddd;
-            border-radius: 6px;
-            padding: 8px;
+            border: 1.5px dashed #ccc;
+            border-radius: 4px;
+            padding: 6px;
             text-align: center;
             background: #fafafa;
             cursor: pointer;
-            min-height: 60px;
+            min-height: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
           }
           
           #purchasePhotoPreview i {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             color: #999;
           }
           
           #purchasePhotoPreview p {
-            font-size: 11px;
+            font-size: 10px;
             color: #666;
-            margin: 4px 0 0 0;
+            margin: 2px 0 0 0;
           }
           
-          /* Product rows - visible but compact */
+          #purchasePhotoImg {
+            max-height: 70px;
+            margin-top: 4px;
+          }
+          
+          /* Product rows - MOBILE SPECIFIC LAYOUT */
           .purchase-product-row {
-            padding: 10px;
+            padding: 8px;
             margin-bottom: 8px;
-            background: #f8fff9;
+            background: #f0fff4;
             border: 2px solid #28a745;
-            border-radius: 6px;
+            border-radius: 5px;
+            position: relative;
           }
           
-          .purchase-field-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #28a745;
-            margin-bottom: 3px;
-            text-transform: uppercase;
-          }
-          
-          /* Payment compact */
-          .payment-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 8px;
-          }
-          
-          .payment-row label {
-            flex: 0 0 60px;
-            font-size: 13px;
-            font-weight: 600;
-            margin: 0;
-          }
-          
-          /* Mobile responsive grid */
+          /* Mobile: 3-line layout */
           @media (max-width: 767px) {
-            .purchase-row-line {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
+            .purchase-product-row {
+              display: flex;
+              flex-direction: column;
               gap: 6px;
-              margin-bottom: 6px;
             }
             
-            .purchase-row-line.single {
-              grid-template-columns: 1fr;
+            /* Line 1: Product Name (full width) */
+            .product-line-1 {
+              width: 100%;
+            }
+            
+            /* Line 2: Qty, Rate, Unit (3 columns) */
+            .product-line-2 {
+              display: grid;
+              grid-template-columns: 1fr 1fr 1fr;
+              gap: 6px;
+            }
+            
+            /* Line 3: Amount (full width) */
+            .product-line-3 {
+              width: 100%;
+            }
+            
+            .purchase-field-label {
+              font-size: 10px;
+              font-weight: 600;
+              color: #28a745;
+              margin-bottom: 2px;
+              text-transform: uppercase;
+            }
+            
+            .purchase-product-row input,
+            .purchase-product-row select {
+              font-size: 13px;
+              height: 30px;
+              padding: 4px 6px;
+            }
+            
+            .purchase-remove-btn {
+              position: absolute;
+              top: 4px;
+              right: 4px;
+              width: 24px;
+              height: 24px;
+              padding: 0;
+              font-size: 14px;
+              line-height: 24px;
+              border-radius: 3px;
             }
           }
           
+          /* Desktop: single row grid */
           @media (min-width: 768px) {
             .purchase-product-row {
               display: grid;
-              grid-template-columns: 2fr 1fr 1fr 1fr 1fr 40px;
+              grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 35px;
               gap: 8px;
               align-items: center;
+              padding: 6px 8px;
             }
             
             .purchase-field-label {
               display: none;
             }
             
-            .purchase-row-line {
+            .product-line-1,
+            .product-line-2,
+            .product-line-3 {
               display: contents;
             }
+            
+            .purchase-remove-btn {
+              width: 28px;
+              height: 28px;
+              padding: 0;
+            }
+          }
+          
+          /* Payment compact */
+          .payment-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+          }
+          
+          .payment-row label {
+            flex: 0 0 55px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 0;
+          }
+          
+          .payment-row .input-group-sm {
+            height: 30px;
+          }
+          
+          .payment-row .input-group-sm input,
+          .payment-row .input-group-sm .input-group-text {
+            height: 30px;
+            font-size: 13px;
+            padding: 4px 6px;
           }
         </style>
         
-        <!-- Photo (Compact) -->
-        <label class="form-label">📷 Photo (Optional)</label>
+        <!-- Photo -->
+        <label class="form-label">📷 Photo</label>
         <div id="purchasePhotoPreview" onclick="document.getElementById('purchasePhotoInput').click()">
           <i class="bi bi-camera"></i>
           <p>Tap to add</p>
-          <img id="purchasePhotoImg" style="display: none; max-width: 100%; max-height: 80px; border-radius: 4px; margin-top: 4px;" />
+          <img id="purchasePhotoImg" style="display: none; max-width: 100%; border-radius: 3px;" />
         </div>
         <input type="file" id="purchasePhotoInput" accept="image/*" capture="environment" style="display: none;" onchange="handlePurchasePhotoUpload(this)">
-        <div style="margin-top: 4px; display: flex; gap: 6px;">
+        <div style="margin-top: 3px; display: flex; gap: 4px;">
           <button type="button" class="btn btn-sm btn-outline-success" onclick="openPurchaseCamera()">
             <i class="bi bi-camera"></i> Camera
           </button>
@@ -11874,49 +11805,48 @@ document.addEventListener('productsUpdated', () => {
           </button>
         </div>
         
-        <div class="section-divider"></div>
+        <div class="section-gap"></div>
         
         <!-- Vendor -->
-        <label class="form-label">🏢 Vendor Name</label>
-        <input type="text" class="form-control" id="purchaseVendorName" placeholder="Enter vendor name">
+        <label class="form-label">🏢 Vendor</label>
+        <input type="text" class="form-control" id="purchaseVendorName" placeholder="Vendor name">
         
-        <div class="section-divider"></div>
+        <div class="section-gap"></div>
         
         <!-- Products -->
-        <label class="form-label">📦 Products Purchased</label>
-        <div id="purchaseProductRows" style="margin-bottom: 8px;">
+        <label class="form-label">📦 Products</label>
+        <div id="purchaseProductRows" style="margin-bottom: 6px;">
           <!-- Dynamic rows -->
         </div>
-        <div style="display: flex; gap: 6px;">
+        <div style="display: flex; gap: 4px;">
           <button type="button" class="btn btn-sm btn-outline-primary" onclick="addPurchaseProductRow()">
-            <i class="bi bi-plus"></i> Add Row
+            <i class="bi bi-plus"></i> Row
           </button>
           <button type="button" class="btn btn-sm btn-success" onclick="openBulkAddModalForPurchase()">
-            <i class="bi bi-collection"></i> Bulk Add
+            <i class="bi bi-collection"></i> Bulk
           </button>
         </div>
         
-        <div class="section-divider"></div>
+        <div class="section-gap"></div>
         
         <!-- Total -->
-        <label class="form-label">💰 Total Amount</label>
-        <div class="input-group">
+        <label class="form-label">💰 Total</label>
+        <div class="input-group input-group-sm">
           <span class="input-group-text">₹</span>
           <input type="number" class="form-control" id="purchaseTotalAmount" placeholder="0.00" step="0.01" min="0" style="font-weight: 600;">
         </div>
         
-        <div class="section-divider"></div>
+        <div class="section-gap"></div>
         
         <!-- Payment -->
-        <label class="form-label">💳 Payment Mode</label>
+        <label class="form-label">💳 Payment</label>
         
-        <!-- Cash -->
         <div class="payment-row">
           <div style="position: relative; flex-shrink: 0;">
             <input type="checkbox" id="purchasePaymentCash" 
                    onchange="togglePaymentModeCheckmark(this, 'cashCheckmark')"
-                   style="width: 22px; height: 22px; cursor: pointer; accent-color: #28a745;">
-            <span id="cashCheckmark" style="display: none; position: absolute; top: 1px; left: 4px; font-size: 16px; color: white; pointer-events: none;">✓</span>
+                   style="width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;">
+            <span id="cashCheckmark" style="display: none; position: absolute; top: 1px; left: 3px; font-size: 15px; color: white; pointer-events: none;">✓</span>
           </div>
           <label for="purchasePaymentCash">Cash</label>
           <div class="input-group input-group-sm" style="flex: 1;">
@@ -11925,13 +11855,12 @@ document.addEventListener('productsUpdated', () => {
           </div>
         </div>
         
-        <!-- Online -->
         <div class="payment-row">
           <div style="position: relative; flex-shrink: 0;">
             <input type="checkbox" id="purchasePaymentOnline"
                    onchange="togglePaymentModeCheckmark(this, 'onlineCheckmark')"
-                   style="width: 22px; height: 22px; cursor: pointer; accent-color: #28a745;">
-            <span id="onlineCheckmark" style="display: none; position: absolute; top: 1px; left: 4px; font-size: 16px; color: white; pointer-events: none;">✓</span>
+                   style="width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;">
+            <span id="onlineCheckmark" style="display: none; position: absolute; top: 1px; left: 3px; font-size: 15px; color: white; pointer-events: none;">✓</span>
           </div>
           <label for="purchasePaymentOnline">Online</label>
           <div class="input-group input-group-sm" style="flex: 1;">
@@ -11940,13 +11869,12 @@ document.addEventListener('productsUpdated', () => {
           </div>
         </div>
         
-        <!-- Credit -->
         <div class="payment-row">
           <div style="position: relative; flex-shrink: 0;">
             <input type="checkbox" id="purchasePaymentCredit"
                    onchange="togglePaymentModeCheckmark(this, 'creditCheckmark')"
-                   style="width: 22px; height: 22px; cursor: pointer; accent-color: #28a745;">
-            <span id="creditCheckmark" style="display: none; position: absolute; top: 1px; left: 4px; font-size: 16px; color: white; pointer-events: none;">✓</span>
+                   style="width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;">
+            <span id="creditCheckmark" style="display: none; position: absolute; top: 1px; left: 3px; font-size: 15px; color: white; pointer-events: none;">✓</span>
           </div>
           <label for="purchasePaymentCredit">Credit</label>
           <div class="input-group input-group-sm" style="flex: 1;">
@@ -11955,24 +11883,24 @@ document.addEventListener('productsUpdated', () => {
           </div>
         </div>
         
-        <div id="purchasePaymentValidation" style="font-size: 11px; color: #dc3545; margin-top: 4px; display: none;">
-          ⚠️ Payment must equal total
+        <div id="purchasePaymentValidation" style="font-size: 10px; color: #dc3545; margin-top: 2px; display: none;">
+          ⚠️ Payment ≠ Total
         </div>
         
-        <div class="section-divider"></div>
+        <div class="section-gap"></div>
         
         <!-- Notes -->
-        <label class="form-label">📝 Notes (Optional)</label>
-        <textarea class="form-control" id="purchaseOtherInfo" rows="2" placeholder="Additional information" style="resize: vertical;"></textarea>
+        <label class="form-label">📝 Notes</label>
+        <textarea class="form-control" id="purchaseOtherInfo" rows="2" placeholder="Optional" style="font-size: 13px; padding: 5px 8px;"></textarea>
         
       </div>
       
-      <!-- Compact Footer -->
-      <div class="modal-footer" style="padding: 8px 12px; gap: 8px; background: #f8f9fa;">
-        <button type="button" class="btn btn-secondary" onclick="closeRecordPurchaseModal()" style="flex: 1;">
+      <!-- Ultra Compact Footer -->
+      <div class="modal-footer" style="padding: 6px 10px; gap: 6px; background: #f8f9fa; border-top: 1px solid #ddd;">
+        <button type="button" class="btn btn-sm btn-secondary" onclick="closeRecordPurchaseModal()" style="flex: 1; height: 32px;">
           Cancel
         </button>
-        <button type="button" class="btn btn-success" onclick="submitPurchaseEntry()" style="flex: 1;">
+        <button type="button" class="btn btn-sm btn-success" onclick="submitPurchaseEntry()" style="flex: 1; height: 32px;">
           <i class="bi bi-check"></i> Submit
         </button>
       </div>
@@ -11982,7 +11910,7 @@ document.addEventListener('productsUpdated', () => {
 </div>
 
 <!-- ==========================================
-     ORIGINAL BULK ADD MODAL (FANTASTIC!)
+     BULK ADD MODAL (UNCHANGED - FANTASTIC!)
      ========================================== -->
 <div class="modal fade" id="bulkAddModalForPurchase" tabindex="-1" backdrop="static">
   <div class="modal-dialog modal-lg">
@@ -11995,58 +11923,30 @@ document.addEventListener('productsUpdated', () => {
       </div>
       
       <div class="modal-body">
-        <!-- Search Input -->
         <input type="text" class="form-control mb-3" id="bulkSearchInputPurchase" 
                placeholder="Type to search products..."
                oninput="filterBulkProductsPurchase(this.value)">
         
-        <!-- Two Column Layout -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-height: 400px;">
-          
-          <!-- LEFT: All Products List -->
           <div>
             <h6 class="border-bottom pb-2"><i class="bi bi-box"></i> Products</h6>
-            <div id="bulkProductsListPurchase" style="
-              overflow-y: auto;
-              max-height: 350px;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              background: white;
-            ">
-              <!-- Populated by JavaScript -->
-            </div>
+            <div id="bulkProductsListPurchase" style="overflow-y: auto; max-height: 350px; border: 1px solid #ddd; border-radius: 4px; background: white;"></div>
           </div>
-          
-          <!-- RIGHT: Selected Items -->
           <div>
             <h6 class="border-bottom pb-2">
-              <i class="bi bi-check-circle"></i> Selected Items 
+              <i class="bi bi-check-circle"></i> Selected 
               <span class="badge bg-primary" id="bulkSelectedCountPurchase">0</span>
             </h6>
-            <div style="
-              font-size: 0.9rem;
-              color: #666;
-              margin-bottom: 10px;
-            ">
-              Total Quantity: <strong id="bulkTotalQtyPurchase">0</strong>
+            <div style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">
+              Total Qty: <strong id="bulkTotalQtyPurchase">0</strong>
             </div>
-            <div id="bulkSelectedItemsPurchase" style="
-              overflow-y: auto;
-              max-height: 320px;
-              border: 1px solid #ddd;
-              border-radius: 4px;
-              background: #f9f9f9;
-            ">
-              <!-- Populated by JavaScript -->
-            </div>
+            <div id="bulkSelectedItemsPurchase" style="overflow-y: auto; max-height: 320px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;"></div>
           </div>
         </div>
       </div>
       
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Cancel
-        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-success" onclick="addBulkProductsToPurchase()">
           <i class="bi bi-plus-circle"></i> Add Items
         </button>
@@ -12054,6 +11954,7 @@ document.addEventListener('productsUpdated', () => {
     </div>
   </div>
 </div>
+
 
 
 
@@ -12082,6 +11983,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
