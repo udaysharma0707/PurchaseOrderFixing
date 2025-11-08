@@ -336,6 +336,26 @@
   <i class="bi bi-receipt"></i> Generate Invoice
 </button>
 
+<!-- ✅ NEW: Record Purchase Button -->
+<button onclick="openRecordPurchaseModal()" class="btn" style="
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin-left: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+"
+onmouseover="this.style.background='#218838'"
+onmouseout="this.style.background='#28a745'">
+  📦 Record Purchase
+</button>
+
+
+
+      
     </div>
   </div>
 </div>
@@ -1817,8 +1837,8 @@
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJw3YFidhMHqTs4u4lFmQpwHRoTTdTh5YHguOspTlmArxNrKiVsmAYFiXm-obcrBuh/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzJw3YFidhMHqTs4u4lFmQpwHRoTTdTh5YHguOspTlmArxNrKiVsmAYFiXm-obcrBuh/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOzemxo6pCBAvbhkOuLj7I1m7yAqhyg-GRZYPpy9KZ9Z5QlP9pYfpfcEbSSfnSFB5i/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzOzemxo6pCBAvbhkOuLj7I1m7yAqhyg-GRZYPpy9KZ9Z5QlP9pYfpfcEbSSfnSFB5i/exec'
   let cachedProducts = [];
   let cachedSales = [];
 
@@ -3647,6 +3667,492 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
 }
 
 
+
+/**
+ * ==========================================
+ * RECORD PURCHASE - MAIN FUNCTIONS
+ * ==========================================
+ */
+
+// Global variables
+let purchasePhotoBase64 = null;
+let purchaseProductRowCounter = 0;
+let selectedBulkProductsPurchase = {};
+
+/**
+ * Open Record Purchase Modal
+ */
+function openRecordPurchaseModal() {
+  console.log('📦 Opening Record Purchase Modal');
+  
+  // Reset form
+  document.getElementById('purchaseVendorName').value = '';
+  document.getElementById('purchaseTotalAmount').value = '';
+  document.getElementById('purchaseOtherInfo').value = '';
+  document.getElementById('purchaseProductRows').innerHTML = '';
+  
+  // Reset payment modes
+  document.getElementById('purchasePaymentCash').checked = false;
+  document.getElementById('purchasePaymentOnline').checked = false;
+  document.getElementById('purchasePaymentCredit').checked = false;
+  document.getElementById('purchasePaymentCashAmount').value = '';
+  document.getElementById('purchasePaymentOnlineAmount').value = '';
+  document.getElementById('purchasePaymentCreditAmount').value = '';
+  
+  // Reset photo
+  clearPurchasePhoto();
+  
+  // Reset counters
+  purchaseProductRowCounter = 0;
+  
+  // Add one initial row
+  addPurchaseProductRow();
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('recordPurchaseModal'));
+  modal.show();
+}
+
+/**
+ * Close Record Purchase Modal
+ */
+function closeRecordPurchaseModal() {
+  const modal = bootstrap.Modal.getInstance(document.getElementById('recordPurchaseModal'));
+  if (modal) {
+    modal.hide();
+  }
+}
+
+/**
+ * Add product row
+ */
+function addPurchaseProductRow(product = null) {
+  purchaseProductRowCounter++;
+  const rowId = `purchaseRow${purchaseProductRowCounter}`;
+  
+  const container = document.getElementById('purchaseProductRows');
+  
+  const rowDiv = document.createElement('div');
+  rowDiv.id = rowId;
+  rowDiv.className = 'purchase-product-row';
+  rowDiv.style.cssText = `
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 40px;
+    gap: 8px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    align-items: center;
+  `;
+  
+  const productName = product ? (product.size ? `${product.name} (${product.size})` : product.name) : '';
+  const qty = product ? product.qty : '';
+  const rate = product ? product.price : '';
+  const unit = product ? product.unitType : 'Pieces';
+  const amount = product ? (product.qty * product.price).toFixed(2) : '0.00';
+  
+  rowDiv.innerHTML = `
+    <input type="text" class="form-control" placeholder="Product name" value="${escapeHtml(productName)}" data-field="name">
+    <input type="number" class="form-control" placeholder="Qty" min="1" value="${qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
+    <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01" value="${rate}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
+    <select class="form-select" data-field="unit">
+      <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pieces</option>
+      <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Boxes</option>
+      <option value="Kg" ${unit === 'Kg' ? 'selected' : ''}>Kg</option>
+      <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>Liters</option>
+    </select>
+    <input type="number" class="form-control" placeholder="Amount" readonly value="${amount}" data-field="amount" style="background: #f0f0f0; font-weight: 600;">
+    <button type="button" class="btn btn-sm btn-danger" onclick="removePurchaseProductRow('${rowId}')" title="Remove">
+      <i class="bi bi-x"></i>
+    </button>
+  `;
+  
+  container.appendChild(rowDiv);
+  console.log('✅ Added product row:', rowId);
+}
+
+/**
+ * Remove product row
+ */
+function removePurchaseProductRow(rowId) {
+  const row = document.getElementById(rowId);
+  if (row) {
+    row.remove();
+    console.log('❌ Removed product row:', rowId);
+  }
+}
+
+/**
+ * Calculate row amount
+ */
+function calculatePurchaseRowAmount(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  
+  const qtyInput = row.querySelector('[data-field="qty"]');
+  const rateInput = row.querySelector('[data-field="rate"]');
+  const amountInput = row.querySelector('[data-field="amount"]');
+  
+  const qty = parseFloat(qtyInput.value) || 0;
+  const rate = parseFloat(rateInput.value) || 0;
+  const amount = qty * rate;
+  
+  amountInput.value = amount.toFixed(2);
+}
+
+/**
+ * Photo upload handler
+ */
+function handlePurchasePhotoUpload(input) {
+  const file = input.files[0];
+  if (!file) return;
+  
+  if (!file.type.startsWith('image/')) {
+    alert('❌ Please select an image file');
+    return;
+  }
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    purchasePhotoBase64 = e.target.result;
+    
+    // Show preview
+    const img = document.getElementById('purchasePhotoImg');
+    img.src = e.target.result;
+    img.style.display = 'block';
+    
+    // Hide placeholder
+    document.querySelector('#purchasePhotoPreview p').style.display = 'none';
+    document.querySelector('#purchasePhotoPreview i').style.display = 'none';
+    
+    // Show remove button
+    document.getElementById('clearPurchasePhotoBtn').style.display = 'inline-block';
+    
+    console.log('✅ Photo uploaded');
+  };
+  reader.readAsDataURL(file);
+}
+
+/**
+ * Clear photo
+ */
+function clearPurchasePhoto() {
+  purchasePhotoBase64 = null;
+  document.getElementById('purchasePhotoInput').value = '';
+  document.getElementById('purchasePhotoImg').style.display = 'none';
+  document.querySelector('#purchasePhotoPreview p').style.display = 'block';
+  document.querySelector('#purchasePhotoPreview i').style.display = 'block';
+  document.getElementById('clearPurchasePhotoBtn').style.display = 'none';
+  console.log('🗑️ Photo cleared');
+}
+
+/**
+ * Open camera
+ */
+function openPurchaseCamera() {
+  const input = document.getElementById('purchasePhotoInput');
+  input.setAttribute('capture', 'environment');
+  input.click();
+}
+
+/**
+ * Submit purchase entry
+ */
+async function submitPurchaseEntry() {
+  console.log('📤 Submitting purchase entry...');
+  
+  // Validate vendor name
+  const vendorName = document.getElementById('purchaseVendorName').value.trim();
+  if (!vendorName) {
+    alert('❌ Please enter vendor name');
+    return;
+  }
+  
+  // Get products
+  const rows = document.querySelectorAll('.purchase-product-row');
+  if (rows.length === 0) {
+    alert('❌ Please add at least one product');
+    return;
+  }
+  
+  const products = [];
+  for (const row of rows) {
+    const name = row.querySelector('[data-field="name"]').value.trim();
+    const qty = parseFloat(row.querySelector('[data-field="qty"]').value) || 0;
+    const rate = parseFloat(row.querySelector('[data-field="rate"]').value) || 0;
+    const unit = row.querySelector('[data-field="unit"]').value;
+    const amount = parseFloat(row.querySelector('[data-field="amount"]').value) || 0;
+    
+    if (name && qty > 0) {
+      products.push({ name, qty, rate, unit, amount });
+    }
+  }
+  
+  if (products.length === 0) {
+    alert('❌ Please add valid products');
+    return;
+  }
+  
+  // Validate total amount
+  const totalAmount = parseFloat(document.getElementById('purchaseTotalAmount').value) || 0;
+  if (totalAmount <= 0) {
+    alert('❌ Please enter total amount');
+    return;
+  }
+  
+  // Get payment modes
+  const paymentModes = {};
+  if (document.getElementById('purchasePaymentCash').checked) {
+    paymentModes.cash = parseFloat(document.getElementById('purchasePaymentCashAmount').value) || 0;
+  }
+  if (document.getElementById('purchasePaymentOnline').checked) {
+    paymentModes.online = parseFloat(document.getElementById('purchasePaymentOnlineAmount').value) || 0;
+  }
+  if (document.getElementById('purchasePaymentCredit').checked) {
+    paymentModes.credit = parseFloat(document.getElementById('purchasePaymentCreditAmount').value) || 0;
+  }
+  
+  // Validate payment sum
+  const paymentSum = (paymentModes.cash || 0) + (paymentModes.online || 0) + (paymentModes.credit || 0);
+  if (Math.abs(paymentSum - totalAmount) > 0.01) {
+    alert(`❌ Payment modes (₹${paymentSum.toFixed(2)}) must equal total amount (₹${totalAmount.toFixed(2)})`);
+    return;
+  }
+  
+  // Get other info
+  const otherInfo = document.getElementById('purchaseOtherInfo').value.trim();
+  
+  // Prepare data
+  const data = {
+    vendorName,
+    products,
+    totalAmount,
+    paymentModes,
+    otherInfo,
+    photoBase64: purchasePhotoBase64,
+    timestamp: new Date().getTime()
+  };
+  
+  console.log('📦 Purchase data:', data);
+  
+  // TODO: Send to Google Sheets
+  alert('✅ Purchase entry submitted successfully!\n(Backend integration pending)');
+  
+  // Close modal
+  closeRecordPurchaseModal();
+}
+
+
+/**
+ * ==========================================
+ * BULK ADD PRODUCTS FOR PURCHASE
+ * ==========================================
+ */
+
+function openBulkAddModalForPurchase() {
+  console.log('📦 Opening Bulk Add Modal for Purchase');
+  
+  // Reset
+  document.getElementById('bulkSearchInputPurchase').value = '';
+  selectedBulkProductsPurchase = {};
+  
+  // Render products
+  renderBulkProductsListPurchase('');
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('bulkAddModalForPurchase'));
+  modal.show();
+}
+
+function filterBulkProductsPurchase(query) {
+  renderBulkProductsListPurchase(query);
+}
+
+function renderBulkProductsListPurchase(searchQuery) {
+  const container = document.getElementById('bulkProductsListPurchase');
+  if (!container) return;
+  
+  const products = cachedProducts || [];
+  let filtered = products;
+  
+  if (searchQuery && searchQuery.trim().length > 0) {
+    const query = searchQuery.toLowerCase();
+    filtered = products.filter(product => {
+      const name = (product.name || '').toLowerCase();
+      const brand = (product.brand || '').toLowerCase();
+      const category = (product.category || '').toLowerCase();
+      return name.includes(query) || brand.includes(query) || category.includes(query);
+    });
+  }
+  
+  if (filtered.length === 0) {
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No products found</div>';
+    return;
+  }
+  
+  let html = '';
+  filtered.forEach(product => {
+    const isSelected = selectedBulkProductsPurchase[product.id];
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
+    const priceText = product.price ? `₹${product.price}` : 'N/A';
+    
+    html += `
+      <div onclick="toggleBulkProductSelectionPurchase('${product.id}')"
+           style="
+             padding: 12px;
+             border-bottom: 1px solid #f0f0f0;
+             cursor: pointer;
+             transition: background-color 0.2s;
+             display: flex;
+             justify-content: space-between;
+             align-items: center;
+             ${isSelected ? 'background-color: #e3f2fd;' : 'background-color: white;'}
+           "
+           onmouseover="this.style.backgroundColor='#f5f5f5'"
+           onmouseout="this.style.backgroundColor='${isSelected ? '#e3f2fd' : 'white'}'">
+        <div style="flex: 1;">
+          <strong>${escapeHtml(displayName)}</strong>
+          <div style="font-size: 0.85rem; color: #666;">${priceText}</div>
+        </div>
+        <div>${isSelected ? '✓' : ''}</div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+}
+
+function toggleBulkProductSelectionPurchase(productId) {
+  const product = cachedProducts.find(p => p.id === productId);
+  if (!product) return;
+  
+  if (selectedBulkProductsPurchase[productId]) {
+    delete selectedBulkProductsPurchase[productId];
+  } else {
+    selectedBulkProductsPurchase[productId] = {
+      id: product.id,
+      name: product.name,
+      size: product.size || '',
+      price: product.price || 0,
+      unitType: product.unitType || 'Pieces',
+      qty: 1
+    };
+  }
+  
+  renderBulkProductsListPurchase(document.getElementById('bulkSearchInputPurchase').value);
+  renderBulkSelectedItemsPurchase();
+}
+
+function renderBulkSelectedItemsPurchase() {
+  const container = document.getElementById('bulkSelectedItemsPurchase');
+  if (!container) return;
+  
+  const selectedArray = Object.values(selectedBulkProductsPurchase);
+  
+  if (selectedArray.length === 0) {
+    container.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No items selected</div>';
+    updateBulkCountersPurchase();
+    return;
+  }
+  
+  let html = '';
+  selectedArray.forEach(product => {
+    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
+    
+    html += `
+      <div style="padding: 12px; border-bottom: 1px solid #ddd;">
+        <div style="margin-bottom: 8px;">
+          <strong>${escapeHtml(displayName)}</strong>
+          <div style="font-size: 0.85rem; color: #666;">₹${product.price}</div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <button type="button" onclick="updateBulkQtyPurchase('${product.id}', -1)"
+                    style="padding: 6px 10px; background: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">−</button>
+            <input type="number" value="${product.qty}" min="1"
+                   style="width: 50px; text-align: center; padding: 6px; border: 1px solid #ddd; border-radius: 4px;"
+                   onchange="updateBulkQtyDirectPurchase('${product.id}', this.value)">
+            <button type="button" onclick="updateBulkQtyPurchase('${product.id}', 1)"
+                    style="padding: 6px 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">+</button>
+          </div>
+          <button type="button" onclick="toggleBulkProductSelectionPurchase('${product.id}')"
+                  style="padding: 6px 10px; font-size: 16px; cursor: pointer; color: #dc3545; background: none; border: none;">✕</button>
+        </div>
+      </div>
+    `;
+  });
+  
+  container.innerHTML = html;
+  updateBulkCountersPurchase();
+}
+
+function updateBulkQtyPurchase(productId, change) {
+  if (selectedBulkProductsPurchase[productId]) {
+    const newQty = Math.max(1, selectedBulkProductsPurchase[productId].qty + change);
+    selectedBulkProductsPurchase[productId].qty = newQty;
+    renderBulkSelectedItemsPurchase();
+  }
+}
+
+function updateBulkQtyDirectPurchase(productId, value) {
+  if (selectedBulkProductsPurchase[productId]) {
+    const newQty = Math.max(1, parseInt(value) || 1);
+    selectedBulkProductsPurchase[productId].qty = newQty;
+    renderBulkSelectedItemsPurchase();
+  }
+}
+
+function updateBulkCountersPurchase() {
+  const selectedArray = Object.values(selectedBulkProductsPurchase);
+  const selectedCount = selectedArray.length;
+  const totalQty = selectedArray.reduce((sum, p) => sum + p.qty, 0);
+  
+  document.getElementById('bulkSelectedCountPurchase').textContent = selectedCount;
+  document.getElementById('bulkTotalQtyPurchase').textContent = totalQty;
+}
+
+function addBulkProductsToPurchase() {
+  const selectedArray = Object.values(selectedBulkProductsPurchase);
+  
+  if (selectedArray.length === 0) {
+    alert('❌ Please select at least one product');
+    return;
+  }
+  
+  console.log('📦 Adding', selectedArray.length, 'products to purchase');
+  
+  // Add each product as a row
+  selectedArray.forEach(product => {
+    addPurchaseProductRow(product);
+  });
+  
+  // Clear selections
+  selectedBulkProductsPurchase = {};
+  
+  // Close modal
+  const modal = bootstrap.Modal.getInstance(document.getElementById('bulkAddModalForPurchase'));
+  if (modal) {
+    modal.hide();
+  }
+  
+  console.log('✅ Products added successfully!');
+}
+
+
+
+
+
+
+
+
+
+
+
+
+    
     
 
   /***********************
@@ -11067,6 +11573,254 @@ document.addEventListener('productsUpdated', () => {
   </div>
 </div>
 
+<!-- ==========================================
+     RECORD PURCHASE MODAL
+     ========================================== -->
+<div class="modal fade" id="recordPurchaseModal" tabindex="-1" backdrop="static" keyboard="false">
+  <div class="modal-dialog modal-fullscreen">
+    <div class="modal-content">
+      
+      <!-- Modal Header -->
+      <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+        <h5 class="modal-title">
+          <i class="bi bi-cart-plus"></i> 📦 Record Purchase Entry
+        </h5>
+        <button type="button" class="btn-close btn-close-white" onclick="closeRecordPurchaseModal()"></button>
+      </div>
+      
+      <!-- Modal Body -->
+      <div class="modal-body" style="background: #f8f9fa; padding: 20px;">
+        <div class="container-fluid">
+          
+          <!-- Photo Upload Section -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <strong>📷 Photo Upload (Optional)</strong>
+            </div>
+            <div class="card-body">
+              <div id="purchasePhotoPreview" style="
+                border: 2px dashed #ddd;
+                border-radius: 8px;
+                padding: 20px;
+                text-align: center;
+                min-height: 150px;
+                background: white;
+                cursor: pointer;
+              " onclick="document.getElementById('purchasePhotoInput').click()">
+                <i class="bi bi-camera" style="font-size: 3rem; color: #999;"></i>
+                <p style="color: #666; margin-top: 10px;">Click to select or drag & drop photo</p>
+                <img id="purchasePhotoImg" style="display: none; max-width: 100%; max-height: 200px; border-radius: 8px;" />
+              </div>
+              <input type="file" id="purchasePhotoInput" accept="image/*" style="display: none;" onchange="handlePurchasePhotoUpload(this)">
+              
+              <div class="mt-2" style="display: flex; gap: 10px;">
+                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('purchasePhotoInput').click()">
+                  <i class="bi bi-image"></i> Choose from Gallery
+                </button>
+                <button type="button" class="btn btn-outline-success" onclick="openPurchaseCamera()">
+                  <i class="bi bi-camera"></i> Take Photo
+                </button>
+                <button type="button" class="btn btn-outline-danger" onclick="clearPurchasePhoto()" id="clearPurchasePhotoBtn" style="display: none;">
+                  <i class="bi bi-x-circle"></i> Remove Photo
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Vendor Name -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <strong>🏢 Vendor Name</strong>
+            </div>
+            <div class="card-body">
+              <input type="text" class="form-control" id="purchaseVendorName" placeholder="Enter vendor/supplier name" style="font-size: 1.1rem;">
+            </div>
+          </div>
+          
+          <!-- Products Section -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <strong>📦 Products Purchased</strong>
+            </div>
+            <div class="card-body">
+              
+              <!-- Product Rows Container -->
+              <div id="purchaseProductRows" style="margin-bottom: 15px;">
+                <!-- Dynamic rows will be added here -->
+              </div>
+              
+              <!-- Action Buttons -->
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-outline-primary" onclick="addPurchaseProductRow()">
+                  <i class="bi bi-plus-circle"></i> Add More Rows
+                </button>
+                <button type="button" class="btn btn-success" onclick="openBulkAddModalForPurchase()">
+                  <i class="bi bi-collection"></i> Add Products in Bulk
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Total Amount -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <strong>💰 Total Amount Paid</strong>
+            </div>
+            <div class="card-body">
+              <div class="input-group input-group-lg">
+                <span class="input-group-text">₹</span>
+                <input type="number" class="form-control" id="purchaseTotalAmount" placeholder="0.00" step="0.01" min="0">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Payment Modes -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <strong>💳 Mode of Payment</strong>
+            </div>
+            <div class="card-body">
+              <div style="display: flex; flex-direction: column; gap: 15px;">
+                
+                <!-- Cash -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="purchasePaymentCash" class="form-check-input" style="width: 24px; height: 24px;">
+                  <label for="purchasePaymentCash" style="flex: 0 0 80px; font-weight: 600;">Cash</label>
+                  <div class="input-group">
+                    <span class="input-group-text">₹</span>
+                    <input type="number" class="form-control" id="purchasePaymentCashAmount" placeholder="0.00" step="0.01" min="0">
+                  </div>
+                </div>
+                
+                <!-- Online -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="purchasePaymentOnline" class="form-check-input" style="width: 24px; height: 24px;">
+                  <label for="purchasePaymentOnline" style="flex: 0 0 80px; font-weight: 600;">Online</label>
+                  <div class="input-group">
+                    <span class="input-group-text">₹</span>
+                    <input type="number" class="form-control" id="purchasePaymentOnlineAmount" placeholder="0.00" step="0.01" min="0">
+                  </div>
+                </div>
+                
+                <!-- Credit -->
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <input type="checkbox" id="purchasePaymentCredit" class="form-check-input" style="width: 24px; height: 24px;">
+                  <label for="purchasePaymentCredit" style="flex: 0 0 80px; font-weight: 600;">Credit</label>
+                  <div class="input-group">
+                    <span class="input-group-text">₹</span>
+                    <input type="number" class="form-control" id="purchasePaymentCreditAmount" placeholder="0.00" step="0.01" min="0">
+                  </div>
+                </div>
+                
+              </div>
+              
+              <!-- Payment Validation Message -->
+              <div id="purchasePaymentValidation" class="mt-2" style="font-size: 0.9rem; color: #dc3545; display: none;">
+                ⚠️ Payment amounts must equal total amount
+              </div>
+            </div>
+          </div>
+          
+          <!-- Additional Information -->
+          <div class="card mb-3">
+            <div class="card-header bg-light">
+              <strong>📝 Additional Information (Optional)</strong>
+            </div>
+            <div class="card-body">
+              <textarea class="form-control" id="purchaseOtherInfo" rows="3" placeholder="Enter any additional notes or information"></textarea>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      <!-- Modal Footer -->
+      <div class="modal-footer" style="background: #f8f9fa;">
+        <button type="button" class="btn btn-secondary btn-lg" onclick="closeRecordPurchaseModal()">
+          <i class="bi bi-x-circle"></i> Cancel
+        </button>
+        <button type="button" class="btn btn-success btn-lg" onclick="submitPurchaseEntry()">
+          <i class="bi bi-check-circle"></i> Submit Purchase
+        </button>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     BULK ADD PRODUCTS MODAL FOR PURCHASE
+     ========================================== -->
+<div class="modal fade" id="bulkAddModalForPurchase" tabindex="-1" backdrop="static">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
+        <h5 class="modal-title">
+          <i class="bi bi-collection"></i> Add Items in Bulk
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      
+      <div class="modal-body">
+        <!-- Search Input -->
+        <input type="text" class="form-control mb-3" id="bulkSearchInputPurchase" 
+               placeholder="🔍 Type to search products..."
+               oninput="filterBulkProductsPurchase(this.value)">
+        
+        <!-- Two Column Layout -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-height: 400px;">
+          
+          <!-- LEFT: All Products List -->
+          <div>
+            <h6 class="border-bottom pb-2"><i class="bi bi-box"></i> Products</h6>
+            <div id="bulkProductsListPurchase" style="
+              overflow-y: auto;
+              max-height: 350px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              background: white;
+            ">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+          
+          <!-- RIGHT: Selected Items -->
+          <div>
+            <h6 class="border-bottom pb-2">
+              <i class="bi bi-check-circle"></i> Selected Items 
+              <span class="badge bg-success" id="bulkSelectedCountPurchase">0</span>
+            </h6>
+            <div style="
+              font-size: 0.9rem;
+              color: #666;
+              margin-bottom: 10px;
+            ">
+              Total Quantity: <strong id="bulkTotalQtyPurchase">0</strong>
+            </div>
+            <div id="bulkSelectedItemsPurchase" style="
+              overflow-y: auto;
+              max-height: 320px;
+              border: 1px solid #ddd;
+              border-radius: 4px;
+              background: #f9f9f9;
+            ">
+              <!-- Populated by JavaScript -->
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancel
+        </button>
+        <button type="button" class="btn btn-success" onclick="addBulkProductsToPurchase()">
+          <i class="bi bi-plus-circle"></i> Add Items
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 
   
@@ -11093,6 +11847,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
