@@ -4176,69 +4176,104 @@ function displayPurchases(purchases) {
 /**
  * Open photo in lightbox modal (FIXED VERSION)
  */
+/**
+ * Open photo in simple full-screen overlay (NO BOOTSTRAP)
+ */
 function openPhotoLightbox(purchaseIndex) {
   const purchase = window.currentPurchases[purchaseIndex];
   
   if (!purchase || !purchase.photoLink) {
-    alert('❌ No photo available for this purchase');
+    alert('❌ No photo available');
     return;
   }
   
-  const photoUrl = purchase.photoLink;
-  const title = purchase.vendorName || 'Purchase Photo';
-  
-  console.log('📸 Opening photo:', photoUrl);
-  
-  // Create or get lightbox modal
-  let lightbox = document.getElementById('photoLightboxModal');
-  
-  if (!lightbox) {
-    lightbox = document.createElement('div');
-    lightbox.id = 'photoLightboxModal';
-    lightbox.className = 'modal fade';
-    lightbox.setAttribute('tabindex', '-1');
-    lightbox.innerHTML = `
-      <div class="modal-dialog modal-dialog-centered modal-lg">
-        <div class="modal-content" style="background: #f8f9fa;">
-          <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; color: white;">
-            <h5 class="modal-title" id="photoLightboxTitle">
-              <i class="bi bi-image"></i> Purchase Photo
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body text-center" style="padding: 0; background: #fff;">
-            <img 
-              id="photoLightboxImg" 
-              src="" 
-              style="width: 100%; max-height: 70vh; object-fit: contain;" 
-              alt="Purchase Photo"
-              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-            <div id="photoLoadError" style="display:none; padding: 40px; color: #dc3545;">
-              <i class="bi bi-exclamation-triangle" style="font-size: 3rem;"></i>
-              <p>Failed to load photo</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(lightbox);
-  }
-  
-  // Update modal content
-  document.getElementById('photoLightboxTitle').innerHTML = `
-    <i class="bi bi-image"></i> ${escapeHtml(title)}
+  // Create overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
   `;
   
-  const imgElement = document.getElementById('photoLightboxImg');
-  imgElement.style.display = 'block';
-  imgElement.src = photoUrl;
+  // Title
+  const title = document.createElement('div');
+  title.style.cssText = `
+    color: white;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+  `;
+  title.textContent = purchase.vendorName || 'Purchase Photo';
+  overlay.appendChild(title);
   
-  document.getElementById('photoLoadError').style.display = 'none';
+  // Image
+  const img = document.createElement('img');
+  img.src = purchase.photoLink;
+  img.style.cssText = `
+    max-width: 90%;
+    max-height: 75vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  `;
   
-  // Show modal
-  const bsLightbox = new bootstrap.Modal(lightbox);
-  bsLightbox.show();
+  img.onerror = function() {
+    img.style.display = 'none';
+    const error = document.createElement('div');
+    error.style.cssText = 'color: white; font-size: 1.2rem; text-align: center;';
+    error.innerHTML = '❌ Failed to load photo<br><small>' + purchase.photoLink + '</small>';
+    overlay.appendChild(error);
+  };
+  
+  overlay.appendChild(img);
+  
+  // Close button
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform 0.2s;
+  `;
+  
+  closeBtn.onmouseover = () => closeBtn.style.transform = 'scale(1.1)';
+  closeBtn.onmouseout = () => closeBtn.style.transform = 'scale(1)';
+  closeBtn.onclick = () => document.body.removeChild(overlay);
+  
+  overlay.appendChild(closeBtn);
+  
+  // Close on background click
+  overlay.onclick = (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  };
+  
+  // Add to body
+  document.body.appendChild(overlay);
+  
+  console.log('📸 Opened photo:', purchase.photoLink);
 }
+
 /**
  * Escape HTML to prevent XSS
  */
@@ -12425,6 +12460,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
