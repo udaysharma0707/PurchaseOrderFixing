@@ -1877,8 +1877,7 @@ onmouseout="this.style.background='#28a745'">
    ***********************/
   const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwItTBgTkc9gOswGsOxLv0LZA_8jOO08So2MlyhkYvVpfvJi9wB1duUOJS2hxqzvq8q/exec'; // <-- replace with your deployed URL
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwItTBgTkc9gOswGsOxLv0LZA_8jOO08So2MlyhkYvVpfvJi9wB1duUOJS2hxqzvq8q/exec'
-const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwItTBgTkc9gOswGsOxLv0LZA_8jOO08So2MlyhkYvVpfvJi9wB1duUOJS2hxqzvq8q/exec'
+
     
   let cachedProducts = [];
   let cachedSales = [];
@@ -3714,6 +3713,9 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  * RECORD PURCHASE - MAIN FUNCTIONS
  * ==========================================
  */
+
+    const CONFIG = {
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwItTBgTkc9gOswGsOxLv0LZA_8jOO08So2MlyhkYvVpfvJi9wB1duUOJS2hxqzvq8q/exec'
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -12301,6 +12303,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
