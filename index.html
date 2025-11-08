@@ -4267,6 +4267,22 @@ function togglePaymentModeCheckmark(checkbox, checkmarkId) {
 }
 
 
+/**
+ * Toggle collapsible sections on mobile
+ */
+function toggleSection(sectionId) {
+  // Only work on mobile
+  if (window.innerWidth > 767) return;
+  
+  const section = document.getElementById(sectionId);
+  const icon = document.getElementById(sectionId + 'Icon');
+  
+  if (section && icon) {
+    section.classList.toggle('open');
+    icon.classList.toggle('open');
+    console.log('📱 Toggled section:', sectionId);
+  }
+}
 
 
 
@@ -11698,217 +11714,340 @@ document.addEventListener('productsUpdated', () => {
 </div>
 
 <!-- ==========================================
-     RECORD PURCHASE MODAL
+     RECORD PURCHASE MODAL (MOBILE OPTIMIZED)
      ========================================== -->
 <div class="modal fade" id="recordPurchaseModal" tabindex="-1" backdrop="static" keyboard="false">
   <div class="modal-dialog modal-fullscreen">
     <div class="modal-content">
       
       <!-- Modal Header -->
-      <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
-        <h5 class="modal-title">
-          <i class="bi bi-cart-plus"></i> 📦 Record Purchase Entry
+      <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 12px 15px;">
+        <h5 class="modal-title" style="font-size: 1.1rem;">
+          <i class="bi bi-cart-plus"></i> 📦 Record Purchase
         </h5>
         <button type="button" class="btn-close btn-close-white" onclick="closeRecordPurchaseModal()"></button>
       </div>
       
       <!-- Modal Body -->
-      <div class="modal-body" style="background: #f8f9fa; padding: 20px;">
+      <div class="modal-body" id="recordPurchaseModalBody" style="background: #f8f9fa; padding: 10px; overflow-y: auto;">
         <div class="container-fluid">
           
-          <!-- Photo Upload Section -->
-          <div class="card mb-3">
-            <div class="card-header bg-light">
-              <strong>📷 Photo Upload (Optional)</strong>
+          <!-- ========================================
+               MOBILE-OPTIMIZED STYLES
+               ======================================== -->
+          <style>
+            /* Mobile optimizations */
+            @media (max-width: 767px) {
+              #recordPurchaseModalBody {
+                padding: 8px !important;
+              }
+              
+              #recordPurchaseModalBody .card {
+                margin-bottom: 8px !important;
+                border-radius: 8px;
+              }
+              
+              #recordPurchaseModalBody .card-header {
+                padding: 10px 12px !important;
+                font-size: 14px !important;
+                font-weight: 600;
+                cursor: pointer;
+                user-select: none;
+              }
+              
+              #recordPurchaseModalBody .card-body {
+                padding: 12px !important;
+              }
+              
+              /* Compact inputs */
+              #recordPurchaseModalBody .form-control,
+              #recordPurchaseModalBody .form-select {
+                font-size: 15px !important;
+                padding: 8px 12px !important;
+              }
+              
+              #recordPurchaseModalBody .btn {
+                font-size: 13px !important;
+                padding: 8px 14px !important;
+              }
+              
+              #recordPurchaseModalBody .input-group-text {
+                padding: 8px 10px !important;
+                font-size: 14px !important;
+              }
+              
+              /* Photo upload compact */
+              #purchasePhotoPreview {
+                min-height: 100px !important;
+                padding: 12px !important;
+              }
+              
+              #purchasePhotoPreview i {
+                font-size: 2.5rem !important;
+              }
+              
+              #purchasePhotoPreview p {
+                font-size: 13px !important;
+                margin-top: 8px !important;
+              }
+              
+              /* Product rows - BIGGER and VISIBLE */
+              .purchase-product-row {
+                padding: 14px !important;
+                margin-bottom: 12px !important;
+                background: #fff !important;
+                border: 3px solid #28a745 !important;
+                border-radius: 10px !important;
+                box-shadow: 0 3px 6px rgba(40, 167, 69, 0.2) !important;
+              }
+              
+              .purchase-field-label {
+                font-size: 13px !important;
+                font-weight: 700 !important;
+                color: #28a745 !important;
+                margin-bottom: 5px !important;
+                text-transform: uppercase;
+              }
+              
+              .purchase-row-line input,
+              .purchase-row-line select {
+                font-size: 15px !important;
+                font-weight: 500 !important;
+              }
+              
+              /* Payment compact */
+              .payment-mode-row {
+                margin-bottom: 10px !important;
+              }
+              
+              /* Collapsible sections */
+              .collapsible-section {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+              }
+              
+              .collapsible-section.open {
+                max-height: 800px;
+              }
+              
+              .toggle-icon {
+                float: right;
+                font-size: 16px;
+                transition: transform 0.3s;
+              }
+              
+              .toggle-icon.open {
+                transform: rotate(180deg);
+              }
+            }
+            
+            /* Desktop keeps normal */
+            @media (min-width: 768px) {
+              .collapsible-section {
+                max-height: none !important;
+                overflow: visible !important;
+              }
+              
+              .toggle-icon {
+                display: none;
+              }
+              
+              #recordPurchaseModalBody .card-header {
+                cursor: default !important;
+              }
+            }
+          </style>
+          
+          <!-- Photo Upload (Collapsible) -->
+          <div class="card">
+            <div class="card-header bg-light" onclick="toggleSection('photoSection')">
+              <strong>📷 Photo</strong>
+              <span class="toggle-icon" id="photoSectionIcon">▼</span>
             </div>
-            <div class="card-body">
+            <div class="card-body collapsible-section" id="photoSection">
               <div id="purchasePhotoPreview" style="
                 border: 2px dashed #ddd;
                 border-radius: 8px;
-                padding: 20px;
+                padding: 15px;
                 text-align: center;
-                min-height: 150px;
+                min-height: 120px;
                 background: white;
                 cursor: pointer;
               " onclick="document.getElementById('purchasePhotoInput').click()">
                 <i class="bi bi-camera" style="font-size: 3rem; color: #999;"></i>
-                <p style="color: #666; margin-top: 10px;">Click to select or drag & drop photo</p>
-                <img id="purchasePhotoImg" style="display: none; max-width: 100%; max-height: 200px; border-radius: 8px;" />
+                <p style="color: #666; margin-top: 10px;">Tap to add photo</p>
+                <img id="purchasePhotoImg" style="display: none; max-width: 100%; max-height: 180px; border-radius: 8px;" />
               </div>
-              <input type="file" id="purchasePhotoInput" accept="image/*" style="display: none;" onchange="handlePurchasePhotoUpload(this)">
+              <input type="file" id="purchasePhotoInput" accept="image/*" capture="environment" style="display: none;" onchange="handlePurchasePhotoUpload(this)">
               
-              <div class="mt-2" style="display: flex; gap: 10px;">
-                <button type="button" class="btn btn-outline-primary" onclick="document.getElementById('purchasePhotoInput').click()">
-                  <i class="bi bi-image"></i> Choose from Gallery
+              <div class="mt-2" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="openPurchaseCamera()">
+                  <i class="bi bi-camera"></i> Camera
                 </button>
-                <button type="button" class="btn btn-outline-success" onclick="openPurchaseCamera()">
-                  <i class="bi bi-camera"></i> Take Photo
-                </button>
-                <button type="button" class="btn btn-outline-danger" onclick="clearPurchasePhoto()" id="clearPurchasePhotoBtn" style="display: none;">
-                  <i class="bi bi-x-circle"></i> Remove Photo
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearPurchasePhoto()" id="clearPurchasePhotoBtn" style="display: none;">
+                  <i class="bi bi-x-circle"></i> Remove
                 </button>
               </div>
             </div>
           </div>
           
-          <!-- Vendor Name -->
-          <div class="card mb-3">
+          <!-- Vendor Name (Always Open) -->
+          <div class="card">
             <div class="card-header bg-light">
-              <strong>🏢 Vendor Name</strong>
+              <strong>🏢 Vendor</strong>
             </div>
             <div class="card-body">
-              <input type="text" class="form-control" id="purchaseVendorName" placeholder="Enter vendor/supplier name" style="font-size: 1.1rem;">
+              <input type="text" class="form-control" id="purchaseVendorName" placeholder="Enter vendor name">
             </div>
           </div>
           
-          <!-- Products Section -->
-          <div class="card mb-3">
-            <div class="card-header bg-light">
+          <!-- Products Section (HIGHLIGHTED) -->
+          <div class="card" style="border: 2px solid #28a745; box-shadow: 0 2px 8px rgba(40, 167, 69, 0.15);">
+            <div class="card-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; font-weight: 700;">
               <strong>📦 Products Purchased</strong>
             </div>
             <div class="card-body">
               
               <!-- Product Rows Container -->
-              <div id="purchaseProductRows" style="margin-bottom: 15px;">
+              <div id="purchaseProductRows" style="margin-bottom: 12px;">
                 <!-- Dynamic rows will be added here -->
               </div>
               
               <!-- Action Buttons -->
-              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                <button type="button" class="btn btn-outline-primary" onclick="addPurchaseProductRow()">
-                  <i class="bi bi-plus-circle"></i> Add More Rows
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-sm btn-outline-success" onclick="addPurchaseProductRow()">
+                  <i class="bi bi-plus-circle"></i> Add Row
                 </button>
-                <button type="button" class="btn btn-success" onclick="openBulkAddModalForPurchase()">
-                  <i class="bi bi-collection"></i> Add Products in Bulk
+                <button type="button" class="btn btn-sm btn-success" onclick="openBulkAddModalForPurchase()">
+                  <i class="bi bi-collection"></i> Bulk Add
                 </button>
               </div>
             </div>
           </div>
           
-        <!-- Total Amount -->
-<div class="card mb-3">
-  <div class="card-header bg-light">
-    <strong>💰 Total Amount Paid</strong>
-  </div>
-  <div class="card-body">
-    <div class="input-group input-group-lg">
-      <span class="input-group-text">₹</span>
-      <input type="number" class="form-control" id="purchaseTotalAmount" placeholder="0.00" step="0.01" min="0">
-    </div>
-  </div>
-</div>
-
-<!-- Payment Modes -->
-<div class="card mb-3">
-  <div class="card-header bg-light">
-    <strong>💳 Mode of Payment</strong>
-  </div>
-  <div class="card-body">
-    <div style="display: flex; flex-direction: column; gap: 15px;">
-      
-      <!-- Cash -->
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="position: relative; flex-shrink: 0;">
-          <input type="checkbox" id="purchasePaymentCash" class="payment-mode-checkbox" 
-                 onchange="togglePaymentModeCheckmark(this, 'cashCheckmark')"
-                 style="width: 28px; height: 28px; cursor: pointer; accent-color: #28a745;">
-          <span id="cashCheckmark" class="checkmark-icon" style="
-            display: none;
-            position: absolute;
-            top: 4px;
-            left: 6px;
-            font-size: 20px;
-            color: white;
-            pointer-events: none;
-          ">✓</span>
-        </div>
-        <label for="purchasePaymentCash" style="flex: 0 0 80px; font-weight: 600; cursor: pointer;">Cash</label>
-        <div class="input-group">
-          <span class="input-group-text">₹</span>
-          <input type="number" class="form-control" id="purchasePaymentCashAmount" placeholder="0.00" step="0.01" min="0">
-        </div>
-      </div>
-      
-      <!-- Online -->
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="position: relative; flex-shrink: 0;">
-          <input type="checkbox" id="purchasePaymentOnline" class="payment-mode-checkbox"
-                 onchange="togglePaymentModeCheckmark(this, 'onlineCheckmark')"
-                 style="width: 28px; height: 28px; cursor: pointer; accent-color: #28a745;">
-          <span id="onlineCheckmark" class="checkmark-icon" style="
-            display: none;
-            position: absolute;
-            top: 4px;
-            left: 6px;
-            font-size: 20px;
-            color: white;
-            pointer-events: none;
-          ">✓</span>
-        </div>
-        <label for="purchasePaymentOnline" style="flex: 0 0 80px; font-weight: 600; cursor: pointer;">Online</label>
-        <div class="input-group">
-          <span class="input-group-text">₹</span>
-          <input type="number" class="form-control" id="purchasePaymentOnlineAmount" placeholder="0.00" step="0.01" min="0">
-        </div>
-      </div>
-      
-      <!-- Credit -->
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <div style="position: relative; flex-shrink: 0;">
-          <input type="checkbox" id="purchasePaymentCredit" class="payment-mode-checkbox"
-                 onchange="togglePaymentModeCheckmark(this, 'creditCheckmark')"
-                 style="width: 28px; height: 28px; cursor: pointer; accent-color: #28a745;">
-          <span id="creditCheckmark" class="checkmark-icon" style="
-            display: none;
-            position: absolute;
-            top: 4px;
-            left: 6px;
-            font-size: 20px;
-            color: white;
-            pointer-events: none;
-          ">✓</span>
-        </div>
-        <label for="purchasePaymentCredit" style="flex: 0 0 80px; font-weight: 600; cursor: pointer;">Credit</label>
-        <div class="input-group">
-          <span class="input-group-text">₹</span>
-          <input type="number" class="form-control" id="purchasePaymentCreditAmount" placeholder="0.00" step="0.01" min="0">
-        </div>
-      </div>
-      
-    </div>
-    
-    <!-- Payment Validation Message -->
-    <div id="purchasePaymentValidation" class="mt-2" style="font-size: 0.9rem; color: #dc3545; display: none;">
-      ⚠️ Payment amounts must equal total amount
-    </div>
-  </div>
-</div>
-
-<!-- Additional Information -->
-<div class="card mb-3">
-  <div class="card-header bg-light">
-    <strong>📝 Additional Information (Optional)</strong>
-  </div>
-  <div class="card-body">
-    <textarea 
-      class="form-control" 
-      id="purchaseOtherInfo" 
-      rows="3" 
-      placeholder="Enter any additional notes or information"
-      style="resize: vertical; width: 100%;"></textarea>
-  </div>
-</div>
-
+          <!-- Total Amount -->
+          <div class="card">
+            <div class="card-header bg-light">
+              <strong>💰 Total Amount</strong>
+            </div>
+            <div class="card-body">
+              <div class="input-group input-group-lg">
+                <span class="input-group-text">₹</span>
+                <input type="number" class="form-control" id="purchaseTotalAmount" placeholder="0.00" step="0.01" min="0" style="font-weight: 600;">
+              </div>
+            </div>
+          </div>
+          
+          <!-- Payment Modes -->
+          <div class="card">
+            <div class="card-header bg-light">
+              <strong>💳 Payment Mode</strong>
+            </div>
+            <div class="card-body">
+              
+              <!-- Cash -->
+              <div class="payment-mode-row" style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <div style="position: relative; flex-shrink: 0;">
+                  <input type="checkbox" id="purchasePaymentCash" 
+                         onchange="togglePaymentModeCheckmark(this, 'cashCheckmark')"
+                         style="width: 26px; height: 26px; cursor: pointer; accent-color: #28a745;">
+                  <span id="cashCheckmark" style="
+                    display: none;
+                    position: absolute;
+                    top: 3px;
+                    left: 5px;
+                    font-size: 19px;
+                    color: white;
+                    pointer-events: none;
+                  ">✓</span>
+                </div>
+                <label for="purchasePaymentCash" style="flex: 0 0 70px; font-weight: 600; cursor: pointer;">Cash</label>
+                <div class="input-group">
+                  <span class="input-group-text">₹</span>
+                  <input type="number" class="form-control" id="purchasePaymentCashAmount" placeholder="0.00" step="0.01" min="0">
+                </div>
+              </div>
+              
+              <!-- Online -->
+              <div class="payment-mode-row" style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                <div style="position: relative; flex-shrink: 0;">
+                  <input type="checkbox" id="purchasePaymentOnline"
+                         onchange="togglePaymentModeCheckmark(this, 'onlineCheckmark')"
+                         style="width: 26px; height: 26px; cursor: pointer; accent-color: #28a745;">
+                  <span id="onlineCheckmark" style="
+                    display: none;
+                    position: absolute;
+                    top: 3px;
+                    left: 5px;
+                    font-size: 19px;
+                    color: white;
+                    pointer-events: none;
+                  ">✓</span>
+                </div>
+                <label for="purchasePaymentOnline" style="flex: 0 0 70px; font-weight: 600; cursor: pointer;">Online</label>
+                <div class="input-group">
+                  <span class="input-group-text">₹</span>
+                  <input type="number" class="form-control" id="purchasePaymentOnlineAmount" placeholder="0.00" step="0.01" min="0">
+                </div>
+              </div>
+              
+              <!-- Credit -->
+              <div class="payment-mode-row" style="display: flex; align-items: center; gap: 10px;">
+                <div style="position: relative; flex-shrink: 0;">
+                  <input type="checkbox" id="purchasePaymentCredit"
+                         onchange="togglePaymentModeCheckmark(this, 'creditCheckmark')"
+                         style="width: 26px; height: 26px; cursor: pointer; accent-color: #28a745;">
+                  <span id="creditCheckmark" style="
+                    display: none;
+                    position: absolute;
+                    top: 3px;
+                    left: 5px;
+                    font-size: 19px;
+                    color: white;
+                    pointer-events: none;
+                  ">✓</span>
+                </div>
+                <label for="purchasePaymentCredit" style="flex: 0 0 70px; font-weight: 600; cursor: pointer;">Credit</label>
+                <div class="input-group">
+                  <span class="input-group-text">₹</span>
+                  <input type="number" class="form-control" id="purchasePaymentCreditAmount" placeholder="0.00" step="0.01" min="0">
+                </div>
+              </div>
+              
+              <!-- Validation -->
+              <div id="purchasePaymentValidation" class="mt-2" style="font-size: 0.85rem; color: #dc3545; display: none;">
+                ⚠️ Payment must equal total amount
+              </div>
+            </div>
+          </div>
+          
+          <!-- Additional Information (Collapsible) -->
+          <div class="card">
+            <div class="card-header bg-light" onclick="toggleSection('notesSection')">
+              <strong>📝 Notes</strong>
+              <span class="toggle-icon" id="notesSectionIcon">▼</span>
+            </div>
+            <div class="card-body collapsible-section" id="notesSection">
+              <textarea 
+                class="form-control" 
+                id="purchaseOtherInfo" 
+                rows="2" 
+                placeholder="Additional notes (optional)"
+                style="resize: vertical;"></textarea>
+            </div>
+          </div>
+          
         </div>
       </div>
       
       <!-- Modal Footer -->
-      <div class="modal-footer" style="background: #f8f9fa;">
-        <button type="button" class="btn btn-secondary btn-lg" onclick="closeRecordPurchaseModal()">
+      <div class="modal-footer" style="background: #f8f9fa; padding: 10px; gap: 10px;">
+        <button type="button" class="btn btn-secondary" onclick="closeRecordPurchaseModal()" style="flex: 1;">
           <i class="bi bi-x-circle"></i> Cancel
         </button>
-        <button type="button" class="btn btn-success btn-lg" onclick="submitPurchaseEntry()">
-          <i class="bi bi-check-circle"></i> Submit Purchase
+        <button type="button" class="btn btn-success" onclick="submitPurchaseEntry()" style="flex: 1;">
+          <i class="bi bi-check-circle"></i> Submit
         </button>
       </div>
       
@@ -11917,10 +12056,10 @@ document.addEventListener('productsUpdated', () => {
 </div>
 
 <!-- ==========================================
-     BULK ADD PRODUCTS MODAL FOR PURCHASE
+     BULK ADD PRODUCTS MODAL
      ========================================== -->
 <div class="modal fade" id="bulkAddModalForPurchase" tabindex="-1" backdrop="static">
-  <div class="modal-dialog modal-lg">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white;">
         <h5 class="modal-title">
@@ -11932,56 +12071,66 @@ document.addEventListener('productsUpdated', () => {
       <div class="modal-body">
         <!-- Search Input -->
         <input type="text" class="form-control mb-3" id="bulkSearchInputPurchase" 
-               placeholder="🔍 Type to search products..."
+               placeholder="🔍 Search products..."
                oninput="filterBulkProductsPurchase(this.value)">
         
-        <!-- Two Column Layout -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-height: 400px;">
+        <!-- Two Column Layout (Stack on Mobile) -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; max-height: 400px;">
           
-          <!-- LEFT: All Products List -->
+          <!-- Products List -->
           <div>
             <h6 class="border-bottom pb-2"><i class="bi bi-box"></i> Products</h6>
             <div id="bulkProductsListPurchase" style="
               overflow-y: auto;
               max-height: 350px;
               border: 1px solid #ddd;
-              border-radius: 4px;
+              border-radius: 6px;
               background: white;
             ">
-              <!-- Populated by JavaScript -->
+              <!-- Populated by JS -->
             </div>
           </div>
           
-          <!-- RIGHT: Selected Items -->
+          <!-- Selected Items -->
           <div>
             <h6 class="border-bottom pb-2">
-              <i class="bi bi-check-circle"></i> Selected Items 
+              <i class="bi bi-check-circle"></i> Selected 
               <span class="badge bg-success" id="bulkSelectedCountPurchase">0</span>
             </h6>
-            <div style="
-              font-size: 0.9rem;
-              color: #666;
-              margin-bottom: 10px;
-            ">
-              Total Quantity: <strong id="bulkTotalQtyPurchase">0</strong>
+            <div style="font-size: 0.9rem; color: #666; margin-bottom: 8px;">
+              Total Qty: <strong id="bulkTotalQtyPurchase">0</strong>
             </div>
             <div id="bulkSelectedItemsPurchase" style="
               overflow-y: auto;
               max-height: 320px;
               border: 1px solid #ddd;
-              border-radius: 4px;
+              border-radius: 6px;
               background: #f9f9f9;
             ">
-              <!-- Populated by JavaScript -->
+              <!-- Populated by JS -->
             </div>
           </div>
         </div>
+        
+        <!-- Mobile Stack Layout -->
+        <style>
+          @media (max-width: 767px) {
+            .modal-dialog.modal-lg {
+              max-width: 95% !important;
+              margin: 10px auto !important;
+            }
+            
+            #bulkAddModalForPurchase .modal-body > div[style*="grid"] {
+              grid-template-columns: 1fr !important;
+              gap: 15px !important;
+              max-height: 500px !important;
+            }
+          }
+        </style>
       </div>
       
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-          Cancel
-        </button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
         <button type="button" class="btn btn-success" onclick="addBulkProductsToPurchase()">
           <i class="bi bi-plus-circle"></i> Add Items
         </button>
@@ -11989,6 +12138,7 @@ document.addEventListener('productsUpdated', () => {
     </div>
   </div>
 </div>
+
 
 
   
@@ -12015,6 +12165,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
