@@ -3707,8 +3707,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
 }
 
 
-
-/**
+--------------- these are existing ------------- /**
  * ==========================================
  * RECORD PURCHASE - MAIN FUNCTIONS
  * ==========================================
@@ -4112,12 +4111,6 @@ async function loadRecentPurchases() {
 /**
  * Display purchases in table
  */
-/**
- * Display purchases in table (WITH BIGGER CLICKABLE PHOTOS)
- */
-/**
- * Display purchases in table (FIXED PHOTO CLICK)
- */
 function displayPurchases(purchases) {
   const tbody = document.getElementById('purchasesList');
   
@@ -4141,15 +4134,9 @@ function displayPurchases(purchases) {
         <td style="white-space: nowrap;">${purchase.dateTime}</td>
         <td style="text-align: center;">
           ${purchase.photoLink ? `
-            <img 
-              src="${purchase.photoLink}" 
-              onclick="event.stopPropagation(); openPhotoLightbox(${index})" 
-              style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" 
-              onmouseover="this.style.transform='scale(1.05)'" 
-              onmouseout="this.style.transform='scale(1)'"
-              alt="Purchase Photo"
-              title="Click to view full size"
-              onerror="this.style.display='none'; this.parentElement.innerHTML='<span style=color:#999>No photo</span>'">
+            <a href="${purchase.photoLink}" target="_blank" onclick="event.stopPropagation()">
+              <img src="${purchase.photoLink}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer;" alt="Photo">
+            </a>
           ` : '<span style="color: #999;">-</span>'}
         </td>
         <td>${purchase.products}</td>
@@ -4168,124 +4155,6 @@ function displayPurchases(purchases) {
   
   console.log('✅ Displayed', purchases.length, 'purchases');
 }
-
-
-/**
- * Open photo in lightbox modal (like your PS5 example)
- */
-/**
- * Open photo in lightbox modal (FIXED VERSION)
- */
-/**
- * Open photo in simple full-screen overlay (NO BOOTSTRAP)
- */
-function openPhotoLightbox(purchaseIndex) {
-  const purchase = window.currentPurchases[purchaseIndex];
-  
-  if (!purchase || !purchase.photoLink) {
-    alert('❌ No photo available');
-    return;
-  }
-  
-  // Create overlay
-  const overlay = document.createElement('div');
-  overlay.style.cssText = `
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.95);
-    z-index: 99999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-  `;
-  
-  // Title
-  const title = document.createElement('div');
-  title.style.cssText = `
-    color: white;
-    font-size: 1.3rem;
-    font-weight: 600;
-    margin-bottom: 20px;
-    text-align: center;
-  `;
-  title.textContent = purchase.vendorName || 'Purchase Photo';
-  overlay.appendChild(title);
-  
-  // Image
-  const img = document.createElement('img');
-  img.src = purchase.photoLink;
-  img.style.cssText = `
-    max-width: 90%;
-    max-height: 75vh;
-    object-fit: contain;
-    border-radius: 8px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  `;
-  
-  img.onerror = function() {
-    img.style.display = 'none';
-    const error = document.createElement('div');
-    error.style.cssText = 'color: white; font-size: 1.2rem; text-align: center;';
-    error.innerHTML = '❌ Failed to load photo<br><small>' + purchase.photoLink + '</small>';
-    overlay.appendChild(error);
-  };
-  
-  overlay.appendChild(img);
-  
-  // Close button
-  const closeBtn = document.createElement('button');
-  closeBtn.innerHTML = '✕';
-  closeBtn.style.cssText = `
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    background: white;
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 1.8rem;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    transition: transform 0.2s;
-  `;
-  
-  closeBtn.onmouseover = () => closeBtn.style.transform = 'scale(1.1)';
-  closeBtn.onmouseout = () => closeBtn.style.transform = 'scale(1)';
-  closeBtn.onclick = () => document.body.removeChild(overlay);
-  
-  overlay.appendChild(closeBtn);
-  
-  // Close on background click
-  overlay.onclick = (e) => {
-    if (e.target === overlay) {
-      document.body.removeChild(overlay);
-    }
-  };
-  
-  // Add to body
-  document.body.appendChild(overlay);
-  
-  console.log('📸 Opened photo:', purchase.photoLink);
-}
-
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(text) {
-  if (!text) return '';
-  const div = document.createElement('div');
-  div.textContent = text;
-  return div.innerHTML;
-}
-
-
-    
 
 /**
  * View purchase detail in modal
@@ -12460,6 +12329,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
