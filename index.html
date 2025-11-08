@@ -3729,6 +3729,9 @@ function closeRecordPurchaseModal() {
 /**
  * Add product row (MOBILE RESPONSIVE)
  */
+/**
+ * Add product row (FIXED: Product name on Line 1, Qty/Rate/Unit on Line 2)
+ */
 function addPurchaseProductRow(product = null) {
   purchaseProductRowCounter++;
   const rowId = `purchaseRow${purchaseProductRowCounter}`;
@@ -3745,142 +3748,172 @@ function addPurchaseProductRow(product = null) {
   const unit = product ? product.unitType : 'Pieces';
   const amount = product ? (product.qty * product.price).toFixed(2) : '0.00';
   
-  // ✅ RESPONSIVE LAYOUT: Desktop = Grid, Mobile = Stacked
   rowDiv.innerHTML = `
-    <style>
-      .purchase-product-row {
-        padding: 15px;
-        margin-bottom: 15px;
-        background: white;
-        border: 2px solid #ddd;
-        border-radius: 8px;
-        position: relative;
-      }
-      
-      /* Desktop Layout */
-      @media (min-width: 768px) {
-        .purchase-product-row {
-          display: grid;
-          grid-template-columns: 2fr 1fr 1fr 1fr 1fr 40px;
-          gap: 10px;
-          align-items: center;
-        }
-        
-        .purchase-field-label {
-          display: none;
-        }
-      }
-      
-      /* Mobile Layout */
-      @media (max-width: 767px) {
-        .purchase-product-row {
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-        }
-        
-        .purchase-field-label {
-          display: block;
-          font-size: 12px;
-          font-weight: 600;
-          color: #666;
-          margin-bottom: 4px;
-        }
-        
-        .purchase-row-line {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 10px;
-        }
-        
-        .purchase-row-line.single {
-          grid-template-columns: 1fr;
-        }
-        
-        .purchase-field-wrapper {
-          display: flex;
-          flex-direction: column;
-        }
-        
-        .purchase-remove-btn-mobile {
-          position: absolute;
-          top: 10px;
-          right: 10px;
-          z-index: 10;
-        }
-        
-        .purchase-remove-btn-desktop {
-          display: none !important;
-        }
-      }
-      
-      @media (min-width: 768px) {
-        .purchase-remove-btn-mobile {
-          display: none !important;
-        }
-      }
-    </style>
+    <!-- LINE 1: Product Name ONLY -->
+    <div class="product-name-line">
+      <label class="purchase-field-label">Product Name</label>
+      <input type="text" class="form-control" placeholder="Product name" 
+             value="${escapeHtml(productName)}" data-field="name">
+    </div>
     
-    <!-- Mobile Remove Button (Top Right) -->
-    <button type="button" class="btn btn-sm btn-danger purchase-remove-btn-mobile" 
-            onclick="removePurchaseProductRow('${rowId}')" 
-            title="Remove">
-      <i class="bi bi-x"></i>
-    </button>
-    
-    <!-- Line 1: Product Name + Quantity (Mobile) -->
-    <div class="purchase-row-line">
-      <div class="purchase-field-wrapper">
-        <label class="purchase-field-label">Product Name</label>
-        <input type="text" class="form-control" placeholder="Product name" 
-               value="${escapeHtml(productName)}" data-field="name">
-      </div>
-      <div class="purchase-field-wrapper">
+    <!-- LINE 2: Qty, Rate, Unit -->
+    <div class="product-details-line">
+      <div>
         <label class="purchase-field-label">Quantity</label>
         <input type="number" class="form-control" placeholder="Qty" min="1" 
                value="${qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
       </div>
-    </div>
-    
-    <!-- Line 2: Rate + Unit (Mobile) -->
-    <div class="purchase-row-line">
-      <div class="purchase-field-wrapper">
+      <div>
         <label class="purchase-field-label">Rate (₹)</label>
         <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01" 
                value="${rate}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
       </div>
-      <div class="purchase-field-wrapper">
+      <div>
         <label class="purchase-field-label">Unit</label>
         <select class="form-select" data-field="unit">
-          <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pieces</option>
-          <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Boxes</option>
+          <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pcs</option>
+          <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Box</option>
           <option value="Kg" ${unit === 'Kg' ? 'selected' : ''}>Kg</option>
-          <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>Liters</option>
+          <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>L</option>
         </select>
       </div>
     </div>
     
-    <!-- Line 3: Amount (Mobile - Full Width) -->
-    <div class="purchase-row-line single">
-      <div class="purchase-field-wrapper">
-        <label class="purchase-field-label">Amount (₹)</label>
-        <input type="number" class="form-control" placeholder="Amount" readonly 
-               value="${amount}" data-field="amount" 
-               style="background: #f0f0f0; font-weight: 600; font-size: 1.1rem; color: #28a745;">
-      </div>
+    <!-- LINE 3: Amount -->
+    <div class="product-amount-line">
+      <label class="purchase-field-label">Amount (₹)</label>
+      <input type="number" class="form-control" placeholder="Amount" readonly 
+             value="${amount}" data-field="amount" 
+             style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
     </div>
     
-    <!-- Desktop Remove Button (Right Side) -->
-    <button type="button" class="btn btn-sm btn-danger purchase-remove-btn-desktop" 
+    <!-- Remove Button -->
+    <button type="button" class="btn btn-danger btn-sm purchase-remove-btn" 
             onclick="removePurchaseProductRow('${rowId}')" 
-            title="Remove">
-      <i class="bi bi-x"></i>
-    </button>
+            title="Remove">✕</button>
   `;
   
   container.appendChild(rowDiv);
-  console.log('✅ Added responsive product row:', rowId);
 }
+
+/**
+ * Toggle payment section
+ */
+function togglePaymentSection() {
+  const section = document.getElementById('paymentSection');
+  section.classList.toggle('show');
+}
+
+/**
+ * Trigger photo input (for click or paste)
+ */
+function triggerPhotoInput() {
+  document.getElementById('purchasePhotoInput').click();
+}
+
+/**
+ * Handle paste event for photo
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  const photoPreview = document.getElementById('purchasePhotoPreview');
+  
+  if (photoPreview) {
+    // Handle paste event
+    photoPreview.addEventListener('paste', function(e) {
+      const items = e.clipboardData.items;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const blob = items[i].getAsFile();
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            purchasePhotoBase64 = event.target.result;
+            document.getElementById('purchasePhotoImg').src = event.target.result;
+            document.getElementById('purchasePhotoImg').style.display = 'block';
+            photoPreview.querySelector('p').style.display = 'none';
+            photoPreview.querySelector('i').style.display = 'none';
+            document.getElementById('clearPurchasePhotoBtn').style.display = 'inline-block';
+            console.log('✅ Photo pasted');
+          };
+          reader.readAsDataURL(blob);
+        }
+      }
+    });
+  }
+});
+
+/**
+ * Update submit function (payment optional)
+ */
+async function submitPurchaseEntry() {
+  console.log('📤 Submitting purchase...');
+  
+  const vendorName = document.getElementById('purchaseVendorName').value.trim();
+  if (!vendorName) {
+    alert('❌ Please enter vendor name');
+    return;
+  }
+  
+  const rows = document.querySelectorAll('.purchase-product-row');
+  if (rows.length === 0) {
+    alert('❌ Please add at least one product');
+    return;
+  }
+  
+  const products = [];
+  for (const row of rows) {
+    const name = row.querySelector('[data-field="name"]').value.trim();
+    const qty = parseFloat(row.querySelector('[data-field="qty"]').value) || 0;
+    const rate = parseFloat(row.querySelector('[data-field="rate"]').value) || 0;
+    const unit = row.querySelector('[data-field="unit"]').value;
+    const amount = parseFloat(row.querySelector('[data-field="amount"]').value) || 0;
+    
+    if (name && qty > 0) {
+      products.push({ name, qty, rate, unit, amount });
+    }
+  }
+  
+  if (products.length === 0) {
+    alert('❌ Please add valid products');
+    return;
+  }
+  
+  const totalAmount = parseFloat(document.getElementById('purchaseTotalAmount').value) || 0;
+  if (totalAmount <= 0) {
+    alert('❌ Please enter total amount');
+    return;
+  }
+  
+  // Payment modes (optional)
+  const paymentModes = {};
+  if (document.getElementById('purchasePaymentCash').checked) {
+    paymentModes.cash = parseFloat(document.getElementById('purchasePaymentCashAmount').value) || 0;
+  }
+  if (document.getElementById('purchasePaymentOnline').checked) {
+    paymentModes.online = parseFloat(document.getElementById('purchasePaymentOnlineAmount').value) || 0;
+  }
+  if (document.getElementById('purchasePaymentCredit').checked) {
+    paymentModes.credit = parseFloat(document.getElementById('purchasePaymentCreditAmount').value) || 0;
+  }
+  
+  const otherInfo = document.getElementById('purchaseOtherInfo').value.trim();
+  
+  const data = {
+    vendorName,
+    products,
+    totalAmount,
+    paymentModes,
+    otherInfo,
+    photoBase64: purchasePhotoBase64,
+    timestamp: new Date().getTime()
+  };
+  
+  console.log('📦 Data:', data);
+  
+  // TODO: Send to backend
+  alert('✅ Purchase recorded!');
+  closeRecordPurchaseModal();
+}
+
 
 /**
  * Remove product row
@@ -11568,38 +11601,33 @@ document.addEventListener('productsUpdated', () => {
 </div>
 
 <!-- ==========================================
-     RECORD PURCHASE MODAL (ULTRA COMPACT)
+     RECORD PURCHASE MODAL (FINAL)
      ========================================== -->
 <div class="modal fade" id="recordPurchaseModal" tabindex="-1" backdrop="static" keyboard="false">
   <div class="modal-dialog modal-fullscreen">
     <div class="modal-content">
       
-      <!-- Ultra Compact Header -->
+      <!-- Header -->
       <div class="modal-header" style="background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 8px 12px;">
         <h6 class="modal-title" style="font-size: 0.95rem; font-weight: 600; margin: 0;">
-          📦 Record Purchase
+          📦 RECORD PURCHASE
         </h6>
         <button type="button" class="btn-close btn-close-white btn-sm" onclick="closeRecordPurchaseModal()" style="padding: 4px;"></button>
       </div>
       
-      <!-- Ultra Compact Body -->
-      <div class="modal-body" style="background: #fff; padding: 10px; overflow-y: auto; max-height: calc(100vh - 100px);">
+      <!-- Body -->
+      <div class="modal-body" style="background: #fff; padding: 10px; overflow-y: auto;">
         
-        <!-- Compact Styles -->
+        <!-- Styles -->
         <style>
-          /* Global compact styles */
-          #recordPurchaseModal * {
-            box-sizing: border-box;
-          }
-          
           #recordPurchaseModal .form-label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             color: #333;
             margin: 0 0 3px 0;
             display: block;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.5px;
           }
           
           #recordPurchaseModal .form-control,
@@ -11618,29 +11646,17 @@ document.addEventListener('productsUpdated', () => {
             outline: none;
           }
           
-          #recordPurchaseModal .input-group-text {
-            font-size: 13px;
-            padding: 5px 8px;
-            background: #f5f5f5;
-            border: 1px solid #ccc;
-          }
-          
           #recordPurchaseModal .btn-sm {
             font-size: 12px;
             padding: 4px 10px;
             height: 28px;
-            line-height: 1.5;
           }
           
           #recordPurchaseModal .section-gap {
-            height: 10px;
+            height: 8px;
           }
           
-          #recordPurchaseModal textarea {
-            resize: none;
-          }
-          
-          /* Photo upload - ultra compact */
+          /* Photo upload */
           #purchasePhotoPreview {
             border: 1.5px dashed #ccc;
             border-radius: 4px;
@@ -11666,59 +11682,46 @@ document.addEventListener('productsUpdated', () => {
             margin: 2px 0 0 0;
           }
           
-          #purchasePhotoImg {
-            max-height: 70px;
-            margin-top: 4px;
-          }
-          
-          /* Product rows - MOBILE SPECIFIC LAYOUT */
+          /* Product rows - NO BORDER */
           .purchase-product-row {
-            padding: 8px;
+            padding: 8px 0;
             margin-bottom: 8px;
-            background: #f0fff4;
-            border: 2px solid #28a745;
-            border-radius: 5px;
+            background: #f9f9f9;
+            border-radius: 4px;
             position: relative;
           }
           
-          /* Mobile: 3-line layout */
+          /* Mobile: 3 separate lines */
           @media (max-width: 767px) {
             .purchase-product-row {
-              display: flex;
-              flex-direction: column;
-              gap: 6px;
+              display: block;
+              padding: 8px;
             }
             
-            /* Line 1: Product Name (full width) */
-            .product-line-1 {
-              width: 100%;
+            /* Line 1: Product Name ONLY */
+            .product-name-line {
+              margin-bottom: 6px;
             }
             
-            /* Line 2: Qty, Rate, Unit (3 columns) */
-            .product-line-2 {
+            /* Line 2: Qty, Rate, Unit */
+            .product-details-line {
               display: grid;
               grid-template-columns: 1fr 1fr 1fr;
               gap: 6px;
+              margin-bottom: 6px;
             }
             
-            /* Line 3: Amount (full width) */
-            .product-line-3 {
-              width: 100%;
+            /* Line 3: Amount */
+            .product-amount-line {
+              display: block;
             }
             
             .purchase-field-label {
-              font-size: 10px;
+              font-size: 9px;
               font-weight: 600;
-              color: #28a745;
+              color: #666;
               margin-bottom: 2px;
               text-transform: uppercase;
-            }
-            
-            .purchase-product-row input,
-            .purchase-product-row select {
-              font-size: 13px;
-              height: 30px;
-              padding: 4px 6px;
             }
             
             .purchase-remove-btn {
@@ -11729,12 +11732,11 @@ document.addEventListener('productsUpdated', () => {
               height: 24px;
               padding: 0;
               font-size: 14px;
-              line-height: 24px;
               border-radius: 3px;
             }
           }
           
-          /* Desktop: single row grid */
+          /* Desktop */
           @media (min-width: 768px) {
             .purchase-product-row {
               display: grid;
@@ -11748,54 +11750,40 @@ document.addEventListener('productsUpdated', () => {
               display: none;
             }
             
-            .product-line-1,
-            .product-line-2,
-            .product-line-3 {
+            .product-name-line,
+            .product-details-line,
+            .product-amount-line {
               display: contents;
             }
-            
-            .purchase-remove-btn {
-              width: 28px;
-              height: 28px;
-              padding: 0;
-            }
           }
           
-          /* Payment compact */
-          .payment-row {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 6px;
+          /* Payment hidden by default */
+          #paymentSection {
+            display: none;
           }
           
-          .payment-row label {
-            flex: 0 0 55px;
+          #paymentSection.show {
+            display: block;
+          }
+          
+          .payment-toggle {
             font-size: 12px;
-            font-weight: 600;
-            margin: 0;
-          }
-          
-          .payment-row .input-group-sm {
-            height: 30px;
-          }
-          
-          .payment-row .input-group-sm input,
-          .payment-row .input-group-sm .input-group-text {
-            height: 30px;
-            font-size: 13px;
-            padding: 4px 6px;
+            color: #28a745;
+            cursor: pointer;
+            text-decoration: underline;
+            margin-top: 4px;
+            display: inline-block;
           }
         </style>
         
         <!-- Photo -->
-        <label class="form-label">📷 Photo</label>
-        <div id="purchasePhotoPreview" onclick="document.getElementById('purchasePhotoInput').click()">
+        <label class="form-label">📷 Photo (Optional)</label>
+        <div id="purchasePhotoPreview" onclick="triggerPhotoInput()">
           <i class="bi bi-camera"></i>
-          <p>Tap to add</p>
-          <img id="purchasePhotoImg" style="display: none; max-width: 100%; border-radius: 3px;" />
+          <p>Tap or paste photo</p>
+          <img id="purchasePhotoImg" style="display: none; max-width: 100%; max-height: 70px; border-radius: 3px; margin-top: 4px;" />
         </div>
-        <input type="file" id="purchasePhotoInput" accept="image/*" capture="environment" style="display: none;" onchange="handlePurchasePhotoUpload(this)">
+        <input type="file" id="purchasePhotoInput" accept="image/*" style="display: none;" onchange="handlePurchasePhotoUpload(this)">
         <div style="margin-top: 3px; display: flex; gap: 4px;">
           <button type="button" class="btn btn-sm btn-outline-success" onclick="openPurchaseCamera()">
             <i class="bi bi-camera"></i> Camera
@@ -11808,13 +11796,13 @@ document.addEventListener('productsUpdated', () => {
         <div class="section-gap"></div>
         
         <!-- Vendor -->
-        <label class="form-label">🏢 Vendor</label>
+        <label class="form-label">🏢 Vendor Name</label>
         <input type="text" class="form-control" id="purchaseVendorName" placeholder="Vendor name">
         
         <div class="section-gap"></div>
         
         <!-- Products -->
-        <label class="form-label">📦 Products</label>
+        <label class="form-label">📦 Products Purchased</label>
         <div id="purchaseProductRows" style="margin-bottom: 6px;">
           <!-- Dynamic rows -->
         </div>
@@ -11830,72 +11818,72 @@ document.addEventListener('productsUpdated', () => {
         <div class="section-gap"></div>
         
         <!-- Total -->
-        <label class="form-label">💰 Total</label>
+        <label class="form-label">💰 Total Amount</label>
         <div class="input-group input-group-sm">
-          <span class="input-group-text">₹</span>
+          <span class="input-group-text" style="padding: 5px 8px; font-size: 13px;">₹</span>
           <input type="number" class="form-control" id="purchaseTotalAmount" placeholder="0.00" step="0.01" min="0" style="font-weight: 600;">
         </div>
         
-        <div class="section-gap"></div>
+        <!-- Optional Payment Toggle -->
+        <span class="payment-toggle" onclick="togglePaymentSection()">+ Add payment details</span>
         
-        <!-- Payment -->
-        <label class="form-label">💳 Payment</label>
-        
-        <div class="payment-row">
-          <div style="position: relative; flex-shrink: 0;">
-            <input type="checkbox" id="purchasePaymentCash" 
-                   onchange="togglePaymentModeCheckmark(this, 'cashCheckmark')"
-                   style="width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;">
-            <span id="cashCheckmark" style="display: none; position: absolute; top: 1px; left: 3px; font-size: 15px; color: white; pointer-events: none;">✓</span>
+        <!-- Payment Section (Hidden) -->
+        <div id="paymentSection">
+          <div class="section-gap"></div>
+          <label class="form-label">💳 Payment Mode (Optional)</label>
+          
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <div style="position: relative; flex-shrink: 0;">
+              <input type="checkbox" id="purchasePaymentCash" 
+                     onchange="togglePaymentModeCheckmark(this, 'cashCheckmark')"
+                     style="width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;">
+              <span id="cashCheckmark" style="display: none; position: absolute; top: 1px; left: 3px; font-size: 15px; color: white; pointer-events: none;">✓</span>
+            </div>
+            <label for="purchasePaymentCash" style="flex: 0 0 50px; font-size: 12px; font-weight: 600; margin: 0;">Cash</label>
+            <div style="flex: 1; display: flex;">
+              <span style="padding: 5px 8px; background: #f5f5f5; border: 1px solid #ccc; border-right: none; border-radius: 3px 0 0 3px; font-size: 13px;">₹</span>
+              <input type="number" class="form-control" id="purchasePaymentCashAmount" placeholder="0" step="0.01" min="0" style="border-radius: 0 3px 3px 0; flex: 1;">
+            </div>
           </div>
-          <label for="purchasePaymentCash">Cash</label>
-          <div class="input-group input-group-sm" style="flex: 1;">
-            <span class="input-group-text">₹</span>
-            <input type="number" class="form-control" id="purchasePaymentCashAmount" placeholder="0" step="0.01" min="0">
+          
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px;">
+            <div style="position: relative; flex-shrink: 0;">
+              <input type="checkbox" id="purchasePaymentOnline"
+                     onchange="togglePaymentModeCheckmark(this, 'onlineCheckmark')"
+                     style="width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;">
+              <span id="onlineCheckmark" style="display: none; position: absolute; top: 1px; left: 3px; font-size: 15px; color: white; pointer-events: none;">✓</span>
+            </div>
+            <label for="purchasePaymentOnline" style="flex: 0 0 50px; font-size: 12px; font-weight: 600; margin: 0;">Online</label>
+            <div style="flex: 1; display: flex;">
+              <span style="padding: 5px 8px; background: #f5f5f5; border: 1px solid #ccc; border-right: none; border-radius: 3px 0 0 3px; font-size: 13px;">₹</span>
+              <input type="number" class="form-control" id="purchasePaymentOnlineAmount" placeholder="0" step="0.01" min="0" style="border-radius: 0 3px 3px 0; flex: 1;">
+            </div>
           </div>
+          
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="position: relative; flex-shrink: 0;">
+              <input type="checkbox" id="purchasePaymentCredit"
+                     onchange="togglePaymentModeCheckmark(this, 'creditCheckmark')"
+                     style="width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;">
+              <span id="creditCheckmark" style="display: none; position: absolute; top: 1px; left: 3px; font-size: 15px; color: white; pointer-events: none;">✓</span>
+            </div>
+            <label for="purchasePaymentCredit" style="flex: 0 0 50px; font-size: 12px; font-weight: 600; margin: 0;">Credit</label>
+            <div style="flex: 1; display: flex;">
+              <span style="padding: 5px 8px; background: #f5f5f5; border: 1px solid #ccc; border-right: none; border-radius: 3px 0 0 3px; font-size: 13px;">₹</span>
+              <input type="number" class="form-control" id="purchasePaymentCreditAmount" placeholder="0" step="0.01" min="0" style="border-radius: 0 3px 3px 0; flex: 1;">
+            </div>
+          </div>
+          
+          <div class="section-gap"></div>
+          
+          <!-- Notes -->
+          <label class="form-label">📝 Notes</label>
+          <textarea class="form-control" id="purchaseOtherInfo" rows="2" placeholder="Optional" style="font-size: 13px; padding: 5px 8px; resize: none;"></textarea>
         </div>
-        
-        <div class="payment-row">
-          <div style="position: relative; flex-shrink: 0;">
-            <input type="checkbox" id="purchasePaymentOnline"
-                   onchange="togglePaymentModeCheckmark(this, 'onlineCheckmark')"
-                   style="width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;">
-            <span id="onlineCheckmark" style="display: none; position: absolute; top: 1px; left: 3px; font-size: 15px; color: white; pointer-events: none;">✓</span>
-          </div>
-          <label for="purchasePaymentOnline">Online</label>
-          <div class="input-group input-group-sm" style="flex: 1;">
-            <span class="input-group-text">₹</span>
-            <input type="number" class="form-control" id="purchasePaymentOnlineAmount" placeholder="0" step="0.01" min="0">
-          </div>
-        </div>
-        
-        <div class="payment-row">
-          <div style="position: relative; flex-shrink: 0;">
-            <input type="checkbox" id="purchasePaymentCredit"
-                   onchange="togglePaymentModeCheckmark(this, 'creditCheckmark')"
-                   style="width: 20px; height: 20px; cursor: pointer; accent-color: #28a745;">
-            <span id="creditCheckmark" style="display: none; position: absolute; top: 1px; left: 3px; font-size: 15px; color: white; pointer-events: none;">✓</span>
-          </div>
-          <label for="purchasePaymentCredit">Credit</label>
-          <div class="input-group input-group-sm" style="flex: 1;">
-            <span class="input-group-text">₹</span>
-            <input type="number" class="form-control" id="purchasePaymentCreditAmount" placeholder="0" step="0.01" min="0">
-          </div>
-        </div>
-        
-        <div id="purchasePaymentValidation" style="font-size: 10px; color: #dc3545; margin-top: 2px; display: none;">
-          ⚠️ Payment ≠ Total
-        </div>
-        
-        <div class="section-gap"></div>
-        
-        <!-- Notes -->
-        <label class="form-label">📝 Notes</label>
-        <textarea class="form-control" id="purchaseOtherInfo" rows="2" placeholder="Optional" style="font-size: 13px; padding: 5px 8px;"></textarea>
         
       </div>
       
-      <!-- Ultra Compact Footer -->
+      <!-- Footer -->
       <div class="modal-footer" style="padding: 6px 10px; gap: 6px; background: #f8f9fa; border-top: 1px solid #ddd;">
         <button type="button" class="btn btn-sm btn-secondary" onclick="closeRecordPurchaseModal()" style="flex: 1; height: 32px;">
           Cancel
@@ -11909,9 +11897,7 @@ document.addEventListener('productsUpdated', () => {
   </div>
 </div>
 
-<!-- ==========================================
-     BULK ADD MODAL (UNCHANGED - FANTASTIC!)
-     ========================================== -->
+<!-- BULK MODAL (UNCHANGED) -->
 <div class="modal fade" id="bulkAddModalForPurchase" tabindex="-1" backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -11983,6 +11969,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
