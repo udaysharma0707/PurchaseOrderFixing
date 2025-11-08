@@ -3891,171 +3891,112 @@ document.addEventListener('DOMContentLoaded', function() {
  * Submit purchase entry to Google Sheets
  */
 async function submitPurchaseEntry() {
-  console.log('📤 submitPurchaseEntry called');
-  
-  // Get vendor name
-  const vendorInput = document.getElementById('purchaseVendorName');
-  const vendorName = vendorInput ? vendorInput.value.trim() : '';
-  
-  console.log('Vendor:', vendorName);
-  
-  if (!vendorName) {
-    alert('❌ Please enter vendor name');
-    return;
-  }
-  
-  // Get product rows
-  const productRows = document.querySelectorAll('.purchase-product-row');
-  console.log('Product rows found:', productRows.length);
-  
-  if (productRows.length === 0) {
-    alert('❌ Please add at least one product');
-    return;
-  }
-  
-  const products = [];
-  for (const row of productRows) {
-    const name = row.querySelector('[data-field="name"]')?.value.trim() || '';
-    const qty = parseFloat(row.querySelector('[data-field="qty"]')?.value) || 0;
-    const rate = parseFloat(row.querySelector('[data-field="rate"]')?.value) || 0;
-    const unit = row.querySelector('[data-field="unit"]')?.value || 'Pieces';
-    const amount = parseFloat(row.querySelector('[data-field="amount"]')?.value) || 0;
-    
-    if (name && qty > 0) {
-      products.push({ 
-        name, 
-        qty, 
-        rate, 
-        unit, 
-        amount: amount.toFixed(2)
-      });
-    }
-  }
-  
-  console.log('Products collected:', products);
-  
-  if (products.length === 0) {
-    alert('❌ Please add valid products with quantities');
-    return;
-  }
-  
-  // Get total amount
-  const totalAmountInput = document.getElementById('purchaseTotalAmount');
-  const totalAmount = parseFloat(totalAmountInput?.value) || 0;
-  
-  console.log('Total amount:', totalAmount);
-  
-  if (totalAmount <= 0) {
-    alert('❌ Please enter total amount');
-    return;
-  }
-  
-  // Get payment modes
-  const paymentModes = {};
-  const cashCheckbox = document.getElementById('purchasePaymentCash');
-  const onlineCheckbox = document.getElementById('purchasePaymentOnline');
-  const creditCheckbox = document.getElementById('purchasePaymentCredit');
-  
-  if (cashCheckbox && cashCheckbox.checked) {
-    const cashAmount = parseFloat(document.getElementById('purchasePaymentCashAmount')?.value) || 0;
-    if (cashAmount > 0) paymentModes.cash = cashAmount;
-  }
-  
-  if (onlineCheckbox && onlineCheckbox.checked) {
-    const onlineAmount = parseFloat(document.getElementById('purchasePaymentOnlineAmount')?.value) || 0;
-    if (onlineAmount > 0) paymentModes.online = onlineAmount;
-  }
-  
-  if (creditCheckbox && creditCheckbox.checked) {
-    const creditAmount = parseFloat(document.getElementById('purchasePaymentCreditAmount')?.value) || 0;
-    if (creditAmount > 0) paymentModes.credit = creditAmount;
-  }
-  
-  console.log('Payment modes:', paymentModes);
-  
-  // Get other info
-  const otherInfoInput = document.getElementById('purchaseOtherInfo');
-  const otherInfo = otherInfoInput ? otherInfoInput.value.trim() : '';
-  
-  // Prepare data
-  const purchaseData = {
-    action: 'recordPurchase',
-    vendorName: vendorName,
-    products: products,
-    totalAmount: totalAmount,
-    paymentModes: paymentModes,
-    otherInfo: otherInfo,
-    photoBase64: purchasePhotoBase64 || ''
-  };
-  
-  console.log('📦 Sending purchase data:', purchaseData);
-  
-  // Disable button
-  const submitBtn = event?.target || document.querySelector('#recordPurchaseModal button[onclick*="submitPurchaseEntry"]');
-  const originalText = submitBtn?.innerHTML || '';
-  
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Submitting...';
-  }
+  console.log('📤 Starting submission...');
   
   try {
-    console.log('🚀 Sending to:', CONFIG.APPS_SCRIPT_URL);
-    
-    const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(purchaseData)
-    });
-    
-    console.log('📡 Response status:', response.status);
-    
-    const responseText = await response.text();
-    console.log('📡 Response text:', responseText);
-    
-    let result;
-    try {
-      result = JSON.parse(responseText);
-      console.log('📦 Parsed result:', result);
-    } catch (parseErr) {
-      console.error('❌ Failed to parse:', parseErr);
-      throw new Error('Invalid response from server');
+    // 1. Get vendor name
+    const vendorName = document.getElementById('purchaseVendorName')?.value?.trim() || '';
+    if (!vendorName) {
+      alert('❌ Please enter vendor name');
+      return;
     }
     
+    // 2. Get products
+    const productRows = document.querySelectorAll('.purchase-product-row');
+    const products = [];
+    
+    for (const row of productRows) {
+      const name = row.querySelector('[data-field="name"]')?.value?.trim() || '';
+      const qty = parseFloat(row.querySelector('[data-field="qty"]')?.value) || 0;
+      const rate = parseFloat(row.querySelector('[data-field="rate"]')?.value) || 0;
+      const unit = row.querySelector('[data-field="unit"]')?.value || 'Pieces';
+      const amount = parseFloat(row.querySelector('[data-field="amount"]')?.value) || 0;
+      
+      if (name && qty > 0) {
+        products.push({
+          name: name,
+          qty: qty,
+          rate: rate,
+          unit: unit,
+          amount: amount.toFixed(2)
+        });
+      }
+    }
+    
+    if (products.length === 0) {
+      alert('❌ Please add at least one product');
+      return;
+    }
+    
+    // 3. Get total amount
+    const totalAmount = parseFloat(document.getElementById('purchaseTotalAmount')?.value) || 0;
+    if (totalAmount <= 0) {
+      alert('❌ Please enter total amount');
+      return;
+    }
+    
+    // 4. Get payment modes
+    const paymentModes = {};
+    if (document.getElementById('purchasePaymentCash')?.checked) {
+      paymentModes.cash = parseFloat(document.getElementById('purchasePaymentCashAmount')?.value) || 0;
+    }
+    if (document.getElementById('purchasePaymentOnline')?.checked) {
+      paymentModes.online = parseFloat(document.getElementById('purchasePaymentOnlineAmount')?.value) || 0;
+    }
+    if (document.getElementById('purchasePaymentCredit')?.checked) {
+      paymentModes.credit = parseFloat(document.getElementById('purchasePaymentCreditAmount')?.value) || 0;
+    }
+    
+    // 5. Get other info
+    const otherInfo = document.getElementById('purchaseOtherInfo')?.value?.trim() || '';
+    
+    // 6. Prepare data (EXACT SAME FORMAT AS TEST)
+    const data = {
+      action: 'recordPurchase',
+      vendorName: vendorName,
+      products: products,
+      totalAmount: totalAmount,
+      paymentModes: paymentModes,
+      otherInfo: otherInfo,
+      photoBase64: window.purchasePhotoBase64 || ''
+    };
+    
+    console.log('📦 Sending data:', data);
+    
+    // 7. Send request (EXACT SAME AS TEST)
+    const response = await fetch(CONFIG.APPS_SCRIPT_URL, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    
+    console.log('Status:', response.status);
+    
+    const text = await response.text();
+    console.log('Response:', text);
+    
+    const result = JSON.parse(text);
+    console.log('Result:', result);
+    
     if (result.success) {
-      console.log('✅ SUCCESS! Purchase ID:', result.purchaseId);
+      console.log('✅ SUCCESS!', result.purchaseId);
       alert('✅ Purchase recorded successfully!\nPurchase ID: ' + result.purchaseId);
       
       // Close modal
-      if (typeof closeRecordPurchaseModal === 'function') {
-        closeRecordPurchaseModal();
-      } else {
-        const modal = bootstrap.Modal.getInstance(document.getElementById('recordPurchaseModal'));
-        if (modal) modal.hide();
-      }
+      const modal = bootstrap.Modal.getInstance(document.getElementById('recordPurchaseModal'));
+      if (modal) modal.hide();
       
-      // Reload purchases list
+      // Reload purchases
       if (typeof loadRecentPurchases === 'function') {
-        await loadRecentPurchases();
+        loadRecentPurchases();
       }
-      
     } else {
-      console.error('❌ Server error:', result.error);
-      throw new Error(result.error || 'Failed to record purchase');
+      console.log('❌ FAILED:', result.error);
+      alert('❌ Failed: ' + result.error);
     }
     
-  } catch (error) {
-    console.error('❌ FULL ERROR:', error);
-    console.error('Error stack:', error.stack);
-    alert('❌ Failed to record purchase:\n' + error.message);
-  } finally {
-    // Re-enable button
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText || '<i class="bi bi-check"></i> Submit';
-    }
+  } catch (err) {
+    console.log('❌ ERROR:', err);
+    alert('❌ Error: ' + err.message);
   }
 }
 
@@ -11641,6 +11582,31 @@ document.addEventListener('productsUpdated', () => {
   localStorage.setItem('inventoryProducts', JSON.stringify(cachedProducts || []));
 });
 
+// Force attach submit handler when page loads
+window.addEventListener('DOMContentLoaded', function() {
+  console.log('🔧 Attaching purchase submit handler');
+  
+  // Find the submit button
+  const submitBtn = document.querySelector('#recordPurchaseModal button.btn-success');
+  
+  if (submitBtn) {
+    // Remove old onclick
+    submitBtn.onclick = null;
+    
+    // Add new click handler
+    submitBtn.addEventListener('click', function() {
+      console.log('🔘 Button clicked!');
+      submitPurchaseEntry().catch(err => {
+        console.error('Submit error:', err);
+        alert('Error: ' + err.message);
+      });
+    });
+    
+    console.log('✅ Handler attached');
+  } else {
+    console.log('❌ Submit button not found');
+  }
+});
 
     
 
@@ -12356,6 +12322,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
