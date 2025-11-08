@@ -3726,6 +3726,9 @@ function closeRecordPurchaseModal() {
 /**
  * Add product row
  */
+/**
+ * Add product row (MOBILE RESPONSIVE)
+ */
 function addPurchaseProductRow(product = null) {
   purchaseProductRowCounter++;
   const rowId = `purchaseRow${purchaseProductRowCounter}`;
@@ -3735,17 +3738,6 @@ function addPurchaseProductRow(product = null) {
   const rowDiv = document.createElement('div');
   rowDiv.id = rowId;
   rowDiv.className = 'purchase-product-row';
-  rowDiv.style.cssText = `
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 40px;
-    gap: 8px;
-    margin-bottom: 10px;
-    padding: 10px;
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 6px;
-    align-items: center;
-  `;
   
   const productName = product ? (product.size ? `${product.name} (${product.size})` : product.name) : '';
   const qty = product ? product.qty : '';
@@ -3753,24 +3745,141 @@ function addPurchaseProductRow(product = null) {
   const unit = product ? product.unitType : 'Pieces';
   const amount = product ? (product.qty * product.price).toFixed(2) : '0.00';
   
+  // ✅ RESPONSIVE LAYOUT: Desktop = Grid, Mobile = Stacked
   rowDiv.innerHTML = `
-    <input type="text" class="form-control" placeholder="Product name" value="${escapeHtml(productName)}" data-field="name">
-    <input type="number" class="form-control" placeholder="Qty" min="1" value="${qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
-    <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01" value="${rate}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
-    <select class="form-select" data-field="unit">
-      <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pieces</option>
-      <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Boxes</option>
-      <option value="Kg" ${unit === 'Kg' ? 'selected' : ''}>Kg</option>
-      <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>Liters</option>
-    </select>
-    <input type="number" class="form-control" placeholder="Amount" readonly value="${amount}" data-field="amount" style="background: #f0f0f0; font-weight: 600;">
-    <button type="button" class="btn btn-sm btn-danger" onclick="removePurchaseProductRow('${rowId}')" title="Remove">
+    <style>
+      .purchase-product-row {
+        padding: 15px;
+        margin-bottom: 15px;
+        background: white;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        position: relative;
+      }
+      
+      /* Desktop Layout */
+      @media (min-width: 768px) {
+        .purchase-product-row {
+          display: grid;
+          grid-template-columns: 2fr 1fr 1fr 1fr 1fr 40px;
+          gap: 10px;
+          align-items: center;
+        }
+        
+        .purchase-field-label {
+          display: none;
+        }
+      }
+      
+      /* Mobile Layout */
+      @media (max-width: 767px) {
+        .purchase-product-row {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        
+        .purchase-field-label {
+          display: block;
+          font-size: 12px;
+          font-weight: 600;
+          color: #666;
+          margin-bottom: 4px;
+        }
+        
+        .purchase-row-line {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+        }
+        
+        .purchase-row-line.single {
+          grid-template-columns: 1fr;
+        }
+        
+        .purchase-field-wrapper {
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .purchase-remove-btn-mobile {
+          position: absolute;
+          top: 10px;
+          right: 10px;
+          z-index: 10;
+        }
+        
+        .purchase-remove-btn-desktop {
+          display: none !important;
+        }
+      }
+      
+      @media (min-width: 768px) {
+        .purchase-remove-btn-mobile {
+          display: none !important;
+        }
+      }
+    </style>
+    
+    <!-- Mobile Remove Button (Top Right) -->
+    <button type="button" class="btn btn-sm btn-danger purchase-remove-btn-mobile" 
+            onclick="removePurchaseProductRow('${rowId}')" 
+            title="Remove">
+      <i class="bi bi-x"></i>
+    </button>
+    
+    <!-- Line 1: Product Name + Quantity (Mobile) -->
+    <div class="purchase-row-line">
+      <div class="purchase-field-wrapper">
+        <label class="purchase-field-label">Product Name</label>
+        <input type="text" class="form-control" placeholder="Product name" 
+               value="${escapeHtml(productName)}" data-field="name">
+      </div>
+      <div class="purchase-field-wrapper">
+        <label class="purchase-field-label">Quantity</label>
+        <input type="number" class="form-control" placeholder="Qty" min="1" 
+               value="${qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
+      </div>
+    </div>
+    
+    <!-- Line 2: Rate + Unit (Mobile) -->
+    <div class="purchase-row-line">
+      <div class="purchase-field-wrapper">
+        <label class="purchase-field-label">Rate (₹)</label>
+        <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01" 
+               value="${rate}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
+      </div>
+      <div class="purchase-field-wrapper">
+        <label class="purchase-field-label">Unit</label>
+        <select class="form-select" data-field="unit">
+          <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pieces</option>
+          <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Boxes</option>
+          <option value="Kg" ${unit === 'Kg' ? 'selected' : ''}>Kg</option>
+          <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>Liters</option>
+        </select>
+      </div>
+    </div>
+    
+    <!-- Line 3: Amount (Mobile - Full Width) -->
+    <div class="purchase-row-line single">
+      <div class="purchase-field-wrapper">
+        <label class="purchase-field-label">Amount (₹)</label>
+        <input type="number" class="form-control" placeholder="Amount" readonly 
+               value="${amount}" data-field="amount" 
+               style="background: #f0f0f0; font-weight: 600; font-size: 1.1rem; color: #28a745;">
+      </div>
+    </div>
+    
+    <!-- Desktop Remove Button (Right Side) -->
+    <button type="button" class="btn btn-sm btn-danger purchase-remove-btn-desktop" 
+            onclick="removePurchaseProductRow('${rowId}')" 
+            title="Remove">
       <i class="bi bi-x"></i>
     </button>
   `;
   
   container.appendChild(rowDiv);
-  console.log('✅ Added product row:', rowId);
+  console.log('✅ Added responsive product row:', rowId);
 }
 
 /**
@@ -4141,6 +4250,21 @@ function addBulkProductsToPurchase() {
   console.log('✅ Products added successfully!');
 }
 
+/**
+ * Toggle checkmark visibility for payment modes
+ */
+function togglePaymentModeCheckmark(checkbox, checkmarkId) {
+  const checkmark = document.getElementById(checkmarkId);
+  if (checkmark) {
+    if (checkbox.checked) {
+      checkmark.style.display = 'block';
+      console.log('✓ Checkmark shown for', checkmarkId);
+    } else {
+      checkmark.style.display = 'none';
+      console.log('✗ Checkmark hidden for', checkmarkId);
+    }
+  }
+}
 
 
 
@@ -11674,12 +11798,101 @@ document.addEventListener('productsUpdated', () => {
             </div>
           </div>
           
-          <!-- Payment Modes -->
-          <div class="card mb-3">
-            <div class="card-header bg-light">
-              <strong>💳 Mode of Payment</strong>
-            </div>
-            <div class="card-body">
+         <div class="card-body">
+  <div style="display: flex; flex-direction: column; gap: 15px;">
+    
+    <!-- Cash -->
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="position: relative; flex-shrink: 0;">
+        <input type="checkbox" id="purchasePaymentCash" class="payment-mode-checkbox" 
+               onchange="togglePaymentModeCheckmark(this, 'cashCheckmark')"
+               style="
+                 width: 28px;
+                 height: 28px;
+                 cursor: pointer;
+                 accent-color: #28a745;
+               ">
+        <span id="cashCheckmark" class="checkmark-icon" style="
+          display: none;
+          position: absolute;
+          top: 4px;
+          left: 6px;
+          font-size: 20px;
+          color: white;
+          pointer-events: none;
+        ">✓</span>
+      </div>
+      <label for="purchasePaymentCash" style="flex: 0 0 80px; font-weight: 600; cursor: pointer;">Cash</label>
+      <div class="input-group">
+        <span class="input-group-text">₹</span>
+        <input type="number" class="form-control" id="purchasePaymentCashAmount" placeholder="0.00" step="0.01" min="0">
+      </div>
+    </div>
+    
+    <!-- Online -->
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="position: relative; flex-shrink: 0;">
+        <input type="checkbox" id="purchasePaymentOnline" class="payment-mode-checkbox"
+               onchange="togglePaymentModeCheckmark(this, 'onlineCheckmark')"
+               style="
+                 width: 28px;
+                 height: 28px;
+                 cursor: pointer;
+                 accent-color: #28a745;
+               ">
+        <span id="onlineCheckmark" class="checkmark-icon" style="
+          display: none;
+          position: absolute;
+          top: 4px;
+          left: 6px;
+          font-size: 20px;
+          color: white;
+          pointer-events: none;
+        ">✓</span>
+      </div>
+      <label for="purchasePaymentOnline" style="flex: 0 0 80px; font-weight: 600; cursor: pointer;">Online</label>
+      <div class="input-group">
+        <span class="input-group-text">₹</span>
+        <input type="number" class="form-control" id="purchasePaymentOnlineAmount" placeholder="0.00" step="0.01" min="0">
+      </div>
+    </div>
+    
+    <!-- Credit -->
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <div style="position: relative; flex-shrink: 0;">
+        <input type="checkbox" id="purchasePaymentCredit" class="payment-mode-checkbox"
+               onchange="togglePaymentModeCheckmark(this, 'creditCheckmark')"
+               style="
+                 width: 28px;
+                 height: 28px;
+                 cursor: pointer;
+                 accent-color: #28a745;
+               ">
+        <span id="creditCheckmark" class="checkmark-icon" style="
+          display: none;
+          position: absolute;
+          top: 4px;
+          left: 6px;
+          font-size: 20px;
+          color: white;
+          pointer-events: none;
+        ">✓</span>
+      </div>
+      <label for="purchasePaymentCredit" style="flex: 0 0 80px; font-weight: 600; cursor: pointer;">Credit</label>
+      <div class="input-group">
+        <span class="input-group-text">₹</span>
+        <input type="number" class="form-control" id="purchasePaymentCreditAmount" placeholder="0.00" step="0.01" min="0">
+      </div>
+    </div>
+    
+  </div>
+  
+  <!-- Payment Validation Message -->
+  <div id="purchasePaymentValidation" class="mt-2" style="font-size: 0.9rem; color: #dc3545; display: none;">
+    ⚠️ Payment amounts must equal total amount
+  </div>
+</div>
+
               <div style="display: flex; flex-direction: column; gap: 15px;">
                 
                 <!-- Cash -->
@@ -11847,6 +12060,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
