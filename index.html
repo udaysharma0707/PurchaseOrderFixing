@@ -11682,14 +11682,17 @@ document.addEventListener('productsUpdated', () => {
             margin: 2px 0 0 0;
           }
           
-          /* Product rows - NO BORDER */
-          .purchase-product-row {
-            padding: 8px 0;
-            margin-bottom: 8px;
-            background: #f9f9f9;
-            border-radius: 4px;
-            position: relative;
-          }
+      /* Product rows - DARKER GRAY */
+.purchase-product-row {
+  padding: 8px 0;
+  margin-bottom: 10px;
+  background: #e0e0e0;  /* ← Darker gray */
+  border: 1px solid #bdbdbd;  /* ← Dark gray border */
+  border-radius: 5px;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);  /* ← Shadow */
+}
+
           
           /* Mobile: 3 separate lines */
           @media (max-width: 767px) {
@@ -11969,6 +11972,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
