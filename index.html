@@ -4708,25 +4708,35 @@ function openPurchaseCamera() {
 
 /**
  * ==========================================
- * BULK ADD PRODUCTS FOR PURCHASE
+ * BULK ADD PRODUCTS FOR PURCHASE (FIXED)
  * ==========================================
  */
 let selectedBulkProductsPurchase = {};
-    
 
 function openBulkAddModalForPurchase() {
   console.log('📦 Opening Bulk Add Modal for Purchase');
   
-  // Reset
+  // ✅ ALWAYS RESET COMPLETELY
   document.getElementById('bulkSearchInputPurchase').value = '';
   selectedBulkProductsPurchase = {};
   
   // Render products
   renderBulkProductsListPurchase('');
   
+  // ✅ Clear selected items panel
+  const selectedContainer = document.getElementById('bulkSelectedItemsPurchase');
+  if (selectedContainer) {
+    selectedContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No items selected</div>';
+  }
+  
+  // ✅ Reset counters
+  updateBulkCountersPurchase();
+  
   // Show modal
   const modal = new bootstrap.Modal(document.getElementById('bulkAddModalForPurchase'));
   modal.show();
+  
+  console.log('✅ Modal opened with clean state');
 }
 
 function filterBulkProductsPurchase(query) {
@@ -4877,6 +4887,9 @@ function updateBulkCountersPurchase() {
   document.getElementById('bulkTotalQtyPurchase').textContent = totalQty;
 }
 
+/**
+ * ✅ ADD BULK PRODUCTS - MERGE DUPLICATES & AUTO-CLOSE
+ */
 function addBulkProductsToPurchase() {
   const selectedArray = Object.values(selectedBulkProductsPurchase);
   
@@ -4890,59 +4903,98 @@ function addBulkProductsToPurchase() {
   const container = document.getElementById('purchaseProductRows');
   if (!container) return;
   
-  // ✅ PREPEND each product to the TOP (reverse order to maintain array order)
-  selectedArray.reverse().forEach(product => {
-    purchaseProductRowCounter++;
-    const rowId = `purchaseRow${purchaseProductRowCounter}`;
-    
+  // ✅ GET ALL EXISTING ROWS
+  const existingRows = container.querySelectorAll('.purchase-product-row');
+  
+  selectedArray.forEach(product => {
     const productName = product.size ? `${product.name} (${product.size})` : product.name;
-    const qty = product.qty;
-    const rate = product.price;
-    const unit = product.unitType;
-    const amount = (product.qty * product.price).toFixed(2);
+    
+    // ✅ CHECK IF PRODUCT ALREADY EXISTS
+    let existingRow = null;
+    existingRows.forEach(row => {
+      const nameInput = row.querySelector('input[data-field="name"]');
+      if (nameInput && nameInput.value.trim() === productName) {
+        existingRow = row;
+      }
+    });
+    
+    if (existingRow) {
+      // ✅ PRODUCT EXISTS - MERGE QUANTITY
+      const qtyInput = existingRow.querySelector('input[data-field="qty"]');
+      if (qtyInput) {
+        const currentQty = parseFloat(qtyInput.value) || 0;
+        const newQty = currentQty + product.qty;
+        qtyInput.value = newQty;
+        
+        // Trigger amount recalculation
+        const rowId = existingRow.id;
+        if (rowId && typeof calculatePurchaseRowAmount === 'function') {
+          calculatePurchaseRowAmount(rowId);
+        }
+        
+        console.log(`✅ Merged: ${productName} - Updated qty to ${newQty}`);
+      }
+    } else {
+      // ✅ NEW PRODUCT - ADD TO TOP
+      purchaseProductRowCounter++;
+      const rowId = `purchaseRow${purchaseProductRowCounter}`;
+      
+      const rowDiv = document.createElement('div');
+      rowDiv.id = rowId;
+      rowDiv.className = 'purchase-product-row';
 
-    const rowDiv = document.createElement('div');
-    rowDiv.id = rowId;
-    rowDiv.className = 'purchase-product-row';
+      rowDiv.innerHTML = `
+        <input type="text" class="form-control" placeholder="Product name"
+               value="${escapeHtml(productName)}" data-field="name">
+        <input type="number" class="form-control" placeholder="Qty" min="1"
+               value="${product.qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
+        <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
+               value="${product.price}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
+        <select class="form-select" data-field="unit">
+          <option value="Pieces" ${product.unitType === 'Pieces' ? 'selected' : ''}>Pcs</option>
+          <option value="Boxes" ${product.unitType === 'Boxes' ? 'selected' : ''}>Box</option>
+          <option value="Kg" ${product.unitType === 'Kg' ? 'selected' : ''}>Kg</option>
+          <option value="Liters" ${product.unitType === 'Liters' ? 'selected' : ''}>L</option>
+        </select>
+        <input type="number" class="form-control" placeholder="Amount" readonly
+               value="${(product.qty * product.price).toFixed(2)}" data-field="amount"
+               style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
+        <button type="button" class="btn btn-danger purchase-remove-btn"
+            onclick="removePurchaseProductRow('${rowId}')"
+            style="font-size:22px;padding:0;min-width:36px;height:36px;">
+          ×
+        </button>
+      `;
 
-    rowDiv.innerHTML = `
-      <input type="text" class="form-control" placeholder="Product name"
-             value="${escapeHtml(productName)}" data-field="name">
-      <input type="number" class="form-control" placeholder="Qty" min="1"
-             value="${qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
-      <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
-             value="${rate}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
-      <select class="form-select" data-field="unit">
-        <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pcs</option>
-        <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Box</option>
-        <option value="Kg" ${unit === 'Kg' ? 'selected' : ''}>Kg</option>
-        <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>L</option>
-      </select>
-      <input type="number" class="form-control" placeholder="Amount" readonly
-             value="${amount}" data-field="amount"
-             style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
-      <button type="button" class="btn btn-danger purchase-remove-btn"
-          onclick="removePurchaseProductRow('${rowId}')"
-          style="font-size:22px;padding:0;min-width:36px;height:36px;">
-        ×
-      </button>
-    `;
-
-    // Prepend to top
-    container.insertBefore(rowDiv, container.firstChild);
+      container.insertBefore(rowDiv, container.firstChild);
+      console.log(`✅ Added new: ${productName} - Qty ${product.qty}`);
+    }
   });
   
-  // Clear selections
+  // ✅ CLEAR SELECTIONS & CLOSE MODAL
   selectedBulkProductsPurchase = {};
   
-  // Close modal
   const modal = bootstrap.Modal.getInstance(document.getElementById('bulkAddModalForPurchase'));
   if (modal) {
     modal.hide();
   }
   
-  console.log('✅ Products added at the top successfully!');
+  console.log('✅ Products added/merged successfully! Modal closed.');
 }
+
+/**
+ * ✅ HANDLE MODAL CLOSE EVENTS - FORCE RESET
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  const bulkModal = document.getElementById('bulkAddModalForPurchase');
+  if (bulkModal) {
+    bulkModal.addEventListener('hidden.bs.modal', function () {
+      // ✅ Force clear when modal closes by ANY method
+      selectedBulkProductsPurchase = {};
+      console.log('✅ Bulk modal closed - selections cleared');
+    });
+  }
+});
 
 
 /**
@@ -12638,6 +12690,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
