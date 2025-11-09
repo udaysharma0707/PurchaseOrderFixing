@@ -2875,6 +2875,13 @@ textarea:focus {
     display: none !important;
   }
 }
+/* Fix grey bar issue */
+#purchaseProductRows {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+}
+
 
 
 
