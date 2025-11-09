@@ -4010,14 +4010,14 @@ function addPurchaseProductRow(productData = null) {
   `;
   
   row.innerHTML = `
-    <!-- DESKTOP LAYOUT (Horizontal) -->
-    <div class="desktop-product-layout" style="display: none;">
-      <div style="
-        display: grid;
-        grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 40px;
-        gap: 10px;
-        align-items: center;
-      ">
+  <!-- DESKTOP LAYOUT (Horizontal) -->
+<div class="desktop-product-layout" style="display: none;">
+  <div style="
+    display: grid;
+    grid-template-columns: 3fr 1fr 1fr 1.2fr 1.2fr 50px;
+    gap: 10px;
+    align-items: center;
+  ">
         <!-- Product Name -->
         <div>
           <input 
@@ -12633,17 +12633,18 @@ document.addEventListener('DOMContentLoaded', function() {
         <!-- Products -->
         <label class="form-label">📦 Products Purchased</label>
 
-<!-- DESKTOP HEADER (only visible on desktop) -->
-<div class="desktop-header" style="display: none; margin-bottom: 8px; padding: 8px 12px; background: #e9ecef; border-radius: 6px; font-size: 0.85rem; font-weight: 600; color: #495057;">
-  <div style="display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 40px; gap: 10px;">
+<!-- DESKTOP HEADER -->
+<div class="desktop-header" style="display: none; margin-bottom: 10px; padding: 10px 12px; background: #e9ecef; border-radius: 6px; font-size: 0.9rem; font-weight: 600; color: #495057;">
+  <div style="display: grid; grid-template-columns: 3fr 1fr 1fr 1.2fr 1.2fr 50px; gap: 10px;">
     <div>Product Name</div>
     <div>Quantity</div>
     <div>Rate (₹)</div>
     <div>Unit</div>
     <div style="text-align: right;">Amount (₹)</div>
-    <div style="text-align: center;">✕</div>
+    <div></div>
   </div>
 </div>
+
 
 
 
@@ -12776,6 +12777,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
