@@ -3984,62 +3984,107 @@ function closeRecordPurchaseModal() {
 function addPurchaseProductRow(product = null) {
   purchaseProductRowCounter++;
   const rowId = `purchaseRow${purchaseProductRowCounter}`;
-  
+
   const container = document.getElementById('purchaseProductRows');
-  
-  const rowDiv = document.createElement('div');
-  rowDiv.id = rowId;
-  rowDiv.className = 'purchase-product-row';
-  
+
   const productName = product ? (product.size ? `${product.name} (${product.size})` : product.name) : '';
   const qty = product ? product.qty : '';
   const rate = product ? product.price : '';
   const unit = product ? product.unitType : 'Pieces';
   const amount = product ? (product.qty * product.price).toFixed(2) : '0.00';
-  
+
+  const rowDiv = document.createElement('div');
+  rowDiv.id = rowId;
+  rowDiv.className = 'purchase-product-row';
+
   rowDiv.innerHTML = `
-    <!-- LINE 1: Product Name ONLY -->
-    <div class="product-name-line">
-      <label class="purchase-field-label">Product Name</label>
-      <input type="text" class="form-control" placeholder="Product name" 
-             value="${escapeHtml(productName)}" data-field="name">
-    </div>
-    
-    <!-- LINE 2: Qty, Rate, Unit -->
-    <div class="product-details-line">
-      <div>
-        <label class="purchase-field-label">Quantity</label>
-        <input type="number" class="form-control" placeholder="Qty" min="1" 
+    <!-- DESKTOP GRID (auto shown on screen ≥768px) -->
+    <div class="desktop-product-layout" style="display: none;">
+      <div style="
+        display: grid;
+        grid-template-columns: 7fr 2fr 2fr 2.2fr 2.2fr 80px;
+        gap: 16px;
+        align-items: center;
+        width: 100%;
+      ">
+        <input type="text" class="form-control" placeholder="Product name"
+               value="${escapeHtml(productName)}" data-field="name">
+        <input type="number" class="form-control" placeholder="Qty" min="1"
                value="${qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
-      </div>
-      <div>
-        <label class="purchase-field-label">Rate (₹)</label>
-        <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01" 
+        <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
                value="${rate}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
-      </div>
-      <div>
-        <label class="purchase-field-label">Unit</label>
         <select class="form-select" data-field="unit">
           <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pcs</option>
           <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Box</option>
           <option value="Kg" ${unit === 'Kg' ? 'selected' : ''}>Kg</option>
           <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>L</option>
         </select>
+        <input type="number" class="form-control" placeholder="Amount" readonly
+               value="${amount}" data-field="amount"
+               style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
+        <button type="button" class="btn btn-danger purchase-remove-btn"
+            onclick="removePurchaseProductRow('${rowId}')"
+            style="font-size:22px;padding:0;min-width:36px;height:36px;">
+          ×
+        </button>
       </div>
     </div>
-    
-    <!-- LINE 3: Amount -->
-    <div class="product-amount-line">
-      <label class="purchase-field-label">Amount (₹)</label>
-      <input type="number" class="form-control" placeholder="Amount" readonly 
-             value="${amount}" data-field="amount" 
-             style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
+    <!-- MOBILE STACKED LAYOUT (auto shown on screen <768px) -->
+    <div class="mobile-product-layout" style="display: none;">
+      <div class="product-name-line">
+        <label class="purchase-field-label">Product Name</label>
+        <input type="text" class="form-control" placeholder="Product name"
+               value="${escapeHtml(productName)}" data-field="name">
+      </div>
+      <div class="product-details-line">
+        <div>
+          <label class="purchase-field-label">Quantity</label>
+          <input type="number" class="form-control" placeholder="Qty" min="1"
+                 value="${qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
+        </div>
+        <div>
+          <label class="purchase-field-label">Rate (₹)</label>
+          <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
+                 value="${rate}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
+        </div>
+        <div>
+          <label class="purchase-field-label">Unit</label>
+          <select class="form-select" data-field="unit">
+            <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pcs</option>
+            <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Box</option>
+            <option value="Kg" ${unit === 'Kg' ? 'selected' : ''}>Kg</option>
+            <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>L</option>
+          </select>
+        </div>
+      </div>
+      <div class="product-amount-line">
+        <label class="purchase-field-label">Amount (₹)</label>
+        <input type="number" class="form-control" placeholder="Amount" readonly
+               value="${amount}" data-field="amount"
+               style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
+        <button type="button" class="btn btn-danger purchase-remove-btn"
+            onclick="removePurchaseProductRow('${rowId}')"
+            style="position:absolute;top:8px;right:8px;font-size:20px;">
+          ×
+        </button>
+      </div>
     </div>
-    
-    
   `;
-  
+
   container.appendChild(rowDiv);
+
+  // Show proper layout based on screen size
+  function updateRowLayout() {
+    if (window.innerWidth >= 768) {
+      rowDiv.querySelector('.desktop-product-layout').style.display = 'block';
+      rowDiv.querySelector('.mobile-product-layout').style.display = 'none';
+    } else {
+      rowDiv.querySelector('.desktop-product-layout').style.display = 'none';
+      rowDiv.querySelector('.mobile-product-layout').style.display = 'block';
+    }
+  }
+  updateRowLayout();
+  window.addEventListener('resize', updateRowLayout);
 }
 
 /**
@@ -12615,6 +12660,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
