@@ -4023,19 +4023,6 @@ function addPurchaseProductRow(product = null) {
 }
 
 
-  // Show proper layout based on screen size
-  function updateRowLayout() {
-    if (window.innerWidth >= 768) {
-      rowDiv.querySelector('.desktop-product-layout').style.display = 'block';
-      rowDiv.querySelector('.mobile-product-layout').style.display = 'none';
-    } else {
-      rowDiv.querySelector('.desktop-product-layout').style.display = 'none';
-      rowDiv.querySelector('.mobile-product-layout').style.display = 'block';
-    }
-  }
-  updateRowLayout();
-  window.addEventListener('resize', updateRowLayout);
-}
 
 /**
  * Toggle payment section
@@ -12610,6 +12597,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
