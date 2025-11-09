@@ -2808,95 +2808,10 @@ textarea:focus {
 
 /* DESKTOP: Show horizontal layout (min-width: 769px) */
 @media (min-width: 769px) {
-  .desktop-product-layout {
-    display: block !important;
-  }
-  
-  .mobile-product-layout {
-    display: none !important;
-  }
-  
-  /* Add header labels for desktop */
-  #purchaseProductRows::before {
-    content: '';
-    display: block;
-    margin-bottom: 8px;
-    padding: 8px 12px;
-    background: #f0f0f0;
-    border-radius: 6px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: #495057;
-    background-image: 
-      linear-gradient(to right, 
-        transparent 0%, 
-        transparent calc(2fr), 
-        #ddd calc(2fr), 
-        #ddd calc(2fr + 1px)
-      );
-  }
-}
-
-/* MOBILE: Show vertical layout (max-width: 768px) */
-@media (max-width: 768px) {
-  .desktop-product-layout {
-    display: none !important;
-  }
-  
-  .mobile-product-layout {
-    display: block !important;
-  }
-}
-
-/* Purchase product row styling */
-.purchase-product-row {
-  transition: all 0.2s ease;
-}
-
-.purchase-product-row:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* Input field styling */
-.purchase-product-row input[readonly] {
-  background-color: #e9ecef !important;
-  cursor: not-allowed;
-}
-
-/* Show desktop header only on desktop */
-@media (min-width: 769px) {
-  .desktop-header {
-    display: block !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .desktop-header {
-    display: none !important;
-  }
-}
-/* Fix grey bar issue */
-#purchaseProductRows {
-  margin: 0;
-  padding: 0;
-  background: transparent;
-}
-
-/**
- * ==========================================
- * DESKTOP PRODUCT ROW - FORCE FULL WIDTH
- * ==========================================
- */
-
-@media (min-width: 769px) {
-  /* Record Purchase Modal - Make wider */
+  /* Modal width */
   #recordPurchaseModal .modal-dialog {
     max-width: 95% !important;
     width: 95% !important;
-  }
-  
-  #recordPurchaseModal .modal-content {
-    width: 100% !important;
   }
   
   #recordPurchaseModal .modal-body {
@@ -2909,6 +2824,9 @@ textarea:focus {
   #purchaseProductRows {
     width: 100% !important;
     box-sizing: border-box !important;
+    margin: 0;
+    padding: 0;
+    background: transparent;
   }
   
   /* Individual product row */
@@ -2916,16 +2834,20 @@ textarea:focus {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    padding: 12px !important;
+    transition: all 0.2s ease;
+  }
+  
+  .purchase-product-row:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   }
   
   /* Desktop layout wrapper */
   .desktop-product-layout {
-    width: 100% !important;
     display: block !important;
+    width: 100% !important;
   }
   
-  /* Grid container - FORCE NEW LAYOUT */
+  /* ✅ CRITICAL: Grid container with NEW WIDTHS */
   .desktop-product-layout > div {
     display: grid !important;
     grid-template-columns: 3fr 1fr 1fr 1.2fr 1.2fr 50px !important;
@@ -2935,6 +2857,11 @@ textarea:focus {
     box-sizing: border-box !important;
   }
   
+  /* Mobile layout hidden on desktop */
+  .mobile-product-layout {
+    display: none !important;
+  }
+  
   /* Desktop header */
   .desktop-header {
     display: block !important;
@@ -2942,6 +2869,7 @@ textarea:focus {
     box-sizing: border-box !important;
   }
   
+  /* ✅ CRITICAL: Desktop header grid with NEW WIDTHS */
   .desktop-header > div {
     display: grid !important;
     grid-template-columns: 3fr 1fr 1fr 1.2fr 1.2fr 50px !important;
@@ -2949,6 +2877,36 @@ textarea:focus {
     width: 100% !important;
     box-sizing: border-box !important;
   }
+}
+
+/* MOBILE: Show vertical layout (max-width: 768px) */
+@media (max-width: 768px) {
+  .desktop-product-layout {
+    display: none !important;
+  }
+  
+  .mobile-product-layout {
+    display: block !important;
+  }
+  
+  .desktop-header {
+    display: none !important;
+  }
+}
+
+/* Input field styling */
+.purchase-product-row input[readonly] {
+  background-color: #e9ecef !important;
+  cursor: not-allowed;
+}
+
+/* Smooth transitions */
+.purchase-product-row {
+  transition: all 0.2s ease;
+}
+
+.purchase-product-row:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 
