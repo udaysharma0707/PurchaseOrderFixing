@@ -3901,36 +3901,66 @@ async function submitPurchaseEntry() {
 /**
  * Open Record Purchase Modal
  */
+/**
+ * Open Record Purchase Modal (SAFE VERSION)
+ */
 function openRecordPurchaseModal() {
   console.log('📦 Opening Record Purchase Modal');
   
-  // Reset form
-  document.getElementById('purchaseVendorName').value = '';
-  document.getElementById('purchaseTotalAmount').value = '';
-  document.getElementById('purchaseOtherInfo').value = '';
-  document.getElementById('purchaseProductRows').innerHTML = '';
-  
-  // Reset payment modes
-  document.getElementById('purchasePaymentCash').checked = false;
-  document.getElementById('purchasePaymentOnline').checked = false;
-  document.getElementById('purchasePaymentCredit').checked = false;
-  document.getElementById('purchasePaymentCashAmount').value = '';
-  document.getElementById('purchasePaymentOnlineAmount').value = '';
-  document.getElementById('purchasePaymentCreditAmount').value = '';
-  
-  // Reset photo
-  clearPurchasePhoto();
-  
-  // Reset counters
-  purchaseProductRowCounter = 0;
-  
-  // Add one initial row
-  addPurchaseProductRow();
-  
-  // Show modal
-  const modal = new bootstrap.Modal(document.getElementById('recordPurchaseModal'));
-  modal.show();
+  try {
+    // Reset form fields
+    const vendorNameInput = document.getElementById('purchaseVendorName');
+    const totalAmountInput = document.getElementById('purchaseTotalAmount');
+    const otherInfoInput = document.getElementById('purchaseOtherInfo');
+    const productRowsContainer = document.getElementById('purchaseProductRows');
+    
+    if (vendorNameInput) vendorNameInput.value = '';
+    if (totalAmountInput) totalAmountInput.value = '';
+    if (otherInfoInput) otherInfoInput.value = '';
+    if (productRowsContainer) productRowsContainer.innerHTML = '';
+    
+    // Reset payment modes
+    const cashCheckbox = document.getElementById('purchasePaymentCash');
+    const onlineCheckbox = document.getElementById('purchasePaymentOnline');
+    const creditCheckbox = document.getElementById('purchasePaymentCredit');
+    
+    if (cashCheckbox) cashCheckbox.checked = false;
+    if (onlineCheckbox) onlineCheckbox.checked = false;
+    if (creditCheckbox) creditCheckbox.checked = false;
+    
+    const cashAmount = document.getElementById('purchasePaymentCashAmount');
+    const onlineAmount = document.getElementById('purchasePaymentOnlineAmount');
+    const creditAmount = document.getElementById('purchasePaymentCreditAmount');
+    
+    if (cashAmount) cashAmount.value = '';
+    if (onlineAmount) onlineAmount.value = '';
+    if (creditAmount) creditAmount.value = '';
+    
+    // Clear photo (safe)
+    clearPurchasePhoto();
+    
+    // Reset counters
+    window.purchaseProductRowCounter = 0;
+    
+    // Add one initial product row
+    addPurchaseProductRow();
+    
+    // Show modal
+    const modal = document.getElementById('recordPurchaseModal');
+    if (modal) {
+      const bsModal = new bootstrap.Modal(modal);
+      bsModal.show();
+    } else {
+      console.error('❌ Modal element not found: recordPurchaseModal');
+      alert('❌ Error: Modal not found. Please refresh the page.');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error opening modal:', error);
+    alert('❌ Failed to open modal: ' + error.message);
+  }
 }
+
 
 /**
  * Close Record Purchase Modal
@@ -4475,14 +4505,44 @@ function handlePurchasePhotoUpload(input) {
 /**
  * Clear photo
  */
+/**
+ * Clear photo (SAFE VERSION - checks if elements exist)
+ */
 function clearPurchasePhoto() {
-  purchasePhotoBase64 = null;
-  document.getElementById('purchasePhotoInput').value = '';
-  document.getElementById('purchasePhotoImg').style.display = 'none';
-  document.querySelector('#purchasePhotoPreview p').style.display = 'block';
-  document.querySelector('#purchasePhotoPreview i').style.display = 'block';
-  document.getElementById('clearPurchasePhotoBtn').style.display = 'none';
-  console.log('🗑️ Photo cleared');
+  console.log('🗑️ Clearing purchase photo');
+  
+  // Reset photo base64
+  window.purchasePhotoBase64 = null;
+  
+  // Clear file input
+  const photoInput = document.getElementById('purchasePhotoInput');
+  if (photoInput) {
+    photoInput.value = '';
+  }
+  
+  // Hide photo preview image
+  const photoImg = document.getElementById('purchasePhotoImg');
+  if (photoImg) {
+    photoImg.style.display = 'none';
+    photoImg.src = '';
+  }
+  
+  // Show placeholder text
+  const previewDiv = document.getElementById('purchasePhotoPreview');
+  if (previewDiv) {
+    const placeholderP = previewDiv.querySelector('p');
+    const placeholderI = previewDiv.querySelector('i');
+    if (placeholderP) placeholderP.style.display = 'block';
+    if (placeholderI) placeholderI.style.display = 'block';
+  }
+  
+  // Hide clear button
+  const clearBtn = document.getElementById('clearPurchasePhotoBtn');
+  if (clearBtn) {
+    clearBtn.style.display = 'none';
+  }
+  
+  console.log('✅ Photo cleared');
 }
 
 /**
@@ -12407,6 +12467,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
