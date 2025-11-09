@@ -4444,7 +4444,12 @@ function calculatePurchaseRowAmount(rowId) {
   
   amountInput.value = amount.toFixed(2);
 }
-
+/**
+ * Handle photo upload with PREVIEW
+ */
+/**
+ * Handle photo upload with mobile-optimized preview
+ */
 function handlePurchasePhotoUpload(input) {
   const file = input.files[0];
   
@@ -4477,20 +4482,78 @@ function handlePurchasePhotoUpload(input) {
     
     console.log('✅ Photo loaded as base64');
     console.log('   Length:', base64.length);
-    console.log('   Preview:', base64.substring(0, 50));
     
-    // Show preview
-    const preview = document.getElementById('purchasePhotoPreview');
-    if (preview) {
-      preview.src = base64;
-      preview.style.display = 'block';
-    }
-    
-    // Show success message
-    const label = input.nextElementSibling || input.parentElement.querySelector('label');
-    if (label) {
-      label.textContent = '✅ Photo selected: ' + file.name;
-      label.style.color = '#28a745';
+    // ✅ SHOW MOBILE-OPTIMIZED PHOTO PREVIEW
+    const previewContainer = document.getElementById('purchasePhotoPreview');
+    if (previewContainer) {
+      previewContainer.innerHTML = `
+        <div style="position: relative; width: 100%; max-width: 300px;">
+          <img 
+            src="${base64}" 
+            onclick="viewPurchasePhotoPreview(); event.stopPropagation();"
+            style="
+              width: 100%; 
+              height: auto;
+              max-height: 200px; 
+              object-fit: cover; 
+              border-radius: 8px; 
+              box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+              cursor: pointer;
+              transition: transform 0.2s;
+            "
+            onmouseover="this.style.transform='scale(1.02)'"
+            onmouseout="this.style.transform='scale(1)'"
+            title="Click to view full size"
+            alt="Purchase Photo Preview">
+          <div style="
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(220, 53, 69, 0.9);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+          "
+          onclick="clearPurchasePhoto(); event.stopPropagation();"
+          onmouseover="this.style.background='rgba(220, 53, 69, 1)'; this.style.transform='scale(1.1)'"
+          onmouseout="this.style.background='rgba(220, 53, 69, 0.9)'; this.style.transform='scale(1)'"
+          title="Remove photo">
+            ✕
+          </div>
+        </div>
+        <div style="
+          margin-top: 10px; 
+          color: #28a745; 
+          font-size: 0.85rem; 
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 6px;
+        ">
+          <i class="bi bi-check-circle-fill"></i>
+          <span>${file.name}</span>
+        </div>
+      `;
+      
+      previewContainer.style.border = '2px solid #28a745';
+      previewContainer.style.background = '#f0f9f4';
+      previewContainer.style.padding = '15px';
+      
+      // Show remove button (optional, since we have X button)
+      const removeBtn = document.getElementById('clearPurchasePhotoBtn');
+      if (removeBtn) {
+        removeBtn.style.display = 'inline-block';
+      }
     }
   };
   
@@ -4502,48 +4565,156 @@ function handlePurchasePhotoUpload(input) {
   reader.readAsDataURL(file);
 }
 
+
+/**
+ * View purchase photo preview in lightbox
+ */
+/**
+ * View purchase photo preview in full screen (Mobile-Optimized)
+ */
+function viewPurchasePhotoPreview() {
+  if (!window.purchasePhotoBase64) {
+    alert('❌ No photo available');
+    return;
+  }
+  
+  // Create full-screen overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  `;
+  
+  // Header
+  const header = document.createElement('div');
+  header.style.cssText = `
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    padding: 15px 20px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  `;
+  header.innerHTML = '<i class="bi bi-camera"></i> Photo Preview';
+  overlay.appendChild(header);
+  
+  // Image
+  const img = document.createElement('img');
+  img.src = window.purchasePhotoBase64;
+  img.style.cssText = `
+    max-width: 95%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    margin-top: 60px;
+  `;
+  overlay.appendChild(img);
+  
+  // Close button
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    position: absolute;
+    top: 70px;
+    right: 15px;
+    background: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    font-size: 1.6rem;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    z-index: 100000;
+    transition: transform 0.2s;
+  `;
+  closeBtn.onmouseover = () => closeBtn.style.transform = 'scale(1.1)';
+  closeBtn.onmouseout = () => closeBtn.style.transform = 'scale(1)';
+  closeBtn.onclick = () => document.body.removeChild(overlay);
+  overlay.appendChild(closeBtn);
+  
+  // Close on background click
+  overlay.onclick = (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  };
+  
+  // Add to body
+  document.body.appendChild(overlay);
+  
+  console.log('📸 Opened photo preview');
+}
+
+
+
+    
 /**
  * Clear photo
  */
 /**
  * Clear photo (SAFE VERSION - checks if elements exist)
+/**
+ * Clear photo and reset preview area
+ */
+/**
+ * Clear photo and reset preview (Mobile-Optimized)
  */
 function clearPurchasePhoto() {
   console.log('🗑️ Clearing purchase photo');
   
-  // Reset photo base64
-  window.purchasePhotoBase64 = null;
-  
-  // Clear file input
-  const photoInput = document.getElementById('purchasePhotoInput');
-  if (photoInput) {
-    photoInput.value = '';
+  try {
+    // Reset photo base64
+    window.purchasePhotoBase64 = null;
+    
+    // Clear file input
+    const photoInput = document.getElementById('purchasePhotoInput');
+    if (photoInput) {
+      photoInput.value = '';
+    }
+    
+    // Reset preview container to original state
+    const previewContainer = document.getElementById('purchasePhotoPreview');
+    if (previewContainer) {
+      previewContainer.innerHTML = `
+        <i class="bi bi-camera" style="font-size: 2rem; color: #999;"></i>
+        <p style="color: #999; margin: 8px 0 0 0; font-size: 0.9rem;">Tap or paste photo</p>
+      `;
+      
+      previewContainer.style.border = '2px dashed #ccc';
+      previewContainer.style.background = '#f8f9fa';
+      previewContainer.style.padding = '20px';
+      previewContainer.onclick = () => triggerPhotoInput();
+    }
+    
+    // Hide remove button
+    const removeBtn = document.getElementById('clearPurchasePhotoBtn');
+    if (removeBtn) {
+      removeBtn.style.display = 'none';
+    }
+    
+    console.log('✅ Photo cleared');
+  } catch (e) {
+    console.log('⚠️ Error clearing photo:', e.message);
   }
-  
-  // Hide photo preview image
-  const photoImg = document.getElementById('purchasePhotoImg');
-  if (photoImg) {
-    photoImg.style.display = 'none';
-    photoImg.src = '';
-  }
-  
-  // Show placeholder text
-  const previewDiv = document.getElementById('purchasePhotoPreview');
-  if (previewDiv) {
-    const placeholderP = previewDiv.querySelector('p');
-    const placeholderI = previewDiv.querySelector('i');
-    if (placeholderP) placeholderP.style.display = 'block';
-    if (placeholderI) placeholderI.style.display = 'block';
-  }
-  
-  // Hide clear button
-  const clearBtn = document.getElementById('clearPurchasePhotoBtn');
-  if (clearBtn) {
-    clearBtn.style.display = 'none';
-  }
-  
-  console.log('✅ Photo cleared');
 }
+
 
 /**
  * Open camera
@@ -12276,27 +12447,40 @@ window.addEventListener('DOMContentLoaded', function() {
           }
         </style>
         
-        <!-- Photo -->
-        <label class="form-label">📷 Photo (Optional)</label>
-        <div id="purchasePhotoPreview" onclick="triggerPhotoInput()">
-          <i class="bi bi-camera"></i>
-          <p>Tap or paste photo</p>
-          <img id="purchasePhotoImg" style="display: none; max-width: 100%; max-height: 70px; border-radius: 3px; margin-top: 4px;" />
-        </div>
-        <input type="file" id="purchasePhotoInput" accept="image/*" style="display: none;" onchange="handlePurchasePhotoUpload(this)">
-        <div style="margin-top: 3px; display: flex; gap: 4px;">
-          
-          <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearPurchasePhoto()" id="clearPurchasePhotoBtn" style="display: none;">
-            <i class="bi bi-x"></i> Remove
-          </button>
-        </div>
-        
-        <div class="section-gap"></div>
-        
-        <!-- Vendor -->
-        <label class="form-label">🏢 Vendor Name</label>
-        <input type="text" class="form-control" id="purchaseVendorName" placeholder="Vendor name">
-        
+      <!-- Photo -->
+<label class="form-label">📷 Photo (Optional)</label>
+<div id="purchasePhotoPreview" onclick="triggerPhotoInput()" style="
+  border: 2px dashed #ccc;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 8px;
+  background: #f8f9fa;
+  transition: all 0.2s;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+">
+  <i class="bi bi-camera" style="font-size: 2rem; color: #999;"></i>
+  <p style="color: #999; margin: 8px 0 0 0; font-size: 0.9rem;">Tap or paste photo</p>
+</div>
+
+<input type="file" id="purchasePhotoInput" accept="image/*" style="display: none;" onchange="handlePurchasePhotoUpload(this)">
+
+<div style="margin-top: 8px; display: flex; gap: 8px;">
+  <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearPurchasePhoto()" id="clearPurchasePhotoBtn" style="display: none;">
+    <i class="bi bi-x"></i> Remove
+  </button>
+</div>
+
+<div class="section-gap"></div>
+
+<!-- Vendor -->
+<label class="form-label">🏢 Vendor Name</label>
+<input type="text" class="form-control" id="purchaseVendorName" placeholder="Vendor name">
+
         <div class="section-gap"></div>
         
         <!-- Products -->
@@ -12467,6 +12651,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
