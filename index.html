@@ -7269,7 +7269,7 @@ function deleteSaleRow(rowIndex) {
 
   /**
  * ==========================================
- * INVOICE GENERATOR (UPDATED - NO PRODUCT REQUIRED)
+ * INVOICE GENERATOR 
  * ==========================================
  */
 
@@ -7469,22 +7469,29 @@ function updateInvoiceRowTotal(rowIndex) {
 /**
  * Delete invoice row and recalculate totals
  */
+/**
+ * Delete invoice row and recalculate totals (FIXED)
+ */
 function deleteInvoiceRow(rowIndex) {
   console.log('🗑️ Deleting row', rowIndex);
   
-  // Find and remove the row
   const tbody = document.getElementById('invoiceItemsBody');
   if (!tbody) return;
   
   const rows = tbody.querySelectorAll('tr');
-  if (rowIndex < rows.length) {
-    rows[rowIndex].remove();
-    console.log('✅ Row', rowIndex, 'deleted');
-  }
+  
+  // Find and remove the row with matching data-index
+  rows.forEach(row => {
+    if (parseInt(row.getAttribute('data-index')) === rowIndex) {
+      row.remove();
+      console.log('✅ Row', rowIndex, 'deleted');
+    }
+  });
   
   // Recalculate totals
   calculateInvoiceTotal();
 }
+
 
 
 /**
@@ -8010,6 +8017,9 @@ function updateBulkCounters() {
 /**
  * Add all selected products to invoice
  */
+/**
+ * ✅ Add all selected products to invoice (PURCHASE-STYLE GRID LAYOUT)
+ */
 function addBulkProductsToInvoice() {
   const selectedArray = Object.values(selectedBulkProducts);
   
@@ -8026,55 +8036,80 @@ function addBulkProductsToInvoice() {
     return;
   }
   
-  // Add each product as a new row
-  selectedArray.forEach((product, index) => {
-    // Get current number of rows
-    const rowIndex = tbody.querySelectorAll('tr').length;
+  // ✅ GET ALL EXISTING ROWS
+  const existingRows = tbody.querySelectorAll('tr');
+  
+  selectedArray.forEach(product => {
+    const productName = product.size ? `${product.name} (${product.size})` : product.name;
     
-    // Create new row element
-    const tr = document.createElement('tr');
-    tr.setAttribute('data-index', rowIndex);
+    // ✅ CHECK IF PRODUCT ALREADY EXISTS
+    let existingRow = null;
+    existingRows.forEach(row => {
+      const nameInput = row.querySelector('input[type="text"]');
+      if (nameInput && nameInput.value.trim() === productName) {
+        existingRow = row;
+      }
+    });
     
-    const displayName = product.size ? `${product.name} (${product.size})` : product.name;
-    
-    // ✅ Build row HTML (matching your existing table structure)
-    tr.innerHTML = `
-      <td>
-        <input type="text" class="form-control form-control-sm" 
-               id="invoiceProduct-${rowIndex}"
-               value="${escapeHtml(displayName)}" 
-               placeholder="Enter product name"
-               style="padding: 8px; font-size: 0.9rem;">
-      </td>
-      <td>
-        <input type="number" class="form-control form-control-sm text-center" 
-               id="invoiceQty-${rowIndex}"
-               value="${product.qty}" min="1" placeholder="1"
-               style="font-size: 0.9rem;"
-               oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();">
-      </td>
-      <td>
-        <input type="number" class="form-control form-control-sm text-end" 
-               id="invoiceRate-${rowIndex}"
-               value="${product.price}" min="0" step="0.01" placeholder="0.00"
-               style="font-size: 0.9rem;"
-               oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();">
-      </td>
-      <td class="text-end fw-bold" style="width: 120px; font-size: 0.9rem;">
-        <span id="invoiceRowTotal-${rowIndex}">₹${(product.qty * product.price).toFixed(2)}</span>
-      </td>
-      <td class="text-center">
-        <button type="button" class="btn btn-sm btn-link text-danger" 
-                onclick="deleteInvoiceRow(${rowIndex})"
-                style="padding: 2px 6px;">
-          ✕
-        </button>
-      </td>
-    `;
-    
-    tbody.appendChild(tr);
-    
-    console.log('✅ Added row', rowIndex, ':', displayName, 'x' + product.qty);
+    if (existingRow) {
+      // ✅ PRODUCT EXISTS - MERGE QUANTITY
+      const inputs = existingRow.querySelectorAll('input[type="number"]');
+      if (inputs.length >= 2) {
+        const qtyInput = inputs[0]; // First number input is quantity
+        const currentQty = parseFloat(qtyInput.value) || 0;
+        const newQty = currentQty + product.qty;
+        qtyInput.value = newQty;
+        
+        // Trigger amount recalculation
+        calculateInvoiceTotal();
+        
+        console.log(`✅ Merged: ${productName} - Updated qty to ${newQty}`);
+      }
+    } else {
+      // ✅ NEW PRODUCT - ADD TO TOP (PURCHASE-STYLE)
+      const rowIndex = existingRows.length;
+      
+      const tr = document.createElement('tr');
+      tr.setAttribute('data-index', rowIndex);
+      
+      tr.innerHTML = `
+        <td>
+          <input type="text" class="form-control form-control-sm" 
+                 id="invoiceProduct-${rowIndex}"
+                 value="${escapeHtml(productName)}" 
+                 placeholder="Enter product name"
+                 style="padding: 8px; font-size: 0.9rem;">
+        </td>
+        <td>
+          <input type="number" class="form-control form-control-sm text-center" 
+                 id="invoiceQty-${rowIndex}"
+                 value="${product.qty}" min="1" placeholder="1"
+                 style="font-size: 0.9rem;"
+                 oninput="calculateInvoiceTotal();">
+        </td>
+        <td>
+          <input type="number" class="form-control form-control-sm text-end" 
+                 id="invoiceRate-${rowIndex}"
+                 value="${product.price}" min="0" step="0.01" placeholder="0.00"
+                 style="font-size: 0.9rem;"
+                 oninput="calculateInvoiceTotal();">
+        </td>
+        <td class="text-end fw-bold" style="width: 120px; font-size: 0.9rem;">
+          <span id="invoiceRowTotal-${rowIndex}">₹${(product.qty * product.price).toFixed(2)}</span>
+        </td>
+        <td class="text-center">
+          <button type="button" class="btn btn-sm btn-link text-danger" 
+                  onclick="deleteInvoiceRow(${rowIndex})"
+                  style="padding: 2px 6px;">
+            ✕
+          </button>
+        </td>
+      `;
+      
+      // Prepend to top (like Purchase)
+      tbody.insertBefore(tr, tbody.firstChild);
+      console.log(`✅ Added new: ${productName} - Qty ${product.qty}`);
+    }
   });
   
   // ✅ Calculate totals AFTER all rows added
@@ -8092,7 +8127,7 @@ function addBulkProductsToInvoice() {
     modal.hide();
   }
   
-  console.log('✅ All', selectedArray.length, 'products added successfully!');
+  console.log('✅ All', selectedArray.length, 'products added/merged successfully!');
 }
 
 
@@ -12858,6 +12893,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
