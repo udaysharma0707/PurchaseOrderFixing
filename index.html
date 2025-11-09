@@ -4887,16 +4887,49 @@ function addBulkProductsToPurchase() {
   
   console.log('📦 Adding', selectedArray.length, 'products to purchase');
   
-  // ✅ CLEAR ALL EXISTING ROWS FIRST
   const container = document.getElementById('purchaseProductRows');
-  if (container) {
-    container.innerHTML = ''; // Clear all existing rows
-    purchaseProductRowCounter = 0; // Reset counter
-  }
+  if (!container) return;
   
-  // Add each product as a row (starting from row 1)
-  selectedArray.forEach(product => {
-    addPurchaseProductRow(product);
+  // ✅ PREPEND each product to the TOP (reverse order to maintain array order)
+  selectedArray.reverse().forEach(product => {
+    purchaseProductRowCounter++;
+    const rowId = `purchaseRow${purchaseProductRowCounter}`;
+    
+    const productName = product.size ? `${product.name} (${product.size})` : product.name;
+    const qty = product.qty;
+    const rate = product.price;
+    const unit = product.unitType;
+    const amount = (product.qty * product.price).toFixed(2);
+
+    const rowDiv = document.createElement('div');
+    rowDiv.id = rowId;
+    rowDiv.className = 'purchase-product-row';
+
+    rowDiv.innerHTML = `
+      <input type="text" class="form-control" placeholder="Product name"
+             value="${escapeHtml(productName)}" data-field="name">
+      <input type="number" class="form-control" placeholder="Qty" min="1"
+             value="${qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
+      <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
+             value="${rate}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
+      <select class="form-select" data-field="unit">
+        <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pcs</option>
+        <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Box</option>
+        <option value="Kg" ${unit === 'Kg' ? 'selected' : ''}>Kg</option>
+        <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>L</option>
+      </select>
+      <input type="number" class="form-control" placeholder="Amount" readonly
+             value="${amount}" data-field="amount"
+             style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
+      <button type="button" class="btn btn-danger purchase-remove-btn"
+          onclick="removePurchaseProductRow('${rowId}')"
+          style="font-size:22px;padding:0;min-width:36px;height:36px;">
+        ×
+      </button>
+    `;
+
+    // Prepend to top
+    container.insertBefore(rowDiv, container.firstChild);
   });
   
   // Clear selections
@@ -4908,8 +4941,9 @@ function addBulkProductsToPurchase() {
     modal.hide();
   }
   
-  console.log('✅ Products added successfully from row 1!');
+  console.log('✅ Products added at the top successfully!');
 }
+
 
 /**
  * Toggle checkmark visibility for payment modes
@@ -12604,6 +12638,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
