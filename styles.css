@@ -2908,6 +2908,33 @@ textarea:focus {
 .purchase-product-row:hover {
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
+@media (min-width: 769px) {
+  #recordPurchaseModal .modal-dialog {
+    max-width: 1200px !important;   /* You can try 1100px, 1200px, or even up to 1400px */
+    width: 100% !important;
+    margin: 1.75rem auto !important;
+  }
+  #recordPurchaseModal .modal-content {
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+  #recordPurchaseModal .modal-body {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 20px !important;
+    box-sizing: border-box !important;
+  }
+  /* For product rows alignment */
+  #purchaseProductRows,
+  .purchase-product-row,
+  .desktop-product-layout,
+  .desktop-product-layout > div {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+}
+
 
 
 
