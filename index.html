@@ -4887,7 +4887,14 @@ function addBulkProductsToPurchase() {
   
   console.log('📦 Adding', selectedArray.length, 'products to purchase');
   
-  // Add each product as a row
+  // ✅ CLEAR ALL EXISTING ROWS FIRST
+  const container = document.getElementById('purchaseProductRows');
+  if (container) {
+    container.innerHTML = ''; // Clear all existing rows
+    purchaseProductRowCounter = 0; // Reset counter
+  }
+  
+  // Add each product as a row (starting from row 1)
   selectedArray.forEach(product => {
     addPurchaseProductRow(product);
   });
@@ -4901,7 +4908,7 @@ function addBulkProductsToPurchase() {
     modal.hide();
   }
   
-  console.log('✅ Products added successfully!');
+  console.log('✅ Products added successfully from row 1!');
 }
 
 /**
@@ -12597,6 +12604,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
