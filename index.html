@@ -3719,7 +3719,7 @@ const CONFIG = {
 // Global variables
 let purchasePhotoBase64 = null;
 let purchaseProductRowCounter = 0;
-let selectedBulkProductsPurchase = {};
+
 
 async function submitPurchaseEntry() {
   console.log('📤 submitPurchaseEntry called from popup button');
@@ -4732,6 +4732,8 @@ function openPurchaseCamera() {
  * BULK ADD PRODUCTS FOR PURCHASE
  * ==========================================
  */
+let selectedBulkProductsPurchase = {};
+    
 
 function openBulkAddModalForPurchase() {
   console.log('📦 Opening Bulk Add Modal for Purchase');
@@ -12579,7 +12581,7 @@ window.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 
-<!-- BULK MODAL (UNCHANGED) -->
+<!-- BULK MODAL -->
 <div class="modal fade" id="bulkAddModalForPurchase" tabindex="-1" backdrop="static">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
@@ -12651,6 +12653,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
