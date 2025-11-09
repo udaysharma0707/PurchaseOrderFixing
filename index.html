@@ -11890,42 +11890,6 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('✅ Share Invoice dropdown initialized');
 });
 
-// ✅ EXPOSE PRODUCTS FOR OTHER PAGES
-window.cachedProducts = cachedProducts || [];
-localStorage.setItem('inventoryProducts', JSON.stringify(cachedProducts || []));
-
-// Update whenever products change
-document.addEventListener('productsUpdated', () => {
-  window.cachedProducts = cachedProducts || [];
-  localStorage.setItem('inventoryProducts', JSON.stringify(cachedProducts || []));
-});
-
-// Force attach submit handler when page loads
-window.addEventListener('DOMContentLoaded', function() {
-  console.log('🔧 Attaching purchase submit handler');
-  
-  // Find the submit button
-  const submitBtn = document.querySelector('#recordPurchaseModal button.btn-success');
-  
-  if (submitBtn) {
-    // Remove old onclick
-    submitBtn.onclick = null;
-    
-    // Add new click handler
-    submitBtn.addEventListener('click', function() {
-      console.log('🔘 Button clicked!');
-      submitPurchaseEntry().catch(err => {
-        console.error('Submit error:', err);
-        alert('Error: ' + err.message);
-      });
-    });
-    
-    console.log('✅ Handler attached');
-  } else {
-    console.log('❌ Submit button not found');
-  }
-});
-
     
 
     
@@ -12666,6 +12630,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
