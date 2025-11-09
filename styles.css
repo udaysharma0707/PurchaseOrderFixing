@@ -2748,50 +2748,55 @@ textarea:focus {
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-/* Lightbox modal styling */
-#photoLightboxModal .modal-content {
+/* Purchase photo lightbox modal */
+#purchasePhotoLightboxModal .modal-content {
   background: transparent;
   border: none;
 }
 
-#photoLightboxModal .modal-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+#purchasePhotoLightboxModal .modal-header {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
   border: none;
   color: white;
   border-radius: 8px 8px 0 0;
 }
 
-#photoLightboxModal .modal-body {
+#purchasePhotoLightboxModal .modal-body {
   background: #ffffff;
-  padding: 0;
-  border-radius: 0 0 8px 8px;
+  padding: 20px;
 }
 
-#photoLightboxModal img {
+#purchasePhotoLightboxModal .modal-footer {
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
   border-radius: 0 0 8px 8px;
-  max-height: 70vh;
+  padding: 15px 20px;
+}
+
+#purchasePhotoLightboxModal img {
+  border-radius: 8px;
+  max-height: 65vh;
   width: 100%;
   object-fit: contain;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-  .purchase-photo-thumbnail {
-    width: 60px;
-    height: 60px;
+  #purchasePhotoLightboxModal img {
+    max-height: 50vh;
   }
   
-  #photoLightboxModal .modal-lg {
+  #purchasePhotoLightboxModal .modal-lg {
     max-width: 95%;
-  }
-  
-  #photoLightboxModal img {
-    max-height: 60vh;
+    margin: 10px;
   }
 }
 
 
+
     
+
 
 
 
