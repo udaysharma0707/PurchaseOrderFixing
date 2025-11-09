@@ -3984,6 +3984,9 @@ function closeRecordPurchaseModal() {
 /**
  * Add purchase product row (DESKTOP HORIZONTAL + MOBILE VERTICAL)
  */
+/**
+ * Add purchase product row (UPDATED WIDTHS)
+ */
 function addPurchaseProductRow(productData = null) {
   const container = document.getElementById('purchaseProductRows');
   if (!container) return;
@@ -3995,14 +3998,13 @@ function addPurchaseProductRow(productData = null) {
   const price = productData ? productData.price : 0;
   const unitType = productData ? productData.unitType : 'Pieces';
   
-  // Calculate amount
   const amount = qty * price;
   
   const row = document.createElement('div');
   row.id = rowId;
   row.className = 'purchase-product-row';
   row.style.cssText = `
-    margin-bottom: 12px;
+    margin-bottom: 10px;
     padding: 12px;
     background: #f8f9fa;
     border-radius: 8px;
@@ -4010,14 +4012,14 @@ function addPurchaseProductRow(productData = null) {
   `;
   
   row.innerHTML = `
-  <!-- DESKTOP LAYOUT (Horizontal) -->
-<div class="desktop-product-layout" style="display: none;">
-  <div style="
-    display: grid;
-    grid-template-columns: 3fr 1fr 1fr 1.2fr 1.2fr 50px;
-    gap: 10px;
-    align-items: center;
-  ">
+    <!-- DESKTOP LAYOUT (Horizontal) - UPDATED WIDTHS -->
+    <div class="desktop-product-layout" style="display: none;">
+      <div style="
+        display: grid;
+        grid-template-columns: 3fr 1fr 1fr 1.2fr 1.2fr 50px;
+        gap: 10px;
+        align-items: center;
+      ">
         <!-- Product Name -->
         <div>
           <input 
@@ -4056,7 +4058,7 @@ function addPurchaseProductRow(productData = null) {
         <!-- Unit -->
         <div>
           <select class="form-select form-select-sm unit-select">
-            <option value="Pieces" ${unitType === 'Pieces' ? 'selected' : ''}>Pcs</option>
+            <option value="Pieces" ${unitType === 'Pieces' ? 'selected' : ''}>Pieces</option>
             <option value="Box" ${unitType === 'Box' ? 'selected' : ''}>Box</option>
             <option value="Carton" ${unitType === 'Carton' ? 'selected' : ''}>Carton</option>
             <option value="Kg" ${unitType === 'Kg' ? 'selected' : ''}>Kg</option>
@@ -4082,13 +4084,15 @@ function addPurchaseProductRow(productData = null) {
             class="btn btn-sm btn-danger" 
             onclick="removePurchaseProductRow('${rowId}')"
             style="
-              width: 32px;
-              height: 32px;
+              width: 36px;
+              height: 36px;
               padding: 0;
               display: flex;
               align-items: center;
               justify-content: center;
               border-radius: 50%;
+              font-size: 1.2rem;
+              font-weight: bold;
             "
             title="Remove">
             ✕
@@ -4175,6 +4179,35 @@ function addPurchaseProductRow(productData = null) {
   console.log('✅ Added product row:', rowId);
 }
 
+
+/**
+ * Update purchase row amount
+ */
+function updatePurchaseRowAmount(rowId) {
+  const row = document.getElementById(rowId);
+  if (!row) return;
+  
+  const qtyInput = row.querySelector('.quantity-input');
+  const rateInput = row.querySelector('.rate-input');
+  const amountDisplays = row.querySelectorAll('.amount-display');
+  
+  if (qtyInput && rateInput && amountDisplays.length > 0) {
+    const qty = parseFloat(qtyInput.value) || 0;
+    const rate = parseFloat(rateInput.value) || 0;
+    const amount = qty * rate;
+    
+    // Update all amount displays (desktop and mobile)
+    amountDisplays.forEach(display => {
+      display.value = amount.toFixed(2);
+    });
+    
+    console.log('✅ Updated amount for', rowId, ':', amount.toFixed(2));
+  }
+}
+
+
+
+    
 /**
  * Toggle payment section
  */
@@ -12777,6 +12810,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
