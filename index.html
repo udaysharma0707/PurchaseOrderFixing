@@ -12303,166 +12303,154 @@ document.addEventListener('DOMContentLoaded', function() {
       <!-- Body -->
       <div class="modal-body" style="background: #fff; padding: 10px; overflow-y: auto;">
         
-        <!-- Styles -->
-        <style>
-          #recordPurchaseModal .form-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #333;
-            margin: 0 0 3px 0;
-            display: block;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-          }
-          
-          #recordPurchaseModal .form-control,
-          #recordPurchaseModal .form-select {
-            font-size: 14px;
-            padding: 5px 8px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            height: 32px;
-          }
-          
-          #recordPurchaseModal .form-control:focus,
-          #recordPurchaseModal .form-select:focus {
-            border-color: #28a745;
-            box-shadow: 0 0 0 0.15rem rgba(40, 167, 69, 0.2);
-            outline: none;
-          }
-          
-          #recordPurchaseModal .btn-sm {
-            font-size: 12px;
-            padding: 4px 10px;
-            height: 28px;
-          }
-          
-          #recordPurchaseModal .section-gap {
-            height: 8px;
-          }
-          
-          /* Photo upload */
-          #purchasePhotoPreview {
-            border: 1.5px dashed #ccc;
-            border-radius: 4px;
-            padding: 6px;
-            text-align: center;
-            background: #fafafa;
-            cursor: pointer;
-            min-height: 50px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-          }
-          
-          #purchasePhotoPreview i {
-            font-size: 1.5rem;
-            color: #999;
-          }
-          
-          #purchasePhotoPreview p {
-            font-size: 10px;
-            color: #666;
-            margin: 2px 0 0 0;
-          }
-          
-      /* Product rows - DARKER GRAY */
-.purchase-product-row {
-  padding: 8px 0;
-  margin-bottom: 10px;
-  background: #e0e0e0;  /* ← Darker gray */
-  border: 1px solid #bdbdbd;  /* ← Dark gray border */
-  border-radius: 5px;
-  position: relative;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);  /* ← Shadow */
-}
+     <!-- Styles -->
+<style>
+  #recordPurchaseModal .form-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 3px 0;
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  #recordPurchaseModal .form-control,
+  #recordPurchaseModal .form-select {
+    font-size: 14px;
+    padding: 5px 8px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    height: 32px;
+  }
+  #recordPurchaseModal .form-control:focus,
+  #recordPurchaseModal .form-select:focus {
+    border-color: #28a745;
+    box-shadow: 0 0 0 0.15rem rgba(40, 167, 69, 0.2);
+    outline: none;
+  }
+  #recordPurchaseModal .btn-sm {
+    font-size: 12px;
+    padding: 4px 10px;
+    height: 28px;
+  }
+  #recordPurchaseModal .section-gap {
+    height: 8px;
+  }
+  #purchasePhotoPreview {
+    border: 1.5px dashed #ccc;
+    border-radius: 4px;
+    padding: 6px;
+    text-align: center;
+    background: #fafafa;
+    cursor: pointer;
+    min-height: 50px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  #purchasePhotoPreview i {
+    font-size: 1.5rem;
+    color: #999;
+  }
+  #purchasePhotoPreview p {
+    font-size: 10px;
+    color: #666;
+    margin: 2px 0 0 0;
+  }
+  /* Product rows - DARKER GRAY */
+  .purchase-product-row {
+    padding: 8px 0;
+    margin-bottom: 10px;
+    background: #e0e0e0;
+    border: 1px solid #bdbdbd;
+    border-radius: 5px;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  /* Mobile: 3 separate lines */
+  @media (max-width: 767px) {
+    .purchase-product-row {
+      display: block;
+      padding: 8px;
+    }
+    .product-name-line { margin-bottom: 6px; }
+    .product-details-line {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+    .product-amount-line { display: block; }
+    .purchase-field-label {
+      font-size: 9px; font-weight: 600; color: #666; margin-bottom: 2px; text-transform: uppercase;
+    }
+    .purchase-remove-btn {
+      position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; padding: 0; font-size: 14px; border-radius: 3px;
+    }
+  }
+  /* Desktop - FORCE WIDE GRID & CONTAINER */
+  @media (min-width: 768px) {
+    #recordPurchaseModal .modal-dialog {
+      max-width: 1400px !important;
+      min-width: 900px !important;
+      width: 95vw !important;
+      margin: 1.75rem auto !important;
+    }
+    #recordPurchaseModal .modal-content,
+    #recordPurchaseModal .modal-body {
+      width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+      padding: 16px 30px !important;
+    }
+    .purchase-product-row {
+      display: grid;
+      grid-template-columns: 7fr 2fr 2fr 2.2fr 2.2fr 80px;
+      gap: 16px;
+      align-items: center;
+      padding: 10px 12px;
+      width: 100% !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    .purchase-field-label { display: none; }
+    .product-name-line,
+    .product-details-line,
+    .product-amount-line { display: contents; }
+    /* All product row inputs full width */
+    .purchase-product-row input,
+    .purchase-product-row select {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: none !important;
+    }
+    /* Product grid container and parent always full width */
+    #purchaseProductRows,
+    .desktop-product-layout,
+    .desktop-product-layout > div {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      box-sizing: border-box !important;
+    }
+    /* Desktop header columns - match exactly */
+    .desktop-header > div {
+      display: grid !important;
+      grid-template-columns: 7fr 2fr 2fr 2.2fr 2.2fr 80px !important;
+      gap: 16px !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+    }
+  }
+  /* Payment hidden by default */
+  #paymentSection { display: none; }
+  #paymentSection.show { display: block; }
+  .payment-toggle {
+    font-size: 12px; color: #28a745; cursor: pointer; text-decoration: underline; margin-top: 4px; display: inline-block;
+  }
+</style>
 
-          
-          /* Mobile: 3 separate lines */
-          @media (max-width: 767px) {
-            .purchase-product-row {
-              display: block;
-              padding: 8px;
-            }
-            
-            /* Line 1: Product Name ONLY */
-            .product-name-line {
-              margin-bottom: 6px;
-            }
-            
-            /* Line 2: Qty, Rate, Unit */
-            .product-details-line {
-              display: grid;
-              grid-template-columns: 1fr 1fr 1fr;
-              gap: 6px;
-              margin-bottom: 6px;
-            }
-            
-            /* Line 3: Amount */
-            .product-amount-line {
-              display: block;
-            }
-            
-            .purchase-field-label {
-              font-size: 9px;
-              font-weight: 600;
-              color: #666;
-              margin-bottom: 2px;
-              text-transform: uppercase;
-            }
-            
-            .purchase-remove-btn {
-              position: absolute;
-              top: 4px;
-              right: 4px;
-              width: 24px;
-              height: 24px;
-              padding: 0;
-              font-size: 14px;
-              border-radius: 3px;
-            }
-          }
-          
-          /* Desktop */
-          @media (min-width: 768px) {
-            .purchase-product-row {
-              display: grid;
-              grid-template-columns: 3fr 1fr 1fr 1.2fr 1.2fr 50px;
-              gap: 8px;
-              align-items: center;
-              padding: 6px 8px;
-            }
-            
-            .purchase-field-label {
-              display: none;
-            }
-            
-            .product-name-line,
-            .product-details-line,
-            .product-amount-line {
-              display: contents;
-            }
-          }
-          
-          /* Payment hidden by default */
-          #paymentSection {
-            display: none;
-          }
-          
-          #paymentSection.show {
-            display: block;
-          }
-          
-          .payment-toggle {
-            font-size: 12px;
-            color: #28a745;
-            cursor: pointer;
-            text-decoration: underline;
-            margin-top: 4px;
-            display: inline-block;
-          }
-        </style>
         
       <!-- Photo -->
 <label class="form-label">📷 Photo (Optional)</label>
@@ -12630,6 +12618,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
