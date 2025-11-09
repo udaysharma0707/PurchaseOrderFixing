@@ -2793,9 +2793,31 @@ textarea:focus {
   }
 }
 
+/* Automatically stack modals */
+.modal.show {
+  z-index: 1050;
+}
+
+.modal.show ~ .modal.show {
+  z-index: 1060;
+}
+
+.modal.show ~ .modal.show ~ .modal.show {
+  z-index: 1070;
+}
+
+/* Backdrops follow the same pattern */
+.modal-backdrop.show {
+  z-index: 1049;
+}
+
+.modal-backdrop.show ~ .modal-backdrop.show {
+  z-index: 1059;
+}
 
 
     
+
 
 
 
