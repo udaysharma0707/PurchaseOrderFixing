@@ -12344,7 +12344,53 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 
+<!-- BULK MODAL FOR SALE -->
+<div class="modal fade" id="bulkAddModalForSale" tabindex="-1" backdrop="static">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-collection"></i> Add Items in Bulk - Sale
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      
+      <div class="modal-body">
+        <input type="text" class="form-control mb-3" id="bulkSearchInputSale" 
+               placeholder="Type to search products..."
+               oninput="filterBulkProductsSale(this.value)">
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-height: 400px;">
+          <div>
+            <h6 class="border-bottom pb-2"><i class="bi bi-box"></i> Products</h6>
+            <div id="bulkProductsListSale" style="overflow-y: auto; max-height: 350px; border: 1px solid #ddd; border-radius: 4px; background: white;"></div>
+          </div>
+          <div>
+            <h6 class="border-bottom pb-2">
+              <i class="bi bi-check-circle"></i> Selected 
+              <span class="badge bg-primary" id="bulkSelectedCountSale">0</span>
+            </h6>
+            <div style="font-size: 0.9rem; color: #666; margin-bottom: 10px;">
+              Total Qty: <strong id="bulkTotalQtySale">0</strong>
+            </div>
+            <div id="bulkSelectedItemsSale" style="overflow-y: auto; max-height: 320px; border: 1px solid #ddd; border-radius: 4px; background: #f9f9f9;"></div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="addBulkProductsToSale()">
+          <i class="bi bi-plus-circle"></i> Add Items
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
+
+
+  
 
 <!-- BULK MODAL -->
 <div class="modal fade" id="bulkAddModalForPurchase" tabindex="-1" backdrop="static">
@@ -12727,6 +12773,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
