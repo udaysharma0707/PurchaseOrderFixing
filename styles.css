@@ -2793,30 +2793,50 @@ textarea:focus {
   }
 }
 
-/* Automatically stack modals */
-.modal.show {
+/**
+ * ==========================================
+ * MODAL Z-INDEX MANAGEMENT
+ * ==========================================
+ */
+
+/* Record Purchase Modal (default) */
+#recordPurchaseModal {
   z-index: 1050;
 }
 
-.modal.show ~ .modal.show {
-  z-index: 1060;
+/* Bulk Add Modal (higher priority) */
+#bulkAddModalForPurchase {
+  z-index: 1060 !important;
 }
 
-.modal.show ~ .modal.show ~ .modal.show {
-  z-index: 1070;
+/* Bulk modal backdrop */
+#bulkAddModalForPurchase + .modal-backdrop,
+.modal-backdrop:nth-of-type(2) {
+  z-index: 1059 !important;
 }
 
-/* Backdrops follow the same pattern */
-.modal-backdrop.show {
-  z-index: 1049;
+/* Bulk modal dialog content */
+#bulkAddModalForPurchase .modal-dialog {
+  z-index: 1061 !important;
+  position: relative;
 }
 
-.modal-backdrop.show ~ .modal-backdrop.show {
-  z-index: 1059;
+/* Ensure smooth transitions */
+#bulkAddModalForPurchase.fade {
+  transition: opacity 0.15s linear;
+}
+
+/* Mobile optimization */
+@media (max-width: 768px) {
+  #bulkAddModalForPurchase .modal-dialog {
+    margin: 10px;
+    max-width: calc(100% - 20px);
+  }
 }
 
 
     
+
 
 
 
