@@ -2800,6 +2800,81 @@ textarea:focus {
 #bulkAddModalForPurchase .modal-backdrop {
   z-index: 1059 !important;
 }
+/**
+ * ==========================================
+ * PURCHASE PRODUCT ROWS - RESPONSIVE LAYOUT
+ * ==========================================
+ */
+
+/* DESKTOP: Show horizontal layout (min-width: 769px) */
+@media (min-width: 769px) {
+  .desktop-product-layout {
+    display: block !important;
+  }
+  
+  .mobile-product-layout {
+    display: none !important;
+  }
+  
+  /* Add header labels for desktop */
+  #purchaseProductRows::before {
+    content: '';
+    display: block;
+    margin-bottom: 8px;
+    padding: 8px 12px;
+    background: #f0f0f0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #495057;
+    background-image: 
+      linear-gradient(to right, 
+        transparent 0%, 
+        transparent calc(2fr), 
+        #ddd calc(2fr), 
+        #ddd calc(2fr + 1px)
+      );
+  }
+}
+
+/* MOBILE: Show vertical layout (max-width: 768px) */
+@media (max-width: 768px) {
+  .desktop-product-layout {
+    display: none !important;
+  }
+  
+  .mobile-product-layout {
+    display: block !important;
+  }
+}
+
+/* Purchase product row styling */
+.purchase-product-row {
+  transition: all 0.2s ease;
+}
+
+.purchase-product-row:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Input field styling */
+.purchase-product-row input[readonly] {
+  background-color: #e9ecef !important;
+  cursor: not-allowed;
+}
+
+/* Show desktop header only on desktop */
+@media (min-width: 769px) {
+  .desktop-header {
+    display: block !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .desktop-header {
+    display: none !important;
+  }
+}
 
 
 
