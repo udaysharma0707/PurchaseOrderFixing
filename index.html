@@ -6774,23 +6774,50 @@ let selectedBulkProductsSale = {};
 /**
  * Open Bulk Add Modal for Sale
  */
+/**
+ * Open Bulk Add Modal for Sale (WITH SAFETY CHECKS)
+ */
 function openBulkAddModalForSale() {
   console.log('📦 Opening Bulk Add Modal for Sale');
   
-  // Reset search and selections
-  document.getElementById('bulkSearchInputSale').value = '';
+  // ✅ SAFE: Reset search input (check if exists first)
+  const searchInput = document.getElementById('bulkSearchInputSale');
+  if (searchInput) {
+    searchInput.value = '';
+  } else {
+    console.warn('⚠️ bulkSearchInputSale element not found');
+  }
+  
+  // ✅ ALWAYS RESET COMPLETELY
   selectedBulkProductsSale = {};
+  
+  // ✅ Clear selected items panel
+  const selectedContainer = document.getElementById('bulkSelectedItemsSale');
+  if (selectedContainer) {
+    selectedContainer.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No items selected</div>';
+  }
+  
+  // ✅ Reset counters
+  updateBulkCountersSale();
   
   // Render all products
   renderBulkProductsListSale('');
   
   // Show modal
-  const modal = new bootstrap.Modal(document.getElementById('bulkAddModalForSale'));
-  modal.show();
+  const modalElement = document.getElementById('bulkAddModalForSale');
+  if (modalElement) {
+    const modal = new bootstrap.Modal(modalElement);
+    modal.show();
+    console.log('✅ Modal opened with clean state');
+  } else {
+    console.error('❌ bulkAddModalForSale element not found!');
+    alert('Error: Bulk Add Modal not found. Please check your HTML.');
+  }
 }
 
+
 /**
- * Filter products by search query
+ * Filter products by search query (SAFE)
  */
 function filterBulkProductsSale(query) {
   console.log('🔍 Filtering bulk products for sale:', query);
@@ -6798,11 +6825,14 @@ function filterBulkProductsSale(query) {
 }
 
 /**
- * Render products list on left side
+ * Render products list on left side (WITH SAFETY CHECKS)
  */
 function renderBulkProductsListSale(searchQuery) {
   const container = document.getElementById('bulkProductsListSale');
-  if (!container) return;
+  if (!container) {
+    console.error('❌ bulkProductsListSale container not found');
+    return;
+  }
   
   const products = cachedProducts || [];
   let filtered = products;
@@ -6811,7 +6841,7 @@ function renderBulkProductsListSale(searchQuery) {
   if (searchQuery && searchQuery.trim().length > 0) {
     const query = searchQuery.toLowerCase();
     filtered = products.filter(product => {
-      const name = product.name.toLowerCase();
+      const name = (product.name || '').toLowerCase();
       const brand = (product.brand || '').toLowerCase();
       const category = (product.category || '').toLowerCase();
       
@@ -6868,6 +6898,27 @@ function renderBulkProductsListSale(searchQuery) {
   
   container.innerHTML = html;
   console.log('✅ Rendered', filtered.length, 'products for sale');
+}
+
+/**
+ * Update counters (WITH SAFETY CHECKS)
+ */
+function updateBulkCountersSale() {
+  const selectedArray = Object.values(selectedBulkProductsSale);
+  const selectedCount = selectedArray.length;
+  const totalQty = selectedArray.reduce((sum, p) => sum + p.qty, 0);
+  
+  const countElement = document.getElementById('bulkSelectedCountSale');
+  const qtyElement = document.getElementById('bulkTotalQtySale');
+  
+  if (countElement) {
+    countElement.textContent = selectedCount;
+  }
+  if (qtyElement) {
+    qtyElement.textContent = totalQty;
+  }
+  
+  console.log('📊 Counters: Selected=' + selectedCount + ', TotalQty=' + totalQty);
 }
 
 /**
@@ -7052,20 +7103,6 @@ function updateBulkQtyDirectSale(productId, value) {
     renderBulkSelectedItemsSale();
     console.log('📊 Updated qty directly:', newQty);
   }
-}
-
-/**
- * Update counters (selected count, total qty)
- */
-function updateBulkCountersSale() {
-  const selectedArray = Object.values(selectedBulkProductsSale);
-  const selectedCount = selectedArray.length;
-  const totalQty = selectedArray.reduce((sum, p) => sum + p.qty, 0);
-  
-  document.getElementById('bulkSelectedCountSale').textContent = selectedCount;
-  document.getElementById('bulkTotalQtySale').textContent = totalQty;
-  
-  console.log('📊 Counters: Selected=' + selectedCount + ', TotalQty=' + totalQty);
 }
 
 /**
@@ -12690,6 +12727,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
