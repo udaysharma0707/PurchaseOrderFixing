@@ -2792,50 +2792,32 @@ textarea:focus {
     margin: 10px;
   }
 }
-
 /**
  * ==========================================
- * MODAL Z-INDEX MANAGEMENT
+ * BULK MODAL Z-INDEX FIX
+ * Make bulk modal appear above purchase modal
  * ==========================================
  */
 
-/* Record Purchase Modal (default) */
-#recordPurchaseModal {
-  z-index: 1050;
-}
-
-/* Bulk Add Modal (higher priority) */
-#bulkAddModalForPurchase {
+/* Bulk modal should be above Record Purchase modal */
+#bulkAddModalForPurchase.modal {
   z-index: 1060 !important;
 }
 
-/* Bulk modal backdrop */
-#bulkAddModalForPurchase + .modal-backdrop,
-.modal-backdrop:nth-of-type(2) {
+/* Bulk modal backdrop should be above purchase modal */
+#bulkAddModalForPurchase ~ .modal-backdrop {
   z-index: 1059 !important;
 }
 
-/* Bulk modal dialog content */
+/* Alternative: Target all bulk modal backdrops */
+.modal-backdrop.show:last-of-type {
+  z-index: 1059 !important;
+}
+
+/* Ensure bulk modal content is visible */
 #bulkAddModalForPurchase .modal-dialog {
   z-index: 1061 !important;
-  position: relative;
 }
-
-/* Ensure smooth transitions */
-#bulkAddModalForPurchase.fade {
-  transition: opacity 0.15s linear;
-}
-
-/* Mobile optimization */
-@media (max-width: 768px) {
-  #bulkAddModalForPurchase .modal-dialog {
-    margin: 10px;
-    max-width: calc(100% - 20px);
-  }
-}
-
-
-    
 
 
 
