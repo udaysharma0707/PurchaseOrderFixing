@@ -2882,6 +2882,75 @@ textarea:focus {
   background: transparent;
 }
 
+/**
+ * ==========================================
+ * DESKTOP PRODUCT ROW - FORCE FULL WIDTH
+ * ==========================================
+ */
+
+@media (min-width: 769px) {
+  /* Record Purchase Modal - Make wider */
+  #recordPurchaseModal .modal-dialog {
+    max-width: 95% !important;
+    width: 95% !important;
+  }
+  
+  #recordPurchaseModal .modal-content {
+    width: 100% !important;
+  }
+  
+  #recordPurchaseModal .modal-body {
+    padding: 20px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Product rows container */
+  #purchaseProductRows {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Individual product row */
+  .purchase-product-row {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 12px !important;
+  }
+  
+  /* Desktop layout wrapper */
+  .desktop-product-layout {
+    width: 100% !important;
+    display: block !important;
+  }
+  
+  /* Grid container - FORCE NEW LAYOUT */
+  .desktop-product-layout > div {
+    display: grid !important;
+    grid-template-columns: 3fr 1fr 1fr 1.2fr 1.2fr 50px !important;
+    gap: 10px !important;
+    align-items: center !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* Desktop header */
+  .desktop-header {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .desktop-header > div {
+    display: grid !important;
+    grid-template-columns: 3fr 1fr 1fr 1.2fr 1.2fr 50px !important;
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
 
 
 
