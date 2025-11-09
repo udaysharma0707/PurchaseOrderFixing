@@ -3981,68 +3981,198 @@ function closeRecordPurchaseModal() {
 /**
  * Add product row (FIXED: Product name on Line 1, Qty/Rate/Unit on Line 2)
  */
-function addPurchaseProductRow(product = null) {
-  purchaseProductRowCounter++;
-  const rowId = `purchaseRow${purchaseProductRowCounter}`;
-  
+/**
+ * Add purchase product row (DESKTOP HORIZONTAL + MOBILE VERTICAL)
+ */
+function addPurchaseProductRow(productData = null) {
   const container = document.getElementById('purchaseProductRows');
+  if (!container) return;
   
-  const rowDiv = document.createElement('div');
-  rowDiv.id = rowId;
-  rowDiv.className = 'purchase-product-row';
+  const rowId = `purchaseProductRow_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   
-  const productName = product ? (product.size ? `${product.name} (${product.size})` : product.name) : '';
-  const qty = product ? product.qty : '';
-  const rate = product ? product.price : '';
-  const unit = product ? product.unitType : 'Pieces';
-  const amount = product ? (product.qty * product.price).toFixed(2) : '0.00';
+  const productName = productData ? productData.name : '';
+  const qty = productData ? productData.qty : 1;
+  const price = productData ? productData.price : 0;
+  const unitType = productData ? productData.unitType : 'Pieces';
   
-  rowDiv.innerHTML = `
-    <!-- LINE 1: Product Name ONLY -->
-    <div class="product-name-line">
-      <label class="purchase-field-label">Product Name</label>
-      <input type="text" class="form-control" placeholder="Product name" 
-             value="${escapeHtml(productName)}" data-field="name">
-    </div>
-    
-    <!-- LINE 2: Qty, Rate, Unit -->
-    <div class="product-details-line">
-      <div>
-        <label class="purchase-field-label">Quantity</label>
-        <input type="number" class="form-control" placeholder="Qty" min="1" 
-               value="${qty}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="qty">
-      </div>
-      <div>
-        <label class="purchase-field-label">Rate (₹)</label>
-        <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01" 
-               value="${rate}" oninput="calculatePurchaseRowAmount('${rowId}')" data-field="rate">
-      </div>
-      <div>
-        <label class="purchase-field-label">Unit</label>
-        <select class="form-select" data-field="unit">
-          <option value="Pieces" ${unit === 'Pieces' ? 'selected' : ''}>Pcs</option>
-          <option value="Boxes" ${unit === 'Boxes' ? 'selected' : ''}>Box</option>
-          <option value="Kg" ${unit === 'Kg' ? 'selected' : ''}>Kg</option>
-          <option value="Liters" ${unit === 'Liters' ? 'selected' : ''}>L</option>
-        </select>
-      </div>
-    </div>
-    
-    <!-- LINE 3: Amount -->
-    <div class="product-amount-line">
-      <label class="purchase-field-label">Amount (₹)</label>
-      <input type="number" class="form-control" placeholder="Amount" readonly 
-             value="${amount}" data-field="amount" 
-             style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
-    </div>
-    
-    <!-- Remove Button -->
-    <button type="button" class="btn btn-danger btn-sm purchase-remove-btn" 
-            onclick="removePurchaseProductRow('${rowId}')" 
-            title="Remove">✕</button>
+  // Calculate amount
+  const amount = qty * price;
+  
+  const row = document.createElement('div');
+  row.id = rowId;
+  row.className = 'purchase-product-row';
+  row.style.cssText = `
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
   `;
   
-  container.appendChild(rowDiv);
+  row.innerHTML = `
+    <!-- DESKTOP LAYOUT (Horizontal) -->
+    <div class="desktop-product-layout" style="display: none;">
+      <div style="
+        display: grid;
+        grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 40px;
+        gap: 10px;
+        align-items: center;
+      ">
+        <!-- Product Name -->
+        <div>
+          <input 
+            type="text" 
+            class="form-control form-control-sm product-name-input" 
+            placeholder="Product name" 
+            value="${escapeHtml(productName)}"
+            list="productNamesList"
+            onchange="updatePurchaseRowAmount('${rowId}')">
+        </div>
+        
+        <!-- Quantity -->
+        <div>
+          <input 
+            type="number" 
+            class="form-control form-control-sm quantity-input" 
+            placeholder="Qty" 
+            value="${qty}" 
+            min="0.01" 
+            step="0.01"
+            onchange="updatePurchaseRowAmount('${rowId}')">
+        </div>
+        
+        <!-- Rate -->
+        <div>
+          <input 
+            type="number" 
+            class="form-control form-control-sm rate-input" 
+            placeholder="Rate" 
+            value="${price}" 
+            min="0" 
+            step="0.01"
+            onchange="updatePurchaseRowAmount('${rowId}')">
+        </div>
+        
+        <!-- Unit -->
+        <div>
+          <select class="form-select form-select-sm unit-select">
+            <option value="Pieces" ${unitType === 'Pieces' ? 'selected' : ''}>Pcs</option>
+            <option value="Box" ${unitType === 'Box' ? 'selected' : ''}>Box</option>
+            <option value="Carton" ${unitType === 'Carton' ? 'selected' : ''}>Carton</option>
+            <option value="Kg" ${unitType === 'Kg' ? 'selected' : ''}>Kg</option>
+            <option value="Meter" ${unitType === 'Meter' ? 'selected' : ''}>Meter</option>
+            <option value="Sqft" ${unitType === 'Sqft' ? 'selected' : ''}>Sqft</option>
+          </select>
+        </div>
+        
+        <!-- Amount (Read-only) -->
+        <div>
+          <input 
+            type="text" 
+            class="form-control form-control-sm amount-display" 
+            value="${amount.toFixed(2)}" 
+            readonly 
+            style="font-weight: 600; background: #e9ecef; text-align: right;">
+        </div>
+        
+        <!-- Delete Button -->
+        <div style="text-align: center;">
+          <button 
+            type="button" 
+            class="btn btn-sm btn-danger" 
+            onclick="removePurchaseProductRow('${rowId}')"
+            style="
+              width: 32px;
+              height: 32px;
+              padding: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              border-radius: 50%;
+            "
+            title="Remove">
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- MOBILE LAYOUT (Vertical - Unchanged) -->
+    <div class="mobile-product-layout" style="display: none;">
+      <!-- Product Name -->
+      <label style="font-size: 0.85rem; margin-bottom: 4px; display: block; font-weight: 500;">Product Name</label>
+      <input 
+        type="text" 
+        class="form-control form-control-sm product-name-input mb-2" 
+        placeholder="Product name" 
+        value="${escapeHtml(productName)}"
+        list="productNamesList"
+        onchange="updatePurchaseRowAmount('${rowId}')">
+      
+      <!-- Quantity, Rate, Unit in one row -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-bottom: 8px;">
+        <div>
+          <label style="font-size: 0.8rem; margin-bottom: 2px; display: block;">Qty</label>
+          <input 
+            type="number" 
+            class="form-control form-control-sm quantity-input" 
+            placeholder="Qty" 
+            value="${qty}" 
+            min="0.01" 
+            step="0.01"
+            onchange="updatePurchaseRowAmount('${rowId}')">
+        </div>
+        
+        <div>
+          <label style="font-size: 0.8rem; margin-bottom: 2px; display: block;">Rate (₹)</label>
+          <input 
+            type="number" 
+            class="form-control form-control-sm rate-input" 
+            placeholder="Rate" 
+            value="${price}" 
+            min="0" 
+            step="0.01"
+            onchange="updatePurchaseRowAmount('${rowId}')">
+        </div>
+        
+        <div>
+          <label style="font-size: 0.8rem; margin-bottom: 2px; display: block;">Unit</label>
+          <select class="form-select form-select-sm unit-select">
+            <option value="Pieces" ${unitType === 'Pieces' ? 'selected' : ''}>Pcs</option>
+            <option value="Box" ${unitType === 'Box' ? 'selected' : ''}>Box</option>
+            <option value="Carton" ${unitType === 'Carton' ? 'selected' : ''}>Carton</option>
+            <option value="Kg" ${unitType === 'Kg' ? 'selected' : ''}>Kg</option>
+            <option value="Meter" ${unitType === 'Meter' ? 'selected' : ''}>Meter</option>
+            <option value="Sqft" ${unitType === 'Sqft' ? 'selected' : ''}>Sqft</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- Amount Display -->
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1;">
+          <label style="font-size: 0.8rem; margin-bottom: 2px; display: block;">Amount (₹)</label>
+          <input 
+            type="text" 
+            class="form-control form-control-sm amount-display" 
+            value="${amount.toFixed(2)}" 
+            readonly 
+            style="font-weight: 600; background: #e9ecef;">
+        </div>
+        <button 
+          type="button" 
+          class="btn btn-sm btn-danger" 
+          onclick="removePurchaseProductRow('${rowId}')"
+          style="margin-left: 8px; margin-top: 20px;">
+          <i class="bi bi-x"></i> Remove
+        </button>
+      </div>
+    </div>
+  `;
+  
+  container.appendChild(row);
+  
+  console.log('✅ Added product row:', rowId);
 }
 
 /**
@@ -12502,6 +12632,22 @@ document.addEventListener('DOMContentLoaded', function() {
         
         <!-- Products -->
         <label class="form-label">📦 Products Purchased</label>
+
+<!-- DESKTOP HEADER (only visible on desktop) -->
+<div class="desktop-header" style="display: none; margin-bottom: 8px; padding: 8px 12px; background: #e9ecef; border-radius: 6px; font-size: 0.85rem; font-weight: 600; color: #495057;">
+  <div style="display: grid; grid-template-columns: 2fr 0.8fr 0.8fr 0.8fr 1fr 40px; gap: 10px;">
+    <div>Product Name</div>
+    <div>Quantity</div>
+    <div>Rate (₹)</div>
+    <div>Unit</div>
+    <div style="text-align: right;">Amount (₹)</div>
+    <div style="text-align: center;">✕</div>
+  </div>
+</div>
+
+
+
+        
         <div id="purchaseProductRows" style="margin-bottom: 6px;">
           <!-- Dynamic rows -->
         </div>
@@ -12630,6 +12776,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
