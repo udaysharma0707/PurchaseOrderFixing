@@ -4713,7 +4713,7 @@ function openPurchaseCamera() {
 
 /**
  * ==========================================
- * BULK ADD PRODUCTS FOR PURCHASE (FIXED)
+ * BULK ADD PRODUCTS FOR PURCHASE 
  * ==========================================
  */
 let selectedBulkProductsPurchase = {};
@@ -7529,6 +7529,9 @@ function updateInvoiceRowTotal(rowIndex) {
 /**
  * Delete invoice row and recalculate totals (GRID VERSION)
  */
+/**
+ * Delete invoice row and recalculate totals (WITH RENUMBERING)
+ */
 function deleteInvoiceRow(rowIndex) {
   console.log('🗑️ Deleting row', rowIndex);
   
@@ -7536,11 +7539,15 @@ function deleteInvoiceRow(rowIndex) {
   if (row) {
     row.remove();
     console.log('✅ Row', rowIndex, 'deleted');
+    
+    // ✅ Renumber remaining rows
+    renumberInvoiceRows();
   }
   
   // Recalculate totals
   calculateInvoiceTotal();
 }
+
 
 
 
@@ -7661,7 +7668,7 @@ function loadDefaultTerms() {
 
 /**
  * ==========================================
- * BULK ADD PRODUCTS FEATURE
+ * INVOICE BULK ADD MODAL
  * ==========================================
  */
 
@@ -7994,19 +8001,50 @@ function updateBulkCounters() {
 }
 
 /**
- * Add all selected products to invoice
+ * ✅ Renumber all invoice rows after adding/removing (PREVENTS INDEX CONFLICTS)
  */
+function renumberInvoiceRows() {
+  const container = document.getElementById('invoiceItemsBody');
+  if (!container) return;
+  
+  const rows = container.querySelectorAll('.invoice-product-row');
+  
+  rows.forEach((row, newIndex) => {
+    const oldIndex = row.getAttribute('data-index');
+    
+    // Update row data-index
+    row.setAttribute('data-index', newIndex);
+    row.id = `invoiceRow${newIndex}`;
+    
+    // Update all input IDs
+    const productInput = row.querySelector('input[id^="invoiceProduct-"]');
+    const qtyInput = row.querySelector('input[id^="invoiceQty-"]');
+    const rateInput = row.querySelector('input[id^="invoiceRate-"]');
+    const totalInput = row.querySelector('input[id^="invoiceRowTotal-"]');
+    const deleteBtn = row.querySelector('button[onclick*="deleteInvoiceRow"]');
+    
+    if (productInput) productInput.id = `invoiceProduct-${newIndex}`;
+    if (qtyInput) {
+      qtyInput.id = `invoiceQty-${newIndex}`;
+      qtyInput.setAttribute('oninput', `updateInvoiceRowTotal(${newIndex}); calculateInvoiceTotal();`);
+    }
+    if (rateInput) {
+      rateInput.id = `invoiceRate-${newIndex}`;
+      rateInput.setAttribute('oninput', `updateInvoiceRowTotal(${newIndex}); calculateInvoiceTotal();`);
+    }
+    if (totalInput) totalInput.id = `invoiceRowTotal-${newIndex}`;
+    if (deleteBtn) {
+      deleteBtn.setAttribute('onclick', `deleteInvoiceRow(${newIndex})`);
+    }
+    
+    console.log(`  Row ${oldIndex} → ${newIndex}`);
+  });
+  
+  console.log('✅ Renumbered', rows.length, 'invoice rows');
+}
+
 /**
- * Add all selected products to invoice (FIXED)
- */
-/**
- * Add all selected products to invoice
- */
-/**
- * ✅ Add all selected products to invoice (PURCHASE-STYLE GRID LAYOUT)
- */
-/**
- * Add all selected products to invoice (USES createInvoiceRow FOR CONSISTENCY)
+ * ✅ Add all selected products to invoice (FIXED DUPLICATE MATCHING)
  */
 function addBulkProductsToInvoice() {
   const selectedArray = Object.values(selectedBulkProducts);
@@ -8024,23 +8062,25 @@ function addBulkProductsToInvoice() {
     return;
   }
   
-  // Get all existing rows
-  const existingRows = container.querySelectorAll('.invoice-product-row');
-  
   selectedArray.forEach(product => {
     const productName = product.size ? `${product.name} (${product.size})` : product.name;
     
-    // Check if product already exists
+    // ✅ FIX: Get fresh list of rows and check each one's product name input
+    const allRows = container.querySelectorAll('.invoice-product-row');
     let existingRow = null;
-    existingRows.forEach(row => {
-      const nameInput = row.querySelector('input[type="text"]');
+    
+    allRows.forEach(row => {
+      const rowIndex = row.getAttribute('data-index');
+      const nameInput = document.getElementById(`invoiceProduct-${rowIndex}`);
+      
+      // Check if product name matches (exact match, trimmed)
       if (nameInput && nameInput.value.trim() === productName) {
         existingRow = row;
       }
     });
     
     if (existingRow) {
-      // ✅ Merge quantity for existing product
+      // ✅ PRODUCT EXISTS - MERGE QUANTITY
       const rowIndex = existingRow.getAttribute('data-index');
       const qtyInput = document.getElementById(`invoiceQty-${rowIndex}`);
       
@@ -8052,11 +8092,13 @@ function addBulkProductsToInvoice() {
         // Update total
         updateInvoiceRowTotal(parseInt(rowIndex));
         
-        console.log(`✅ Merged: ${productName} - Updated qty to ${newQty}`);
+        console.log(`✅ Merged: ${productName} - Updated qty from ${currentQty} to ${newQty}`);
       }
     } else {
-      // ✅ Add new row using createInvoiceRow
-      const rowIndex = existingRows.length;
+      // ✅ NEW PRODUCT - ADD TO TOP
+      // Get fresh count for new index
+      const currentRowCount = container.querySelectorAll('.invoice-product-row').length;
+      const newRowIndex = currentRowCount;
       
       const item = {
         name: product.name,
@@ -8066,14 +8108,17 @@ function addBulkProductsToInvoice() {
       };
       
       // ✅ Use createInvoiceRow function
-      const rowHTML = createInvoiceRow(item, rowIndex);
+      const rowHTML = createInvoiceRow(item, newRowIndex);
       
       // Add to top of container
       container.insertAdjacentHTML('afterbegin', rowHTML);
       
-      console.log(`✅ Added new: ${productName} - Qty ${product.qty}`);
+      console.log(`✅ Added new: ${productName} - Qty ${product.qty} at index ${newRowIndex}`);
     }
   });
+  
+  // ✅ After all products added, renumber all rows to fix indices
+  renumberInvoiceRows();
   
   // Calculate totals
   setTimeout(() => {
@@ -8087,9 +8132,8 @@ function addBulkProductsToInvoice() {
     modal.hide();
   }
   
-  console.log('✅ All products added successfully!');
+  console.log('✅ All products added/merged successfully!');
 }
-
 
 
 /**
@@ -12854,6 +12898,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
