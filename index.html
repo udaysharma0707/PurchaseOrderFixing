@@ -7395,49 +7395,60 @@ function populateInvoiceItems() {
   calculateInvoiceTotal();
 }
 
-// Create Invoice Row HTML
+/**
+ * Create Invoice Row HTML (UPDATED - matches Purchase style)
+ */
 function createInvoiceRow(item, index) {
   const itemName = item.size ? `${item.name} (${item.size})` : item.name;
+  const amount = (item.quantity * item.rate).toFixed(2);
+  
   return `
     <tr data-index="${index}">
       <td>
         <input type="text" class="form-control form-control-sm" 
+               id="invoiceProduct-${index}"
                value="${escapeHtml(itemName)}" 
                placeholder="Enter product name"
-               oninput="calculateInvoiceTotal()">
+               style="padding: 8px; font-size: 0.9rem;">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm text-center invoice-qty" 
-               value="${item.quantity}" min="1" 
-               placeholder="Qty"
-               oninput="updateInvoiceRowTotal(${index})">
+        <input type="number" class="form-control form-control-sm text-center" 
+               id="invoiceQty-${index}"
+               value="${item.quantity}" min="1" placeholder="1"
+               style="font-size: 0.9rem;"
+               oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();">
       </td>
       <td>
-        <input type="number" class="form-control form-control-sm text-end invoice-rate" 
-               value="${item.rate}" min="0" step="0.01" 
-               placeholder="Price"
-               oninput="updateInvoiceRowTotal(${index})">
+        <input type="number" class="form-control form-control-sm text-end" 
+               id="invoiceRate-${index}"
+               value="${item.rate}" min="0" step="0.01" placeholder="0.00"
+               style="font-size: 0.9rem;"
+               oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();">
       </td>
-      <td class="text-end fw-bold invoice-row-total">
-        ₹${(item.quantity * item.rate).toFixed(2)}
+      <td class="text-end fw-bold" id="invoiceRowTotal-${index}" style="font-size: 0.9rem; padding: 12px;">
+        ₹${amount}
       </td>
       <td class="text-center">
         <button type="button" class="btn btn-sm btn-link text-danger" 
-                onclick="deleteInvoiceRow(${index})">
-          <i class="bi bi-x-lg"></i>
+                onclick="deleteInvoiceRow(${index})"
+                style="padding: 2px 6px; font-size: 18px;">
+          ✕
         </button>
       </td>
     </tr>
   `;
 }
 
+
 /**
  * Update individual row total (FIXED - uses row traversal)
+ */
+/**
+ * Update individual row total (FIXED - direct TD update like Purchase)
  */
 function updateInvoiceRowTotal(rowIndex) {
   console.log('🔄 Updating row', rowIndex, 'total...');
   
-  // Get the row element itself
   const tbody = document.getElementById('invoiceItemsBody');
   if (!tbody) return;
   
@@ -7450,31 +7461,34 @@ function updateInvoiceRowTotal(rowIndex) {
   const row = rows[rowIndex];
   
   // Find inputs within THIS specific row
-  const inputs = row.querySelectorAll('input[type="number"]');
+  const qtyInput = row.querySelector(`#invoiceQty-${rowIndex}`);
+  const rateInput = row.querySelector(`#invoiceRate-${rowIndex}`);
+  const totalCell = row.querySelector(`#invoiceRowTotal-${rowIndex}`);
   
-  if (inputs.length < 2) {
-    console.warn('⚠️ Row', rowIndex, 'missing quantity or rate inputs');
+  if (!qtyInput || !rateInput || !totalCell) {
+    console.warn('⚠️ Row', rowIndex, 'missing required elements');
     return;
   }
   
-  // First number input = quantity, Second = rate
-  const qty = parseFloat(inputs[0].value) || 0;
-  const rate = parseFloat(inputs[1].value) || 0;
+  const qty = parseFloat(qtyInput.value) || 0;
+  const rate = parseFloat(rateInput.value) || 0;
   const total = qty * rate;
   
-  // Find the total span in this row
-  const totalSpan = row.querySelector('span[id^="invoiceRowTotal"]');
-  if (totalSpan) {
-    totalSpan.textContent = '₹' + total.toFixed(2);
-    console.log('✅ Row', rowIndex, 'updated:', qty, 'x', rate, '=', total);
-  }
+  // ✅ Update the TD cell directly (no span, matches Purchase style)
+  totalCell.textContent = '₹' + total.toFixed(2);
+  
+  console.log('✅ Row', rowIndex, 'updated:', qty, 'x', rate, '=', total);
 }
+
 
 /**
  * Delete invoice row and recalculate totals
  */
 /**
  * Delete invoice row and recalculate totals (FIXED)
+ */
+/**
+ * Delete invoice row and recalculate totals (FIXED - matches Purchase)
  */
 function deleteInvoiceRow(rowIndex) {
   console.log('🗑️ Deleting row', rowIndex);
@@ -7500,6 +7514,9 @@ function deleteInvoiceRow(rowIndex) {
 
 /**
  * Add a new empty invoice row
+ */
+/**
+ * Add a new empty invoice row (UPDATED - matches Purchase style)
  */
 function addInvoiceRow() {
   const tbody = document.getElementById('invoiceItemsBody');
@@ -7536,13 +7553,13 @@ function addInvoiceRow() {
              style="font-size: 0.9rem;"
              oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();">
     </td>
-    <td class="text-end fw-bold" style="width: 120px; font-size: 0.9rem;">
-      <span id="invoiceRowTotal-${rowIndex}">₹0.00</span>
+    <td class="text-end fw-bold" id="invoiceRowTotal-${rowIndex}" style="font-size: 0.9rem; padding: 12px;">
+      ₹0.00
     </td>
     <td class="text-center">
       <button type="button" class="btn btn-sm btn-link text-danger" 
               onclick="deleteInvoiceRow(${rowIndex})"
-              style="padding: 2px 6px;">
+              style="padding: 2px 6px; font-size: 18px;">
         ✕
       </button>
     </td>
@@ -12897,6 +12914,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
