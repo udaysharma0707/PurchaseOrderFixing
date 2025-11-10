@@ -7402,46 +7402,53 @@ function populateInvoiceItems() {
 /**
  * Create Invoice Row HTML (GRID LAYOUT - MATCHES PURCHASE)
  */
+/**
+ * Create Invoice Row HTML (3-LINE MOBILE LAYOUT - MATCHES PURCHASE)
+ */
 function createInvoiceRow(item, index) {
   const itemName = item.size ? `${item.name} (${item.size})` : item.name;
   const amount = (item.quantity * item.rate).toFixed(2);
   
   return `
-    <div class="invoice-product-row" id="invoiceRow${index}" data-index="${index}" style="
-      display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1.2fr auto;
-      gap: 8px;
-      align-items: center;
-      padding: 8px;
-      background: white;
-      border-radius: 6px;
-      border: 1px solid #dee2e6;
-    ">
-      <input type="text" class="form-control" placeholder="Product name"
-             id="invoiceProduct-${index}"
-             value="${escapeHtml(itemName)}" 
-             style="font-size: 0.9rem;">
+    <div class="invoice-product-row" id="invoiceRow${index}" data-index="${index}">
+      <!-- Line 1: Product Name -->
+      <div class="invoice-name-line">
+        <div class="invoice-field-label">Product Name</div>
+        <input type="text" class="form-control" placeholder="Product name"
+               id="invoiceProduct-${index}"
+               value="${escapeHtml(itemName)}">
+      </div>
       
-      <input type="number" class="form-control" placeholder="Qty" min="1"
-             id="invoiceQty-${index}"
-             value="${item.quantity}"
-             oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();"
-             style="font-size: 0.9rem;">
+      <!-- Line 2: Qty & Rate -->
+      <div class="invoice-details-line">
+        <div>
+          <div class="invoice-field-label">Quantity</div>
+          <input type="number" class="form-control" placeholder="Qty" min="1"
+                 id="invoiceQty-${index}"
+                 value="${item.quantity}"
+                 oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();">
+        </div>
+        <div>
+          <div class="invoice-field-label">Rate</div>
+          <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
+                 id="invoiceRate-${index}"
+                 value="${item.rate}"
+                 oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();">
+        </div>
+      </div>
       
-      <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
-             id="invoiceRate-${index}"
-             value="${item.rate}"
-             oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();"
-             style="font-size: 0.9rem;">
+      <!-- Line 3: Amount -->
+      <div class="invoice-amount-line">
+        <div class="invoice-field-label">Amount</div>
+        <input type="text" class="form-control" placeholder="Amount" readonly
+               id="invoiceRowTotal-${index}"
+               value="₹${amount}"
+               style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
+      </div>
       
-      <input type="text" class="form-control" placeholder="Amount" readonly
-             id="invoiceRowTotal-${index}"
-             value="₹${amount}"
-             style="background: #e8f5e9; font-weight: 600; color: #2e7d32; font-size: 0.9rem;">
-      
-      <button type="button" class="btn btn-danger"
-              onclick="deleteInvoiceRow(${index})"
-              style="font-size: 22px; padding: 0; min-width: 36px; height: 36px;">
+      <!-- Remove Button (Top-Right on Mobile, Inline on Desktop) -->
+      <button type="button" class="btn btn-danger invoice-remove-btn"
+              onclick="deleteInvoiceRow(${index})">
         ×
       </button>
     </div>
@@ -7453,6 +7460,9 @@ function createInvoiceRow(item, index) {
  */
 /**
  * Add a new empty invoice row (GRID LAYOUT - MATCHES PURCHASE)
+ */
+/**
+ * Add a new empty invoice row (3-LINE MOBILE LAYOUT)
  */
 function addInvoiceRow() {
   const container = document.getElementById('invoiceItemsBody');
@@ -7469,42 +7479,45 @@ function addInvoiceRow() {
   rowDiv.className = 'invoice-product-row';
   rowDiv.id = `invoiceRow${rowIndex}`;
   rowDiv.setAttribute('data-index', rowIndex);
-  rowDiv.style.cssText = `
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1.2fr auto;
-    gap: 8px;
-    align-items: center;
-    padding: 8px;
-    background: white;
-    border-radius: 6px;
-    border: 1px solid #dee2e6;
-  `;
   
   rowDiv.innerHTML = `
-    <input type="text" class="form-control" placeholder="Product name"
-           id="invoiceProduct-${rowIndex}"
-           style="font-size: 0.9rem;">
+    <!-- Line 1: Product Name -->
+    <div class="invoice-name-line">
+      <div class="invoice-field-label">Product Name</div>
+      <input type="text" class="form-control" placeholder="Product name"
+             id="invoiceProduct-${rowIndex}">
+    </div>
     
-    <input type="number" class="form-control" placeholder="Qty" min="1"
-           id="invoiceQty-${rowIndex}"
-           value="1"
-           oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();"
-           style="font-size: 0.9rem;">
+    <!-- Line 2: Qty & Rate -->
+    <div class="invoice-details-line">
+      <div>
+        <div class="invoice-field-label">Quantity</div>
+        <input type="number" class="form-control" placeholder="Qty" min="1"
+               id="invoiceQty-${rowIndex}"
+               value="1"
+               oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();">
+      </div>
+      <div>
+        <div class="invoice-field-label">Rate</div>
+        <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
+               id="invoiceRate-${rowIndex}"
+               value="0"
+               oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();">
+      </div>
+    </div>
     
-    <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
-           id="invoiceRate-${rowIndex}"
-           value="0"
-           oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();"
-           style="font-size: 0.9rem;">
+    <!-- Line 3: Amount -->
+    <div class="invoice-amount-line">
+      <div class="invoice-field-label">Amount</div>
+      <input type="text" class="form-control" placeholder="Amount" readonly
+             id="invoiceRowTotal-${rowIndex}"
+             value="₹0.00"
+             style="background: #e8f5e9; font-weight: 600; color: #2e7d32;">
+    </div>
     
-    <input type="text" class="form-control" placeholder="Amount" readonly
-           id="invoiceRowTotal-${rowIndex}"
-           value="₹0.00"
-           style="background: #e8f5e9; font-weight: 600; color: #2e7d32; font-size: 0.9rem;">
-    
-    <button type="button" class="btn btn-danger"
-            onclick="deleteInvoiceRow(${rowIndex})"
-            style="font-size: 22px; padding: 0; min-width: 36px; height: 36px;">
+    <!-- Remove Button -->
+    <button type="button" class="btn btn-danger invoice-remove-btn"
+            onclick="deleteInvoiceRow(${rowIndex})">
       ×
     </button>
   `;
@@ -7513,6 +7526,7 @@ function addInvoiceRow() {
   
   console.log('✅ Added new invoice row', rowIndex);
 }
+
 
 /**
  * Update individual row total (GRID LAYOUT VERSION)
@@ -12963,6 +12977,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
