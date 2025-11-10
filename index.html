@@ -8162,7 +8162,7 @@ function escapeHtml(text) {
 
 /**
  * ==========================================
- * SAVE INVOICE (FIXED FOR GRID LAYOUT)
+ * SAVE INVOICE (FIXED - FILTERS EMPTY ROWS)
  * ==========================================
  */
 async function saveInvoice() {
@@ -8179,7 +8179,7 @@ async function saveInvoice() {
     
     console.log('📝 Customer name:', customerName);
     
-    // ✅ Collect items from GRID LAYOUT
+    // ✅ Collect items from GRID LAYOUT (SKIP EMPTY ROWS)
     const items = [];
     const container = document.getElementById('invoiceItemsBody');
     
@@ -8198,19 +8198,29 @@ async function saveInvoice() {
           const qty = parseFloat(qtyInput.value) || 0;
           const rate = parseFloat(rateInput.value) || 0;
           
-          if (name || qty > 0) {
+          // ✅ FILTER: Only add row if it has a name AND (quantity > 0 OR rate > 0)
+          if (name && (qty > 0 || rate > 0)) {
             items.push({
               name: name,
               quantity: qty,
               rate: rate,
               amount: qty * rate
             });
+            console.log('  ✅ Added:', name, 'x', qty, '@', rate);
+          } else {
+            console.log('  ⏭️ Skipped empty row:', rowIndex);
           }
         }
       });
     }
     
-    console.log('📦 Items count:', items.length);
+    console.log('📦 Valid items count:', items.length);
+    
+    // ✅ Check if invoice has at least one valid item
+    if (items.length === 0) {
+      alert('⚠️ Please add at least one product to the invoice');
+      return;
+    }
     
     // Calculate totals
     let subtotal = 0;
@@ -8252,7 +8262,7 @@ async function saveInvoice() {
     console.log('✅ Invoice saved! Total invoices:', invoices.length);
     
     // Show success message
-    alert('✅ Invoice saved successfully!\n\nInvoice: ' + invoiceData.invoiceNumber + '\nCustomer: ' + customerName + '\nTotal: ₹' + total.toFixed(2));
+    alert(`✅ Invoice saved successfully!\n\nInvoice: ${invoiceData.invoiceNumber}\nCustomer: ${customerName}\nItems: ${items.length}\nTotal: ₹${total.toFixed(2)}`);
     
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
@@ -8308,7 +8318,7 @@ function previewInvoice() {
         
         console.log('  Row', idx, ':', name, 'x', qty, '@', rate, '=', amount);
         
-        if (name || qty > 0) {
+       if (name && (qty > 0 || rate > 0)) { 
           items.push({
             name: name || 'Unnamed Item',
             quantity: qty,
@@ -8318,7 +8328,7 @@ function previewInvoice() {
           subtotal += amount;
         }
       } else {
-        console.warn('⚠️ Missing inputs for row', idx);
+        console.log('  ⏭️ Skipped empty row');
       }
     });
   }
@@ -13081,6 +13091,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
