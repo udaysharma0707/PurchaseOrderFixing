@@ -8159,13 +8159,12 @@ function escapeHtml(text) {
 
 
     
-// Save Invoice
+
 /**
  * ==========================================
- * SAVE INVOICE (FIXED - Simple & Reliable)
+ * SAVE INVOICE (FIXED FOR GRID LAYOUT)
  * ==========================================
  */
-
 async function saveInvoice() {
   console.log('💾 Save Invoice clicked');
   
@@ -8180,26 +8179,36 @@ async function saveInvoice() {
     
     console.log('📝 Customer name:', customerName);
     
-    // Collect items
+    // ✅ Collect items from GRID LAYOUT
     const items = [];
-    document.querySelectorAll('#invoiceItemsBody tr').forEach(row => {
-      const nameInput = row.querySelector('input[type="text"]');
-      const qtyInput = row.querySelector('.invoice-qty');
-      const rateInput = row.querySelector('.invoice-rate');
+    const container = document.getElementById('invoiceItemsBody');
+    
+    if (container) {
+      const rows = container.querySelectorAll('.invoice-product-row');
       
-      if (nameInput && qtyInput && rateInput) {
-        const name = nameInput.value.trim();
-        const qty = parseFloat(qtyInput.value) || 0;
-        const rate = parseFloat(rateInput.value) || 0;
+      rows.forEach(row => {
+        const rowIndex = row.getAttribute('data-index');
         
-        items.push({
-          name: name,
-          quantity: qty,
-          rate: rate,
-          amount: qty * rate
-        });
-      }
-    });
+        const nameInput = document.getElementById(`invoiceProduct-${rowIndex}`);
+        const qtyInput = document.getElementById(`invoiceQty-${rowIndex}`);
+        const rateInput = document.getElementById(`invoiceRate-${rowIndex}`);
+        
+        if (nameInput && qtyInput && rateInput) {
+          const name = nameInput.value.trim();
+          const qty = parseFloat(qtyInput.value) || 0;
+          const rate = parseFloat(rateInput.value) || 0;
+          
+          if (name || qty > 0) {
+            items.push({
+              name: name,
+              quantity: qty,
+              rate: rate,
+              amount: qty * rate
+            });
+          }
+        }
+      });
+    }
     
     console.log('📦 Items count:', items.length);
     
@@ -8258,83 +8267,8 @@ async function saveInvoice() {
   }
 }
 
-function collectInvoiceData() {
-  const items = [];
-  
-  document.querySelectorAll('#invoiceItemsBody tr').forEach(row => {
-    const name = row.querySelector('input[type="text"]').value;
-    const qty = parseFloat(row.querySelector('.invoice-qty').value) || 0;
-    const rate = parseFloat(row.querySelector('.invoice-rate').value) || 0;
-    
-    items.push({
-      name: name,
-      quantity: qty,
-      rate: rate,
-      amount: qty * rate
-    });
-  });
-  
-  // ✅ FIXED: Handle null/undefined values safely
-  let subtotal = 0;
-  let discount = 0;
-  let tax = 0;
-  let total = 0;
-  
-  const subtotalEl = document.getElementById('invoiceSubtotal');
-  const discountEl = document.getElementById('invoiceDiscountAmount');
-  const taxEl = document.getElementById('invoiceTaxAmount');
-  const totalEl = document.getElementById('invoiceGrandTotal');
-  
-  // Parse subtotal safely
-  if (subtotalEl && subtotalEl.textContent) {
-    subtotal = parseFloat(subtotalEl.textContent.replace(/[₹,]/g, '')) || 0;
-  }
-  
-  // Parse discount safely
-  if (discountEl && discountEl.textContent) {
-    discount = parseFloat(discountEl.textContent.replace(/[₹,-]/g, '')) || 0;
-  }
-  
-  // Parse tax safely
-  if (taxEl && taxEl.textContent) {
-    tax = parseFloat(taxEl.textContent.replace(/[₹,]/g, '')) || 0;
-  }
-  
-  // Parse total safely
-  if (totalEl && totalEl.textContent) {
-    total = parseFloat(totalEl.textContent.replace(/[₹,]/g, '')) || 0;
-  }
-  
-  console.log('📊 Invoice data collected:', {
-    subtotal,
-    discount,
-    tax,
-    total,
-    itemsCount: items.length
-  });
-  
-  return {
-    invoiceNumber: document.getElementById('invoiceNumber').value,
-    customerName: document.getElementById('invoiceCustomerName').value,
-    invoiceDate: document.getElementById('invoiceDate').value,
-    dueDate: document.getElementById('invoiceDueDate').value,
-    items: items,
-    subtotal: isNaN(subtotal) ? 0 : subtotal,
-    discount: isNaN(discount) ? 0 : discount,
-    tax: isNaN(tax) ? 0 : tax,
-    total: isNaN(total) ? 0 : total,
-    notes: document.getElementById('invoiceNotes').value,
-    terms: document.getElementById('invoiceTerms').value,
-    createdAt: new Date().toISOString()
-  };
-}
-
-
 /**
- * Preview Invoice with all current data
- */
-/**
- * Preview Invoice with all current data (FIXED)
+ * Preview Invoice with all current data (FIXED FOR GRID LAYOUT)
  */
 function previewInvoice() {
   console.log('👁️ Opening invoice preview...');
@@ -8344,24 +8278,27 @@ function previewInvoice() {
   const invoiceNumber = document.getElementById('invoiceNumber')?.value || 'INV-0000';
   const invoiceDate = document.getElementById('invoiceDate')?.value || new Date().toISOString().split('T')[0];
   const dueDate = document.getElementById('invoiceDueDate')?.value || invoiceDate;
-  const paymentTerms = document.getElementById('paymentTerms')?.value || 'Net 15';
+  const paymentTerms = document.getElementById('paymentTerms')?.selectedOptions[0]?.text || 'Net 15';
   
-  // Get invoice items - FIX: Better row parsing
-  const tbody = document.getElementById('invoiceItemsBody');
+  // ✅ FIX: Get invoice items from GRID LAYOUT (not table rows)
+  const container = document.getElementById('invoiceItemsBody');
   let items = [];
   let subtotal = 0;
   
-  console.log('📋 Parsing invoice items...');
+  console.log('📋 Parsing invoice items from grid layout...');
   
-  if (tbody) {
-    const rows = tbody.querySelectorAll('tr');
-    console.log('Found', rows.length, 'rows');
+  if (container) {
+    // ✅ Get all invoice-product-row divs (not tr elements)
+    const rows = container.querySelectorAll('.invoice-product-row');
+    console.log('✅ Found', rows.length, 'product rows');
     
     rows.forEach((row, idx) => {
-      // Get all inputs in the row
-      const nameInput = row.querySelector('input[id^="invoiceProduct"]');
-      const qtyInput = row.querySelector('input[id^="invoiceQty"]');
-      const rateInput = row.querySelector('input[id^="invoiceRate"]');
+      const rowIndex = row.getAttribute('data-index');
+      
+      // Get inputs by ID (more reliable)
+      const nameInput = document.getElementById(`invoiceProduct-${rowIndex}`);
+      const qtyInput = document.getElementById(`invoiceQty-${rowIndex}`);
+      const rateInput = document.getElementById(`invoiceRate-${rowIndex}`);
       
       if (nameInput && qtyInput && rateInput) {
         const name = nameInput.value.trim();
@@ -8369,17 +8306,19 @@ function previewInvoice() {
         const rate = parseFloat(rateInput.value) || 0;
         const amount = qty * rate;
         
-        console.log('Row', idx, ':', name, 'x', qty, '@', rate, '=', amount);
+        console.log('  Row', idx, ':', name, 'x', qty, '@', rate, '=', amount);
         
         if (name || qty > 0) {
           items.push({
-            name: name,
+            name: name || 'Unnamed Item',
             quantity: qty,
             rate: rate,
             amount: amount
           });
           subtotal += amount;
         }
+      } else {
+        console.warn('⚠️ Missing inputs for row', idx);
       }
     });
   }
@@ -8454,7 +8393,7 @@ function previewInvoice() {
           margin: 0 auto;
           padding: 30px;
           border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          box-shadow: 0 2 8px rgba(0,0,0,0.1);
         }
         .invoice-header { 
           text-align: center; 
@@ -8681,142 +8620,8 @@ function previewInvoice() {
 }
 
 
+
             
-
-// ==========================================
-// VIEW SAVED INVOICES FEATURE
-// ==========================================
-
-/**
- * ==========================================
- * VIEW SAVED INVOICES (FIXED)
- * ==========================================
- */
-
-function viewSavedInvoices() {
-  console.log('📋 View Invoices clicked');
-  
-  try {
-    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-    console.log('📊 Found', invoices.length, 'invoices');
-    
-    const container = document.getElementById('invoicesListContainer');
-    
-    if (!container) {
-      alert('❌ Container not found');
-      console.error('❌ invoicesListContainer element not found');
-      return;
-    }
-    
-    if (invoices.length === 0) {
-      container.innerHTML = `
-        <div class="alert alert-info text-center">
-          <i class="bi bi-info-circle"></i> No saved invoices found
-        </div>
-      `;
-      console.log('ℹ️ No invoices');
-    } else {
-      let html = `
-        <div class="table-responsive">
-          <table class="table table-hover table-bordered table-sm">
-            <thead class="table-light">
-              <tr>
-                <th>Invoice No</th>
-                <th>Customer</th>
-                <th>Date</th>
-                <th class="text-end">Total</th>
-                <th class="text-center" style="width: 120px;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      invoices.forEach((inv, index) => {
-        html += `
-          <tr>
-            <td><strong>${inv.invoiceNumber}</strong></td>
-            <td>${inv.customerName}</td>
-            <td>${new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</td>
-            <td class="text-end">₹${(inv.total || 0).toFixed(2)}</td>
-            <td class="text-center">
-              <button class="btn btn-sm btn-info" onclick="previewSavedInvoice(${index})" title="Preview">
-                <i class="bi bi-eye"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" onclick="deleteSavedInvoice(${index})" title="Delete">
-                <i class="bi bi-trash"></i>
-              </button>
-            </td>
-          </tr>
-        `;
-      });
-      
-      html += `
-            </tbody>
-          </table>
-        </div>
-        <div class="alert alert-success">
-          <strong>Total Invoices:</strong> ${invoices.length}
-        </div>
-      `;
-      
-      container.innerHTML = html;
-      console.log('✅ Table rendered');
-    }
-    
-    // Show modal
-    const modalEl = document.getElementById('viewInvoicesModal');
-    if (modalEl) {
-      const modal = new bootstrap.Modal(modalEl);
-      modal.show();
-      console.log('✅ Modal opened');
-    } else {
-      alert('❌ Modal element not found');
-    }
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-    alert('❌ Error: ' + error.message);
-  }
-}
-
-
-function previewSavedInvoice(index) {
-  console.log('👁️ Previewing invoice at index:', index);
-  
-  const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-  const invoice = invoices[index];
-  
-  if (!invoice) {
-    console.error('❌ Invoice not found at index:', index);
-    alert('❌ Invoice not found');
-    return;
-  }
-  
-  // ✅ Ensure all values are valid numbers
-  invoice.subtotal = parseFloat(invoice.subtotal) || 0;
-  invoice.discount = parseFloat(invoice.discount) || 0;
-  invoice.tax = parseFloat(invoice.tax) || 0;
-  invoice.total = parseFloat(invoice.total) || 0;
-  
-  console.log('✅ Invoice found:', invoice.invoiceNumber);
-  
-  // Generate and show preview
-  try {
-    const invoiceHTML = generateInvoiceHTML(invoice);
-    const previewWindow = window.open('', 'Invoice Preview', 'width=900,height=700');
-    
-    if (previewWindow) {
-      previewWindow.document.write(invoiceHTML);
-      previewWindow.document.close();
-      console.log('✅ Preview window opened');
-    } else {
-      alert('⚠️ Could not open preview window. Check your popup blocker.');
-    }
-  } catch (error) {
-    console.error('❌ Error previewing invoice:', error);
-    alert('❌ Error previewing invoice. Check console for details.');
-  }
-}
 
 
 function deleteSavedInvoice(index) {
@@ -12898,6 +12703,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
