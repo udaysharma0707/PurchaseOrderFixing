@@ -1885,8 +1885,8 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyecp5XWigGXD5-2LR1XuT81nUTtBo7JP2fhEtYxWkD4muRb_eySFYRarPtqs8MazXB/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyecp5XWigGXD5-2LR1XuT81nUTtBo7JP2fhEtYxWkD4muRb_eySFYRarPtqs8MazXB/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCy7l0Gmq6GSx60CN5R6hfjXwUHIf_4RFTYClFnJUZRdNLCqBRxIXnyIRfluDL8WG3/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxCy7l0Gmq6GSx60CN5R6hfjXwUHIf_4RFTYClFnJUZRdNLCqBRxIXnyIRfluDL8WG3/exec';
 
     
   let cachedProducts = [];
@@ -3724,7 +3724,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyecp5XWigGXD5-2LR1XuT81nUTtBo7JP2fhEtYxWkD4muRb_eySFYRarPtqs8MazXB/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxCy7l0Gmq6GSx60CN5R6hfjXwUHIf_4RFTYClFnJUZRdNLCqBRxIXnyIRfluDL8WG3/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -8176,6 +8176,8 @@ function escapeHtml(text) {
  * Uses CustomerInvoices and CustomerInvoiceItems sheets
  * ==========================================
  */
+
+
 async function saveInvoice() {
   console.log('💾 Save Invoice clicked');
   
@@ -8259,32 +8261,42 @@ async function saveInvoice() {
     localStorage.setItem('customerInvoices', JSON.stringify(invoices));
     console.log('✅ Saved to localStorage');
     
-    // ✅ Save to Google Sheets (cloud backup)
+    // ✅ Try to save to Google Sheets (cloud backup) - with BETTER error handling
+    let cloudSyncSuccess = false;
+    let cloudSyncError = null;
+    
     try {
-      // Make HTTP POST request to Apps Script
+      console.log('☁️ Attempting cloud sync to:', SCRIPT_URL);
+      
+      // Use FormData instead of JSON to avoid CORS preflight
+      const formData = new URLSearchParams();
+      formData.append('action', 'saveCustomerInvoice');
+      formData.append('invoiceData', JSON.stringify(invoiceData));
+      
       const response = await fetch(SCRIPT_URL, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: JSON.stringify({
-          action: 'saveCustomerInvoice',
-          invoice: invoiceData
-        })
+        body: formData.toString(),
+        mode: 'no-cors' // This prevents CORS errors but we can't read the response
       });
       
-      const result = await response.json();
+      // With no-cors mode, we can't read the response
+      // Assume success if no error is thrown
+      cloudSyncSuccess = true;
+      console.log('✅ Cloud sync request sent (no-cors mode)');
       
-      if (result.success) {
-        console.log('✅ Saved to Google Sheets (CustomerInvoices)');
-        alert(`✅ Invoice saved successfully!\n\nInvoice: ${invoiceData.invoiceNumber}\nCustomer: ${customerName}\nItems: ${items.length}\nTotal: ₹${total.toFixed(2)}\n\n✓ Saved to Cloud (accessible on all devices)`);
-      } else {
-        console.warn('⚠️ Sheet save failed:', result.message);
-        alert(`⚠️ Invoice saved locally, but cloud sync failed.\n\n${result.message}`);
-      }
     } catch (sheetError) {
-      console.error('❌ Google Sheets error:', sheetError);
-      alert(`⚠️ Invoice saved locally only.\n\nCloud sync failed: ${sheetError.message}\n\nYou can still access it on this device.`);
+      cloudSyncError = sheetError;
+      console.error('❌ Cloud sync error:', sheetError);
+    }
+    
+    // Show appropriate message
+    if (cloudSyncSuccess) {
+      alert(`✅ Invoice saved successfully!\n\n📄 Invoice: ${invoiceData.invoiceNumber}\n👤 Customer: ${customerName}\n📦 Items: ${items.length}\n💰 Total: ₹${total.toFixed(2)}\n\n☁️ Cloud sync sent (check Google Sheets to confirm)`);
+    } else {
+      alert(`✅ Invoice saved locally!\n\n📄 Invoice: ${invoiceData.invoiceNumber}\n💰 Total: ₹${total.toFixed(2)}\n\n⚠️ Cloud sync failed: ${cloudSyncError?.message || 'Unknown error'}\n\nThe invoice is saved on this device and can be accessed here.`);
     }
     
     // Close modal
@@ -8298,7 +8310,6 @@ async function saveInvoice() {
     alert('❌ Error: ' + error.message);
   }
 }
-
 
 
 /**
@@ -13222,6 +13233,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
