@@ -8323,63 +8323,73 @@ async function saveInvoice() {
 
 
 /**
- * ✅ UPDATED: Preview saved invoice (mobile & laptop compatible)
- * Works with cloud sync - reads from merged localStorage
+ * ✅ FIXED: Preview saved invoice (works on mobile!)
+ * Closes parent modal first, then shows preview modal
  */
 function previewSavedInvoice(index) {
-  console.log('👁️ Previewing saved invoice at index:', index);
+  console.log('👁️ Previewing invoice at index:', index);
   
   try {
-    // ✅ Use customerInvoices (cloud-synced data)
+    // Get invoice data
     const invoices = JSON.parse(localStorage.getItem('customerInvoices') || '[]');
     
     if (!invoices[index]) {
       alert('❌ Invoice not found');
-      console.error('❌ Invoice at index', index, 'not found');
       return;
     }
     
     const inv = invoices[index];
-    console.log('📄 Invoice data:', inv);
+    console.log('📄 Invoice:', inv.invoiceNumber);
     
-    // For mobile: Use modal instead of popup window
-    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
-    
-    if (isMobile) {
-      // Mobile: Show in Bootstrap modal
-      showInvoiceModal(inv);
-    } else {
-      // Laptop: Open in new window
-      showInvoiceWindow(inv);
+    // ✅ MOBILE FIX: Close parent modal first
+    const parentModal = document.getElementById('invoiceListModal');
+    if (parentModal) {
+      const bsModal = bootstrap.Modal.getInstance(parentModal);
+      if (bsModal) {
+        bsModal.hide();
+      }
     }
     
+    // Wait for parent modal to close, then show preview
+    setTimeout(() => {
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+      
+      if (isMobile) {
+        showInvoiceModal(inv);
+      } else {
+        showInvoiceWindow(inv);
+      }
+    }, 300); // Wait for modal close animation
+    
   } catch (error) {
-    console.error('❌ Error previewing invoice:', error);
+    console.error('❌ Error:', error);
     alert('❌ Error: ' + error.message);
   }
 }
 
 /**
- * ✅ Show invoice in modal (for mobile)
+ * ✅ Show invoice in modal (mobile-optimized)
  */
 function showInvoiceModal(inv) {
   const invoiceHTML = generateInvoiceHTML(inv);
   
-  // Create modal
   const modalHTML = `
-    <div class="modal fade" id="invoicePreviewModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-      <div class="modal-dialog modal-fullscreen-md-down modal-xl">
+    <div class="modal fade" id="invoicePreviewModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-fullscreen">
         <div class="modal-content">
-          <div class="modal-header" style="background: #007bff; color: white;">
-            <h5 class="modal-title">📄 Invoice ${escapeHtml(inv.invoiceNumber)}</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          <div class="modal-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; position: sticky; top: 0; z-index: 1000;">
+            <h5 class="modal-title">
+              <i class="bi bi-file-earmark-text"></i> 
+              Invoice ${escapeHtml(inv.invoiceNumber)}
+            </h5>
+            <button type="button" class="btn-close btn-close-white" onclick="closeInvoicePreview()"></button>
           </div>
-          <div class="modal-body" style="padding: 0; background: #f5f5f5; max-height: 80vh; overflow-y: auto;">
+          <div class="modal-body" style="padding: 0; background: #f5f5f5; overflow-y: auto;">
             ${invoiceHTML}
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-              <i class="bi bi-x-circle"></i> Close
+          <div class="modal-footer" style="position: sticky; bottom: 0; background: white; border-top: 2px solid #dee2e6; z-index: 999;">
+            <button type="button" class="btn btn-secondary" onclick="closeInvoicePreview()">
+              <i class="bi bi-arrow-left"></i> Back
             </button>
             <button type="button" class="btn btn-success" onclick="printInvoiceFromModal('${inv.invoiceNumber}')">
               <i class="bi bi-printer"></i> Print
@@ -8390,120 +8400,151 @@ function showInvoiceModal(inv) {
     </div>
   `;
   
-  // Remove existing modal
-  const existingModal = document.getElementById('invoicePreviewModal');
-  if (existingModal) existingModal.remove();
+  // Remove existing modals
+  document.querySelectorAll('#invoicePreviewModal').forEach(el => el.remove());
   
-  // Add to body
+  // Add new modal
   document.body.insertAdjacentHTML('beforeend', modalHTML);
   
-  // Show modal
-  const modal = new bootstrap.Modal(document.getElementById('invoicePreviewModal'));
-  modal.show();
-  
-  // Cleanup on close
-  document.getElementById('invoicePreviewModal').addEventListener('hidden.bs.modal', function() {
-    this.remove();
-  });
-  
-  console.log('✅ Invoice modal opened');
+  // Show modal with a slight delay
+  setTimeout(() => {
+    const modal = new bootstrap.Modal(document.getElementById('invoicePreviewModal'), {
+      backdrop: 'static',
+      keyboard: false
+    });
+    modal.show();
+    console.log('✅ Invoice modal opened');
+  }, 100);
 }
 
 /**
- * ✅ Show invoice in new window (for laptop)
+ * ✅ Close invoice preview and reopen invoice list
+ */
+function closeInvoicePreview() {
+  const previewModal = document.getElementById('invoicePreviewModal');
+  if (previewModal) {
+    const bsModal = bootstrap.Modal.getInstance(previewModal);
+    if (bsModal) {
+      bsModal.hide();
+    }
+    
+    // Remove modal after animation
+    setTimeout(() => {
+      previewModal.remove();
+      
+      // Reopen invoice list
+      viewSavedInvoices();
+    }, 300);
+  }
+}
+
+/**
+ * ✅ Show invoice in window (for laptop)
  */
 function showInvoiceWindow(inv) {
-  const invoiceHTML = generateInvoiceHTML(inv, true); // true = include full HTML wrapper
-  
-  const printButtons = `
-    <div class="print-button">
-      <button onclick="window.print()">🖨️ Print Invoice</button>
-      <button class="close-btn" onclick="window.close()">✕ Close</button>
-    </div>
-  `;
+  const invoiceHTML = generateInvoiceHTML(inv);
   
   const fullHTML = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Invoice ${inv.invoiceNumber}</title>
+      <title>Invoice ${escapeHtml(inv.invoiceNumber)}</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
       <style>
         body { 
           font-family: Arial, sans-serif; 
-          padding: 0; 
-          margin: 0;
+          margin: 0; 
+          padding: 0;
           background: #f5f5f5;
         }
-        .print-button {
-          margin-top: 30px;
+        .print-buttons {
           text-align: center;
           padding: 20px;
           background: white;
-          border-top: 1px solid #ddd;
+          border-top: 2px solid #dee2e6;
+          position: sticky;
+          bottom: 0;
+          box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
         }
-        .print-button button {
+        .print-buttons button {
           padding: 12px 30px;
           font-size: 14px;
+          font-weight: 600;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          margin: 0 5px;
+          transition: all 0.2s;
+        }
+        .print-btn {
           background: #28a745;
           color: white;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          margin-right: 10px;
-          font-weight: 600;
         }
-        .print-button button:hover {
+        .print-btn:hover {
           background: #218838;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(40,167,69,0.3);
         }
-        .print-button button.close-btn {
+        .close-btn {
           background: #6c757d;
+          color: white;
         }
-        .print-button button.close-btn:hover {
+        .close-btn:hover {
           background: #5a6268;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 8px rgba(108,117,125,0.3);
         }
         @media print {
           body { background: white; }
-          .print-button { display: none; }
+          .print-buttons { display: none; }
         }
       </style>
     </head>
     <body>
       ${invoiceHTML}
-      ${printButtons}
+      <div class="print-buttons">
+        <button class="print-btn" onclick="window.print()">
+          <i class="bi bi-printer"></i> 🖨️ Print Invoice
+        </button>
+        <button class="close-btn" onclick="window.close()">
+          ✕ Close Window
+        </button>
+      </div>
     </body>
     </html>
   `;
   
-  const previewWindow = window.open('', 'invoicePreview', 'width=950,height=1100');
-  if (previewWindow) {
-    previewWindow.document.write(fullHTML);
-    previewWindow.document.close();
+  const win = window.open('', 'InvoicePreview', 'width=950,height=1100,scrollbars=yes');
+  if (win) {
+    win.document.write(fullHTML);
+    win.document.close();
     console.log('✅ Invoice window opened');
   } else {
-    alert('❌ Pop-up blocked. Please allow pop-ups.');
+    alert('❌ Pop-up blocked. Please allow pop-ups and try again.');
   }
 }
 
+
 /**
- * ✅ Generate invoice HTML (reusable for both modal and window)
+ * ✅ Generate invoice HTML (mobile responsive)
  */
-function generateInvoiceHTML(inv, includeWrapper = false) {
-  // Build items HTML
+function generateInvoiceHTML(inv) {
+  // Build items table
   let itemsHTML = '';
   if (inv.items && inv.items.length > 0) {
     inv.items.forEach((item, idx) => {
       itemsHTML += `
         <tr>
-          <td style="text-align: center">${idx + 1}</td>
-          <td>${escapeHtml(item.name)}</td>
-          <td style="text-align: center">${item.quantity}</td>
-          <td style="text-align: right">₹${parseFloat(item.rate || 0).toFixed(2)}</td>
-          <td style="text-align: right">₹${parseFloat(item.amount || 0).toFixed(2)}</td>
+          <td style="text-align: center; font-weight: 600; color: #666;">${idx + 1}</td>
+          <td style="font-weight: 500;">${escapeHtml(item.name)}</td>
+          <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
+          <td style="text-align: right; color: #28a745; font-weight: 600;">₹${parseFloat(item.rate || 0).toFixed(2)}</td>
+          <td style="text-align: right; color: #007bff; font-weight: 700;">₹${parseFloat(item.amount || 0).toFixed(2)}</td>
         </tr>
       `;
     });
   } else {
-    itemsHTML = `<tr><td colspan="5" style="text-align: center; color: #999; padding: 20px;">No items</td></tr>`;
+    itemsHTML = `<tr><td colspan="5" style="text-align: center; color: #999; padding: 30px;">No items</td></tr>`;
   }
   
   const subtotal = parseFloat(inv.subtotal || 0);
@@ -8511,114 +8552,189 @@ function generateInvoiceHTML(inv, includeWrapper = false) {
   const tax = parseFloat(inv.tax || 0);
   const total = parseFloat(inv.total || 0);
   
-  const styles = includeWrapper ? '' : `<style>
-    body { 
-      font-family: Arial, sans-serif; 
-      padding: 0; 
-      margin: 0;
-    }
-    .invoice-container {
-      background: white;
-      max-width: 900px;
-      margin: 0 auto;
-      padding: 30px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .invoice-header { 
-      text-align: center; 
-      margin-bottom: 30px;
-      border-bottom: 2px solid #007bff;
-      padding-bottom: 20px;
-    }
-    .invoice-header h1 { margin: 0; color: #333; font-size: 32px; }
-    .invoice-header h3 { margin: 5px 0 0 0; color: #666; font-size: 16px; }
-    .invoice-details { 
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 30px;
-      margin-bottom: 30px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid #ddd;
-    }
-    .detail-group p {
-      margin: 8px 0;
-      font-size: 14px;
-      line-height: 1.6;
-    }
-    .detail-group strong {
-      color: #333;
-      font-weight: 600;
-    }
-    table { 
-      width: 100%; 
-      border-collapse: collapse; 
-      margin-bottom: 20px; 
-    }
-    th, td { 
-      border: 1px solid #ddd; 
-      padding: 12px; 
-      font-size: 14px;
-      text-align: left;
-    }
-    th { 
-      background-color: #007bff;
-      color: white;
-      font-weight: bold;
-    }
-    tbody tr:nth-child(even) { background-color: #f9f9f9; }
-    .totals-table {
-      width: 450px;
-      margin-left: auto;
-      margin-bottom: 30px;
-    }
-    .totals-table td {
-      border: 1px solid #ddd;
-      padding: 12px;
-    }
-    .totals-table .label {
-      font-weight: 600;
-      color: #333;
-      width: 70%;
-    }
-    .totals-table .amount {
-      text-align: right;
-      font-weight: 600;
-    }
-    .totals-table .total-row {
-      background-color: #d4edda;
-      font-weight: bold;
-      font-size: 16px;
-    }
-    .notes-section {
-      margin-top: 30px;
-      padding: 15px;
-      border-top: 1px solid #ddd;
-      font-size: 13px;
-      color: #555;
-    }
-    .terms-section {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #666;
-      background: #f9f9f9;
-      padding: 15px;
-      border-radius: 4px;
-      border-left: 3px solid #007bff;
-    }
-    @media print {
-      body { background: white; }
-      .invoice-container { box-shadow: none; }
-    }
-    @media (max-width: 768px) {
-      .invoice-container { padding: 15px; }
-      .invoice-details { grid-template-columns: 1fr; gap: 15px; }
-      .totals-table { width: 100%; }
-      th, td { padding: 8px; font-size: 12px; }
-    }
-  </style>`;
-  
   return `
-    ${styles}
+    <style>
+      .invoice-container {
+        background: white;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 30px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .invoice-header {
+        text-align: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 3px solid #667eea;
+        background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+        padding: 20px;
+        border-radius: 8px;
+      }
+      .invoice-header h1 {
+        margin: 0;
+        color: #667eea;
+        font-size: 36px;
+        font-weight: 800;
+        letter-spacing: 2px;
+      }
+      .invoice-header h3 {
+        margin: 8px 0 0 0;
+        color: #666;
+        font-size: 16px;
+        font-weight: 400;
+      }
+      .invoice-details {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+      .detail-group p {
+        margin: 10px 0;
+        font-size: 14px;
+        line-height: 1.8;
+      }
+      .detail-group strong {
+        color: #333;
+        font-weight: 700;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      th, td {
+        border: 1px solid #dee2e6;
+        padding: 14px;
+        font-size: 14px;
+      }
+      th {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      tbody tr:nth-child(even) {
+        background-color: #f8f9fa;
+      }
+      tbody tr:hover {
+        background-color: #e9ecef;
+      }
+      .totals-table {
+        width: 100%;
+        max-width: 450px;
+        margin-left: auto;
+        margin-bottom: 30px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .totals-table td {
+        padding: 14px;
+        font-size: 15px;
+        border: none;
+        border-bottom: 1px solid #dee2e6;
+      }
+      .totals-table tr:last-child td {
+        border-bottom: none;
+      }
+      .totals-table .label {
+        font-weight: 600;
+        color: #495057;
+      }
+      .totals-table .amount {
+        text-align: right;
+        font-weight: 700;
+        color: #212529;
+      }
+      .totals-table .total-row {
+        background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+        font-size: 18px;
+      }
+      .totals-table .total-row .amount {
+        color: #667eea;
+        font-size: 20px;
+      }
+      .notes-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        border-radius: 4px;
+      }
+      .notes-section h4 {
+        margin: 0 0 10px 0;
+        color: #856404;
+        font-size: 16px;
+      }
+      .terms-section {
+        margin-top: 20px;
+        padding: 20px;
+        background: #d4edda;
+        border-left: 4px solid #28a745;
+        border-radius: 4px;
+        font-size: 13px;
+        color: #155724;
+      }
+      .terms-section strong {
+        display: block;
+        margin-bottom: 10px;
+        font-size: 15px;
+        color: #155724;
+      }
+      
+      /* Mobile Responsive */
+      @media (max-width: 768px) {
+        .invoice-container {
+          padding: 15px;
+        }
+        .invoice-header h1 {
+          font-size: 28px;
+        }
+        .invoice-details {
+          grid-template-columns: 1fr;
+          gap: 10px;
+          padding: 15px;
+        }
+        .detail-group p {
+          font-size: 13px;
+          margin: 8px 0;
+        }
+        table {
+          font-size: 12px;
+        }
+        th, td {
+          padding: 10px 8px;
+        }
+        .totals-table {
+          width: 100%;
+        }
+        .totals-table td {
+          padding: 12px;
+          font-size: 14px;
+        }
+        .notes-section, .terms-section {
+          padding: 15px;
+          font-size: 12px;
+        }
+      }
+      
+      @media print {
+        body {
+          background: white;
+        }
+        .invoice-container {
+          box-shadow: none;
+          padding: 20px;
+        }
+      }
+    </style>
+    
     <div class="invoice-container">
       <div class="invoice-header">
         <h1>INVOICE</h1>
@@ -8627,12 +8743,12 @@ function generateInvoiceHTML(inv, includeWrapper = false) {
       
       <div class="invoice-details">
         <div class="detail-group">
-          <p><strong>Invoice Number:</strong> ${escapeHtml(inv.invoiceNumber)}</p>
+          <p><strong>Invoice #:</strong> ${escapeHtml(inv.invoiceNumber)}</p>
           <p><strong>Invoice Date:</strong> ${new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</p>
           <p><strong>Created:</strong> ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</p>
         </div>
         <div class="detail-group">
-          <p><strong>Customer Name:</strong> ${escapeHtml(inv.customerName)}</p>
+          <p><strong>Customer:</strong> ${escapeHtml(inv.customerName)}</p>
           <p><strong>Due Date:</strong> ${new Date(inv.dueDate).toLocaleDateString('en-IN')}</p>
         </div>
       </div>
@@ -8640,10 +8756,10 @@ function generateInvoiceHTML(inv, includeWrapper = false) {
       <table>
         <thead>
           <tr>
-            <th style="width: 50px; text-align: center">#</th>
-            <th>Item Description</th>
-            <th style="width: 100px; text-align: center">Quantity</th>
-            <th style="width: 120px; text-align: right">Rate</th>
+            <th style="width: 40px; text-align: center">#</th>
+            <th>Description</th>
+            <th style="width: 80px; text-align: center">Qty</th>
+            <th style="width: 100px; text-align: right">Rate</th>
             <th style="width: 120px; text-align: right">Amount</th>
           </tr>
         </thead>
@@ -8662,34 +8778,33 @@ function generateInvoiceHTML(inv, includeWrapper = false) {
           <td class="amount">-₹${discount.toFixed(2)}</td>
         </tr>
         <tr>
-          <td class="label">Tax:</td>
+          <td class="label">Tax (GST):</td>
           <td class="amount">₹${tax.toFixed(2)}</td>
         </tr>
         <tr class="total-row">
-          <td class="label">Grand Total:</td>
+          <td class="label">GRAND TOTAL:</td>
           <td class="amount">₹${total.toFixed(2)}</td>
         </tr>
       </table>
       
       ${inv.notes ? `
       <div class="notes-section">
-        <h4 style="margin: 0 0 10px 0;">Customer Notes</h4>
-        <p style="margin: 0;">${escapeHtml(inv.notes)}</p>
+        <h4>📝 Notes</h4>
+        <p style="margin: 0; line-height: 1.6;">${escapeHtml(inv.notes)}</p>
       </div>
       ` : ''}
       
       ${inv.terms ? `
       <div class="terms-section">
-        <strong style="display: block; margin-bottom: 10px;">Terms & Conditions:</strong>
-        ${escapeHtml(inv.terms)}
+        <strong>📜 Terms & Conditions</strong>
+        <div style="white-space: pre-wrap; line-height: 1.6;">${escapeHtml(inv.terms)}</div>
       </div>
       ` : ''}
     </div>
   `;
 }
 
-
-
+    
 
 
 async function loadCustomerInvoices() {
@@ -8960,300 +9075,9 @@ function displayCustomerInvoiceList(invoices) {
 
   
 
-    /**
- * Preview a saved invoice (opens in new window)
- */
-function previewSavedInvoice(index) {
-  console.log('👁️ Previewing saved invoice at index:', index);
-  
-  try {
-    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
-    
-    if (!invoices[index]) {
-      alert('❌ Invoice not found');
-      console.error('❌ Invoice at index', index, 'not found');
-      return;
-    }
-    
-    const inv = invoices[index];
-    console.log('📄 Invoice data:', inv);
-    
-    // Build items HTML
-    let itemsHTML = '';
-    if (inv.items && inv.items.length > 0) {
-      inv.items.forEach((item, idx) => {
-        itemsHTML += `
-          <tr>
-            <td style="text-align: center">${idx + 1}</td>
-            <td>${escapeHtml(item.name)}</td>
-            <td style="text-align: center">${item.quantity}</td>
-            <td style="text-align: right">₹${item.rate.toFixed(2)}</td>
-            <td style="text-align: right">₹${item.amount.toFixed(2)}</td>
-          </tr>
-        `;
-      });
-    } else {
-      itemsHTML = `<tr><td colspan="5" style="text-align: center; color: #999; padding: 20px;">No items in this invoice</td></tr>`;
-    }
-    
-    // Generate HTML
-    const invoiceHTML = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Invoice ${inv.invoiceNumber}</title>
-        <style>
-          body { 
-            font-family: Arial, sans-serif; 
-            padding: 40px; 
-            background: #f5f5f5;
-            margin: 0;
-          }
-          .invoice-container {
-            background: white;
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-          }
-          .invoice-header { 
-            text-align: center; 
-            margin-bottom: 30px;
-            border-bottom: 2px solid #007bff;
-            padding-bottom: 20px;
-          }
-          .invoice-header h1 { margin: 0; color: #333; font-size: 32px; }
-          .invoice-header h3 { margin: 5px 0 0 0; color: #666; font-size: 16px; }
-          .invoice-details { 
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-          }
-          .detail-group p {
-            margin: 8px 0;
-            font-size: 14px;
-            line-height: 1.6;
-          }
-          .detail-group strong {
-            color: #333;
-            font-weight: 600;
-          }
-          table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-bottom: 20px; 
-          }
-          th, td { 
-            border: 1px solid #ddd; 
-            padding: 12px; 
-            font-size: 14px;
-            text-align: left;
-          }
-          th { 
-            background-color: #007bff;
-            color: white;
-            font-weight: bold;
-          }
-          tbody tr:nth-child(even) { background-color: #f9f9f9; }
-          .totals-table {
-            width: 450px;
-            margin-left: auto;
-            margin-bottom: 30px;
-            border-collapse: collapse;
-          }
-          .totals-table td {
-            border: 1px solid #ddd;
-            padding: 12px;
-            font-size: 14px;
-          }
-          .totals-table .label {
-            font-weight: 600;
-            color: #333;
-            width: 70%;
-          }
-          .totals-table .amount {
-            text-align: right;
-            width: 30%;
-            font-weight: 600;
-            color: #333;
-          }
-          .totals-table .total-row {
-            background-color: #d4edda;
-            font-weight: bold;
-            font-size: 16px;
-          }
-          .notes-section {
-            margin-top: 30px;
-            padding: 15px;
-            border-top: 1px solid #ddd;
-            font-size: 13px;
-            color: #555;
-          }
-          .notes-section h4 {
-            margin: 0 0 10px 0;
-            color: #333;
-            font-size: 14px;
-            font-weight: 600;
-          }
-          .notes-section p {
-            margin: 0;
-            line-height: 1.5;
-          }
-          .terms-section {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #666;
-            white-space: pre-wrap;
-            background: #f9f9f9;
-            padding: 15px;
-            border-radius: 4px;
-            border-left: 3px solid #007bff;
-          }
-          .terms-section strong {
-            color: #333;
-            display: block;
-            margin-bottom: 10px;
-            font-size: 13px;
-          }
-          .print-button {
-            margin-top: 30px;
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-          }
-          .print-button button {
-            padding: 12px 30px;
-            font-size: 14px;
-            background: #28a745;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-            font-weight: 600;
-            transition: background 0.2s;
-          }
-          .print-button button:hover {
-            background: #218838;
-          }
-          .print-button button.close-btn {
-            background: #6c757d;
-          }
-          .print-button button.close-btn:hover {
-            background: #5a6268;
-          }
-          @media print {
-            body { background: white; padding: 0; }
-            .invoice-container { box-shadow: none; }
-            .print-button { display: none; }
-            .invoice-details { border-bottom: 1px solid #000; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="invoice-container">
-          <div class="invoice-header">
-            <h1>INVOICE</h1>
-            <h3>Tile & Sanitaryware Inventory</h3>
-          </div>
-          
-          <div class="invoice-details">
-            <div class="detail-group">
-              <p><strong>Invoice Number:</strong> ${inv.invoiceNumber}</p>
-              <p><strong>Invoice Date:</strong> ${new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</p>
-              <p><strong>Created:</strong> ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</p>
-            </div>
-            <div class="detail-group">
-              <p><strong>Customer Name:</strong> ${escapeHtml(inv.customerName)}</p>
-              <p><strong>Due Date:</strong> ${new Date(inv.dueDate).toLocaleDateString('en-IN')}</p>
-            </div>
-          </div>
-          
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 50px; text-align: center">#</th>
-                <th>Item Description</th>
-                <th style="width: 100px; text-align: center">Quantity</th>
-                <th style="width: 120px; text-align: right">Rate</th>
-                <th style="width: 120px; text-align: right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itemsHTML}
-            </tbody>
-          </table>
-          
-          <table class="totals-table">
-            <tr>
-              <td class="label">Sub Total:</td>
-              <td class="amount">₹${inv.subtotal.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td class="label">Discount:</td>
-              <td class="amount">-₹${inv.discount.toFixed(2)}</td>
-            </tr>
-            <tr>
-              <td class="label">Tax:</td>
-              <td class="amount">₹${inv.tax.toFixed(2)}</td>
-            </tr>
-            <tr class="total-row">
-              <td class="label">Grand Total:</td>
-              <td class="amount">₹${inv.total.toFixed(2)}</td>
-            </tr>
-          </table>
-          
-          ${inv.notes ? `
-          <div class="notes-section">
-            <h4>Customer Notes</h4>
-            <p>${escapeHtml(inv.notes)}</p>
-          </div>
-          ` : ''}
-          
-          ${inv.terms ? `
-          <div class="terms-section">
-            <strong>Terms & Conditions:</strong>
-            ${escapeHtml(inv.terms)}
-          </div>
-          ` : ''}
-          
-          <div class="print-button">
-            <button onclick="window.print()">🖨️ Print Invoice</button>
-            <button class="close-btn" onclick="window.close()">✕ Close</button>
-          </div>
-        </div>
-      </body>
-      </html>
-    `;
-    
-    // Open preview
-    const previewWindow = window.open('', 'savedInvoicePreview', 'width=950,height=1100');
-    if (previewWindow) {
-      previewWindow.document.write(invoiceHTML);
-      previewWindow.document.close();
-      console.log('✅ Saved invoice preview opened');
-    } else {
-      alert('❌ Preview window blocked. Please allow pop-ups.');
-    }
-    
-  } catch (error) {
-    console.error('❌ Error previewing invoice:', error);
-    alert('❌ Error: ' + error.message);
-  }
-}
-        
+ 
 
 
-/**
- * Delete invoice from both localStorage and Google Sheets
- */
-/**
- * Delete invoice from both localStorage and Google Sheets
- */
 /**
  * Delete invoice from both localStorage and Google Sheets
  */
@@ -13400,6 +13224,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
