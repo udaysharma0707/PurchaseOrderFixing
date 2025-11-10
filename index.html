@@ -8714,7 +8714,292 @@ function viewSavedInvoices() {
 }
 
 
-            
+    /**
+ * Preview a saved invoice (opens in new window)
+ */
+function previewSavedInvoice(index) {
+  console.log('👁️ Previewing saved invoice at index:', index);
+  
+  try {
+    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    
+    if (!invoices[index]) {
+      alert('❌ Invoice not found');
+      console.error('❌ Invoice at index', index, 'not found');
+      return;
+    }
+    
+    const inv = invoices[index];
+    console.log('📄 Invoice data:', inv);
+    
+    // Build items HTML
+    let itemsHTML = '';
+    if (inv.items && inv.items.length > 0) {
+      inv.items.forEach((item, idx) => {
+        itemsHTML += `
+          <tr>
+            <td style="text-align: center">${idx + 1}</td>
+            <td>${escapeHtml(item.name)}</td>
+            <td style="text-align: center">${item.quantity}</td>
+            <td style="text-align: right">₹${item.rate.toFixed(2)}</td>
+            <td style="text-align: right">₹${item.amount.toFixed(2)}</td>
+          </tr>
+        `;
+      });
+    } else {
+      itemsHTML = `<tr><td colspan="5" style="text-align: center; color: #999; padding: 20px;">No items in this invoice</td></tr>`;
+    }
+    
+    // Generate HTML
+    const invoiceHTML = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Invoice ${inv.invoiceNumber}</title>
+        <style>
+          body { 
+            font-family: Arial, sans-serif; 
+            padding: 40px; 
+            background: #f5f5f5;
+            margin: 0;
+          }
+          .invoice-container {
+            background: white;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          }
+          .invoice-header { 
+            text-align: center; 
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+          }
+          .invoice-header h1 { margin: 0; color: #333; font-size: 32px; }
+          .invoice-header h3 { margin: 5px 0 0 0; color: #666; font-size: 16px; }
+          .invoice-details { 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+          }
+          .detail-group p {
+            margin: 8px 0;
+            font-size: 14px;
+            line-height: 1.6;
+          }
+          .detail-group strong {
+            color: #333;
+            font-weight: 600;
+          }
+          table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 20px; 
+          }
+          th, td { 
+            border: 1px solid #ddd; 
+            padding: 12px; 
+            font-size: 14px;
+            text-align: left;
+          }
+          th { 
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+          }
+          tbody tr:nth-child(even) { background-color: #f9f9f9; }
+          .totals-table {
+            width: 450px;
+            margin-left: auto;
+            margin-bottom: 30px;
+            border-collapse: collapse;
+          }
+          .totals-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            font-size: 14px;
+          }
+          .totals-table .label {
+            font-weight: 600;
+            color: #333;
+            width: 70%;
+          }
+          .totals-table .amount {
+            text-align: right;
+            width: 30%;
+            font-weight: 600;
+            color: #333;
+          }
+          .totals-table .total-row {
+            background-color: #d4edda;
+            font-weight: bold;
+            font-size: 16px;
+          }
+          .notes-section {
+            margin-top: 30px;
+            padding: 15px;
+            border-top: 1px solid #ddd;
+            font-size: 13px;
+            color: #555;
+          }
+          .notes-section h4 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+          }
+          .notes-section p {
+            margin: 0;
+            line-height: 1.5;
+          }
+          .terms-section {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+            white-space: pre-wrap;
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 4px;
+            border-left: 3px solid #007bff;
+          }
+          .terms-section strong {
+            color: #333;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 13px;
+          }
+          .print-button {
+            margin-top: 30px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+          }
+          .print-button button {
+            padding: 12px 30px;
+            font-size: 14px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            font-weight: 600;
+            transition: background 0.2s;
+          }
+          .print-button button:hover {
+            background: #218838;
+          }
+          .print-button button.close-btn {
+            background: #6c757d;
+          }
+          .print-button button.close-btn:hover {
+            background: #5a6268;
+          }
+          @media print {
+            body { background: white; padding: 0; }
+            .invoice-container { box-shadow: none; }
+            .print-button { display: none; }
+            .invoice-details { border-bottom: 1px solid #000; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="invoice-container">
+          <div class="invoice-header">
+            <h1>INVOICE</h1>
+            <h3>Tile & Sanitaryware Inventory</h3>
+          </div>
+          
+          <div class="invoice-details">
+            <div class="detail-group">
+              <p><strong>Invoice Number:</strong> ${inv.invoiceNumber}</p>
+              <p><strong>Invoice Date:</strong> ${new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</p>
+              <p><strong>Created:</strong> ${new Date(inv.createdAt).toLocaleDateString('en-IN')}</p>
+            </div>
+            <div class="detail-group">
+              <p><strong>Customer Name:</strong> ${escapeHtml(inv.customerName)}</p>
+              <p><strong>Due Date:</strong> ${new Date(inv.dueDate).toLocaleDateString('en-IN')}</p>
+            </div>
+          </div>
+          
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 50px; text-align: center">#</th>
+                <th>Item Description</th>
+                <th style="width: 100px; text-align: center">Quantity</th>
+                <th style="width: 120px; text-align: right">Rate</th>
+                <th style="width: 120px; text-align: right">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHTML}
+            </tbody>
+          </table>
+          
+          <table class="totals-table">
+            <tr>
+              <td class="label">Sub Total:</td>
+              <td class="amount">₹${inv.subtotal.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td class="label">Discount:</td>
+              <td class="amount">-₹${inv.discount.toFixed(2)}</td>
+            </tr>
+            <tr>
+              <td class="label">Tax:</td>
+              <td class="amount">₹${inv.tax.toFixed(2)}</td>
+            </tr>
+            <tr class="total-row">
+              <td class="label">Grand Total:</td>
+              <td class="amount">₹${inv.total.toFixed(2)}</td>
+            </tr>
+          </table>
+          
+          ${inv.notes ? `
+          <div class="notes-section">
+            <h4>Customer Notes</h4>
+            <p>${escapeHtml(inv.notes)}</p>
+          </div>
+          ` : ''}
+          
+          ${inv.terms ? `
+          <div class="terms-section">
+            <strong>Terms & Conditions:</strong>
+            ${escapeHtml(inv.terms)}
+          </div>
+          ` : ''}
+          
+          <div class="print-button">
+            <button onclick="window.print()">🖨️ Print Invoice</button>
+            <button class="close-btn" onclick="window.close()">✕ Close</button>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    // Open preview
+    const previewWindow = window.open('', 'savedInvoicePreview', 'width=950,height=1100');
+    if (previewWindow) {
+      previewWindow.document.write(invoiceHTML);
+      previewWindow.document.close();
+      console.log('✅ Saved invoice preview opened');
+    } else {
+      alert('❌ Preview window blocked. Please allow pop-ups.');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error previewing invoice:', error);
+    alert('❌ Error: ' + error.message);
+  }
+}
+        
 
 
 function deleteSavedInvoice(index) {
@@ -12796,6 +13081,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
