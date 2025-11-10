@@ -336,6 +336,11 @@
   <i class="bi bi-receipt"></i> Generate Invoice
 </button>
 
+  <button onclick="testGoogleConnection()" class="btn btn-info">
+  Test Cloud Connection
+</button>
+    
+
 <!-- ✅ NEW: Record Purchase Button -->
 <button onclick="openRecordPurchaseModal()" class="btn" style="
   background: #28a745;
@@ -12332,6 +12337,46 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
     
+/**
+ * Test Google Apps Script connection
+ */
+async function testGoogleConnection() {
+  console.log('🧪 Testing Google Apps Script connection...');
+  
+  if (typeof google === 'undefined' || !google.script || !google.script.run) {
+    console.error('❌ Google Apps Script API not available');
+    alert('❌ Not connected to Google Apps Script\n\nMake sure you:\n1. Deployed as Web App\n2. Opened via Web App URL\n3. Granted permissions');
+    return false;
+  }
+  
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => {
+        reject(new Error('Connection timeout'));
+      }, 5000);
+      
+      google.script.run
+        .withSuccessHandler((res) => {
+          clearTimeout(timeout);
+          resolve(res);
+        })
+        .withFailureHandler((err) => {
+          clearTimeout(timeout);
+          reject(err);
+        })
+        .loadCustomerInvoicesFromSheet(); // Try loading invoices
+    });
+    
+    console.log('✅ Google Apps Script connection successful:', result);
+    alert('✅ Connected to Google Apps Script!\n\nCloud sync is working properly.');
+    return true;
+    
+  } catch (error) {
+    console.error('❌ Connection test failed:', error);
+    alert('❌ Connection test failed:\n\n' + error.message);
+    return false;
+  }
+}
 
     
   </script>
@@ -13163,6 +13208,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
