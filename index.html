@@ -1885,8 +1885,8 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtIo6S5uMPQBWwWY99KJbz6ZUUWuD4JVqAIKvZRohgKaXEG4e3GguvJbPxrBLEp_6X/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtIo6S5uMPQBWwWY99KJbz6ZUUWuD4JVqAIKvZRohgKaXEG4e3GguvJbPxrBLEp_6X/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyecp5XWigGXD5-2LR1XuT81nUTtBo7JP2fhEtYxWkD4muRb_eySFYRarPtqs8MazXB/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyecp5XWigGXD5-2LR1XuT81nUTtBo7JP2fhEtYxWkD4muRb_eySFYRarPtqs8MazXB/exec';
 
     
   let cachedProducts = [];
@@ -3724,7 +3724,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxtIo6S5uMPQBWwWY99KJbz6ZUUWuD4JVqAIKvZRohgKaXEG4e3GguvJbPxrBLEp_6X/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyecp5XWigGXD5-2LR1XuT81nUTtBo7JP2fhEtYxWkD4muRb_eySFYRarPtqs8MazXB/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -8260,13 +8260,34 @@ async function saveInvoice() {
     console.log('✅ Saved to localStorage');
     
     // ✅ Save to Google Sheets (cloud backup)
-    try {
-      const result = await new Promise((resolve, reject) => {
-        google.script.run
-          .withSuccessHandler(resolve)
-          .withFailureHandler(reject)
-          .saveCustomerInvoiceToSheet(invoiceData);
-      });
+    // ✅ Save to Google Sheets (cloud backup)
+try {
+  // Make HTTP POST request to Apps Script
+  const response = await fetch(SCRIPT_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      action: 'saveCustomerInvoice',
+      invoice: invoiceData
+    })
+  });
+  
+  const result = await response.json();
+  
+  if (result.success) {
+    console.log('✅ Saved to Google Sheets (CustomerInvoices)');
+    alert(`✅ Invoice saved successfully!\n\nInvoice: ${invoiceData.invoiceNumber}\nCustomer: ${customerName}\nItems: ${items.length}\nTotal: ₹${total.toFixed(2)}\n\n✓ Saved to Cloud (accessible on all devices)`);
+  } else {
+    console.warn('⚠️ Sheet save failed:', result.message);
+    alert(`⚠️ Invoice saved locally, but cloud sync failed.\n\n${result.message}`);
+  }
+} catch (sheetError) {
+  console.error('❌ Google Sheets error:', sheetError);
+  alert(`⚠️ Invoice saved locally only.\n\nCloud sync failed: ${sheetError.message}\n\nYou can still access it on this device.`);
+}
+
       
       if (result.success) {
         console.log('✅ Saved to Google Sheets (CustomerInvoices)');
@@ -8648,16 +8669,24 @@ function previewInvoice() {
 /**
  * Load customer invoices from Google Sheets on app start
  */
+/**
+ * Load customer invoices from Google Sheets on app start
+ */
 async function loadCustomerInvoicesFromCloud() {
   console.log('☁️ Loading customer invoices from cloud...');
   
   try {
-    const result = await new Promise((resolve, reject) => {
-      google.script.run
-        .withSuccessHandler(resolve)
-        .withFailureHandler(reject)
-        .loadCustomerInvoicesFromSheet();
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'loadCustomerInvoices'
+      })
     });
+    
+    const result = await response.json();
     
     if (result.success && result.invoices) {
       // Merge with localStorage (prefer cloud data)
@@ -9060,6 +9089,9 @@ function previewSavedInvoice(index) {
 /**
  * Delete invoice from both localStorage and Google Sheets
  */
+/**
+ * Delete invoice from both localStorage and Google Sheets
+ */
 async function deleteSavedInvoice(index) {
   if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
     return;
@@ -9074,12 +9106,18 @@ async function deleteSavedInvoice(index) {
   
   // Delete from Google Sheets
   try {
-    const result = await new Promise((resolve, reject) => {
-      google.script.run
-        .withSuccessHandler(resolve)
-        .withFailureHandler(reject)
-        .deleteCustomerInvoiceFromSheet(deletedInvoice.invoiceNumber);
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        action: 'deleteCustomerInvoice',
+        invoiceNumber: deletedInvoice.invoiceNumber
+      })
     });
+    
+    const result = await response.json();
     
     if (result.success) {
       console.log('✅ Deleted from cloud');
@@ -9093,17 +9131,6 @@ async function deleteSavedInvoice(index) {
   // Refresh the list
   viewSavedInvoices();
 }
-/**
- * Initialize app - load customer invoices on page load
- */
-document.addEventListener('DOMContentLoaded', function() {
-  console.log('🚀 App starting...');
-  
-  // Load customer invoices from cloud
-  loadCustomerInvoicesFromCloud();
-  
-  // Your other initialization code here...
-});
 
 
 // ==========================================
@@ -13208,6 +13235,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
