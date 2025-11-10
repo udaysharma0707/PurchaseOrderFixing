@@ -2826,6 +2826,155 @@ textarea:focus {
   background: #f8f9fa;
 }
 
+/* ==========================================
+   INVOICE MODAL STYLING (MATCHES PURCHASE)
+   ========================================== */
+
+#invoiceModal .form-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 3px 0;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+#invoiceModal .form-control,
+#invoiceModal .form-select {
+  font-size: 14px;
+  padding: 5px 8px;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  height: 32px;
+}
+
+#invoiceModal .form-control:focus,
+#invoiceModal .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.2);
+  outline: none;
+}
+
+#invoiceModal .btn-sm {
+  font-size: 12px;
+  padding: 4px 10px;
+  height: 28px;
+}
+
+#invoiceModal .section-gap {
+  height: 8px;
+}
+
+/* Invoice Product Rows - DARKER GRAY BACKGROUND */
+.invoice-product-row {
+  padding: 8px 0;
+  margin-bottom: 10px;
+  background: #e0e0e0;
+  border: 1px solid #bdbdbd;
+  border-radius: 5px;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Mobile: 3 Separate Lines Layout */
+@media (max-width: 767px) {
+  .invoice-product-row {
+    display: block;
+    padding: 8px;
+  }
+  
+  .invoice-name-line { 
+    margin-bottom: 6px; 
+  }
+  
+  .invoice-details-line {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  
+  .invoice-amount-line { 
+    display: block; 
+  }
+  
+  .invoice-field-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #666;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+  }
+  
+  .invoice-remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    font-size: 14px;
+    border-radius: 3px;
+  }
+}
+
+/* Desktop - FORCE WIDE GRID & CONTAINER */
+@media (min-width: 768px) {
+  #invoiceModal .modal-dialog {
+    max-width: 1400px !important;
+    min-width: 900px !important;
+    width: 95vw !important;
+    margin: 1.75rem auto !important;
+  }
+  
+  #invoiceModal .modal-content,
+  #invoiceModal .modal-body {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    padding: 16px 30px !important;
+  }
+  
+  .invoice-product-row {
+    display: grid;
+    grid-template-columns: 7fr 2fr 2fr 2.2fr 80px;
+    gap: 16px;
+    align-items: center;
+    padding: 10px 12px;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  
+  .invoice-field-label { 
+    display: none; 
+  }
+  
+  .invoice-name-line,
+  .invoice-details-line,
+  .invoice-amount-line { 
+    display: contents; 
+  }
+  
+  /* All invoice row inputs full width */
+  .invoice-product-row input,
+  .invoice-product-row select {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  
+  /* Invoice grid container always full width */
+  #invoiceItemsBody,
+  .invoice-items-container {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+}
+
 
 
 
