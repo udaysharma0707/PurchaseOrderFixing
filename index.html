@@ -8621,6 +8621,99 @@ function previewInvoice() {
 
 
 
+/**
+ * ==========================================
+ * VIEW SAVED INVOICES 
+ * ==========================================
+ */
+
+function viewSavedInvoices() {
+  console.log('📋 View Invoices clicked');
+  
+  try {
+    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    console.log('📊 Found', invoices.length, 'invoices');
+    
+    const container = document.getElementById('invoicesListContainer');
+    
+    if (!container) {
+      alert('❌ Container not found');
+      console.error('❌ invoicesListContainer element not found');
+      return;
+    }
+    
+    if (invoices.length === 0) {
+      container.innerHTML = `
+        <div class="alert alert-info text-center">
+          <i class="bi bi-info-circle"></i> No saved invoices found
+        </div>
+      `;
+      console.log('ℹ️ No invoices');
+    } else {
+      let html = `
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered table-sm">
+            <thead class="table-light">
+              <tr>
+                <th>Invoice No</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th class="text-end">Total</th>
+                <th class="text-center" style="width: 120px;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      invoices.forEach((inv, index) => {
+        html += `
+          <tr>
+            <td><strong>${inv.invoiceNumber}</strong></td>
+            <td>${inv.customerName}</td>
+            <td>${new Date(inv.invoiceDate).toLocaleDateString('en-IN')}</td>
+            <td class="text-end">₹${(inv.total || 0).toFixed(2)}</td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-info" onclick="previewSavedInvoice(${index})" title="Preview">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" onclick="deleteSavedInvoice(${index})" title="Delete">
+                <i class="bi bi-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      });
+      
+      html += `
+            </tbody>
+          </table>
+        </div>
+        <div class="alert alert-success">
+          <strong>Total Invoices:</strong> ${invoices.length}
+        </div>
+      `;
+      
+      container.innerHTML = html;
+      console.log('✅ Table rendered');
+    }
+    
+    // Show modal
+    const modalEl = document.getElementById('viewInvoicesModal');
+    if (modalEl) {
+      const modal = new bootstrap.Modal(modalEl);
+      modal.show();
+      console.log('✅ Modal opened');
+    } else {
+      alert('❌ Modal element not found');
+    }
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error: ' + error.message);
+  }
+}
+
+
             
 
 
@@ -12703,6 +12796,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
