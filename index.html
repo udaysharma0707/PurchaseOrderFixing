@@ -1880,8 +1880,8 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6f78id6Hj10F6fsgpjmQOoDVD0a7AS-0FDcO6tXetCxPqZpQtfiiZmT4QwdosPsKp/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbw6f78id6Hj10F6fsgpjmQOoDVD0a7AS-0FDcO6tXetCxPqZpQtfiiZmT4QwdosPsKp/exec'
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtIo6S5uMPQBWwWY99KJbz6ZUUWuD4JVqAIKvZRohgKaXEG4e3GguvJbPxrBLEp_6X/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtIo6S5uMPQBWwWY99KJbz6ZUUWuD4JVqAIKvZRohgKaXEG4e3GguvJbPxrBLEp_6X/exec'
 
     
   let cachedProducts = [];
@@ -3719,7 +3719,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbw6f78id6Hj10F6fsgpjmQOoDVD0a7AS-0FDcO6tXetCxPqZpQtfiiZmT4QwdosPsKp/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxtIo6S5uMPQBWwWY99KJbz6ZUUWuD4JVqAIKvZRohgKaXEG4e3GguvJbPxrBLEp_6X/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -8162,7 +8162,13 @@ function escapeHtml(text) {
 
 /**
  * ==========================================
- * SAVE INVOICE (FIXED - FILTERS EMPTY ROWS)
+ * SAVE INVOICE (SAVES TO BOTH LOCALSTORAGE & GOOGLE SHEETS)
+ * ==========================================
+ */
+/**
+ * ==========================================
+ * SAVE INVOICE (SAVES TO BOTH LOCALSTORAGE & GOOGLE SHEETS)
+ * Uses CustomerInvoices and CustomerInvoiceItems sheets
  * ==========================================
  */
 async function saveInvoice() {
@@ -8173,13 +8179,10 @@ async function saveInvoice() {
     
     if (!customerName) {
       alert('⚠️ Please enter customer name');
-      console.warn('❌ No customer name');
       return;
     }
     
-    console.log('📝 Customer name:', customerName);
-    
-    // ✅ Collect items from GRID LAYOUT (SKIP EMPTY ROWS)
+    // Collect items from GRID LAYOUT (SKIP EMPTY ROWS)
     const items = [];
     const container = document.getElementById('invoiceItemsBody');
     
@@ -8198,7 +8201,6 @@ async function saveInvoice() {
           const qty = parseFloat(qtyInput.value) || 0;
           const rate = parseFloat(rateInput.value) || 0;
           
-          // ✅ FILTER: Only add row if it has a name AND (quantity > 0 OR rate > 0)
           if (name && (qty > 0 || rate > 0)) {
             items.push({
               name: name,
@@ -8206,17 +8208,11 @@ async function saveInvoice() {
               rate: rate,
               amount: qty * rate
             });
-            console.log('  ✅ Added:', name, 'x', qty, '@', rate);
-          } else {
-            console.log('  ⏭️ Skipped empty row:', rowIndex);
           }
         }
       });
     }
     
-    console.log('📦 Valid items count:', items.length);
-    
-    // ✅ Check if invoice has at least one valid item
     if (items.length === 0) {
       alert('⚠️ Please add at least one product to the invoice');
       return;
@@ -8233,8 +8229,6 @@ async function saveInvoice() {
     const taxableAmount = subtotal - discount;
     const tax = (taxableAmount * taxRate) / 100;
     const total = taxableAmount + tax;
-    
-    console.log('💰 Totals - Subtotal:', subtotal, 'Tax:', tax, 'Total:', total);
     
     // Create invoice object
     const invoiceData = {
@@ -8254,28 +8248,45 @@ async function saveInvoice() {
     
     console.log('✅ Invoice data ready:', invoiceData);
     
-    // Save to localStorage
-    let invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    // ✅ Save to localStorage (immediate backup)
+    let invoices = JSON.parse(localStorage.getItem('customerInvoices') || '[]');
     invoices.push(invoiceData);
-    localStorage.setItem('invoices', JSON.stringify(invoices));
+    localStorage.setItem('customerInvoices', JSON.stringify(invoices));
+    console.log('✅ Saved to localStorage');
     
-    console.log('✅ Invoice saved! Total invoices:', invoices.length);
-    
-    // Show success message
-    alert(`✅ Invoice saved successfully!\n\nInvoice: ${invoiceData.invoiceNumber}\nCustomer: ${customerName}\nItems: ${items.length}\nTotal: ₹${total.toFixed(2)}`);
+    // ✅ Save to Google Sheets (cloud backup)
+    try {
+      const result = await new Promise((resolve, reject) => {
+        google.script.run
+          .withSuccessHandler(resolve)
+          .withFailureHandler(reject)
+          .saveCustomerInvoiceToSheet(invoiceData);
+      });
+      
+      if (result.success) {
+        console.log('✅ Saved to Google Sheets (CustomerInvoices)');
+        alert(`✅ Invoice saved successfully!\n\nInvoice: ${invoiceData.invoiceNumber}\nCustomer: ${customerName}\nItems: ${items.length}\nTotal: ₹${total.toFixed(2)}\n\n✓ Saved to Cloud (accessible on all devices)`);
+      } else {
+        console.warn('⚠️ Sheet save failed:', result.message);
+        alert(`⚠️ Invoice saved locally, but cloud sync failed.\n\n${result.message}`);
+      }
+    } catch (sheetError) {
+      console.error('❌ Google Sheets error:', sheetError);
+      alert(`⚠️ Invoice saved locally only.\n\nCloud sync failed: ${sheetError.message}\n\nYou can still access it on this device.`);
+    }
     
     // Close modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('invoiceModal'));
     if (modal) {
       modal.hide();
-      console.log('✅ Modal closed');
     }
     
   } catch (error) {
     console.error('❌ Error saving invoice:', error);
-    alert('❌ Error saving invoice. Check console for details.\n\n' + error.message);
+    alert('❌ Error: ' + error.message);
   }
 }
+
 
 /**
  * Preview Invoice with all current data (FIXED FOR GRID LAYOUT)
@@ -8629,6 +8640,34 @@ function previewInvoice() {
   }
 }
 
+/**
+ * Load customer invoices from Google Sheets on app start
+ */
+async function loadCustomerInvoicesFromCloud() {
+  console.log('☁️ Loading customer invoices from cloud...');
+  
+  try {
+    const result = await new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .loadCustomerInvoicesFromSheet();
+    });
+    
+    if (result.success && result.invoices) {
+      // Merge with localStorage (prefer cloud data)
+      localStorage.setItem('customerInvoices', JSON.stringify(result.invoices));
+      console.log(`✅ Loaded ${result.invoices.length} customer invoices from cloud`);
+      return result.invoices;
+    } else {
+      console.warn('⚠️ Failed to load from cloud');
+      return JSON.parse(localStorage.getItem('customerInvoices') || '[]');
+    }
+  } catch (error) {
+    console.error('❌ Error loading from cloud:', error);
+    return JSON.parse(localStorage.getItem('customerInvoices') || '[]');
+  }
+}
 
 
 /**
@@ -8637,18 +8676,20 @@ function previewInvoice() {
  * ==========================================
  */
 
+/**
+ * View saved customer invoices
+ */
 function viewSavedInvoices() {
   console.log('📋 View Invoices clicked');
   
   try {
-    const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    const invoices = JSON.parse(localStorage.getItem('customerInvoices') || '[]');
     console.log('📊 Found', invoices.length, 'invoices');
     
     const container = document.getElementById('invoicesListContainer');
     
     if (!container) {
       alert('❌ Container not found');
-      console.error('❌ invoicesListContainer element not found');
       return;
     }
     
@@ -8658,7 +8699,6 @@ function viewSavedInvoices() {
           <i class="bi bi-info-circle"></i> No saved invoices found
         </div>
       `;
-      console.log('ℹ️ No invoices');
     } else {
       let html = `
         <div class="table-responsive">
@@ -8704,7 +8744,6 @@ function viewSavedInvoices() {
       `;
       
       container.innerHTML = html;
-      console.log('✅ Table rendered');
     }
     
     // Show modal
@@ -8712,9 +8751,6 @@ function viewSavedInvoices() {
     if (modalEl) {
       const modal = new bootstrap.Modal(modalEl);
       modal.show();
-      console.log('✅ Modal opened');
-    } else {
-      alert('❌ Modal element not found');
     }
     
   } catch (error) {
@@ -8722,6 +8758,7 @@ function viewSavedInvoices() {
     alert('❌ Error: ' + error.message);
   }
 }
+
 
 
     /**
@@ -9012,22 +9049,57 @@ function previewSavedInvoice(index) {
         
 
 
-function deleteSavedInvoice(index) {
+/**
+ * Delete invoice from both localStorage and Google Sheets
+ */
+/**
+ * Delete invoice from both localStorage and Google Sheets
+ */
+async function deleteSavedInvoice(index) {
   if (!confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
     return;
   }
   
-  const invoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+  const invoices = JSON.parse(localStorage.getItem('customerInvoices') || '[]');
   const deletedInvoice = invoices[index];
   
+  // Delete from localStorage
   invoices.splice(index, 1);
-  localStorage.setItem('invoices', JSON.stringify(invoices));
+  localStorage.setItem('customerInvoices', JSON.stringify(invoices));
   
-  alert(`ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ Invoice ${deletedInvoice.invoiceNumber} deleted successfully`);
+  // Delete from Google Sheets
+  try {
+    const result = await new Promise((resolve, reject) => {
+      google.script.run
+        .withSuccessHandler(resolve)
+        .withFailureHandler(reject)
+        .deleteCustomerInvoiceFromSheet(deletedInvoice.invoiceNumber);
+    });
+    
+    if (result.success) {
+      console.log('✅ Deleted from cloud');
+    }
+  } catch (error) {
+    console.error('❌ Failed to delete from cloud:', error);
+  }
+  
+  alert(`✅ Invoice ${deletedInvoice.invoiceNumber} deleted successfully`);
   
   // Refresh the list
   viewSavedInvoices();
 }
+/**
+ * Initialize app - load customer invoices on page load
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 App starting...');
+  
+  // Load customer invoices from cloud
+  loadCustomerInvoicesFromCloud();
+  
+  // Your other initialization code here...
+});
+
 
 // ==========================================
 // SHARE INVOICE FEATURE
@@ -13091,6 +13163,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
