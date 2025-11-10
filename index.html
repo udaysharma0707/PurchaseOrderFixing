@@ -8321,224 +8321,6 @@ async function saveInvoice() {
   }
 }
 
-
-/**
- * ✅ FIXED: Preview saved invoice (works on mobile!)
- * Closes parent modal first, then shows preview modal
- */
-
-
-/**
- * ==========================================
- * VIEW SAVED INVOICES 
- * ==========================================
- */
-
-/**
- * ✅ UPDATED: View Invoices (with cloud sync)
- */
-async function viewSavedInvoices() {
-  console.log('📄 Opening saved invoices...');
-  
-  // Show loading modal
-  const loadingModal = `
-    <div class="modal fade" id="invoiceListModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-      <div class="modal-dialog modal-fullscreen-md-down modal-xl">
-        <div class="modal-content">
-          <div class="modal-header" style="background: #007bff; color: white;">
-            <h5 class="modal-title">📄 Saved Invoices</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body" id="invoiceListContent" style="min-height: 400px;">
-            <div style="text-align: center; padding: 60px 20px;">
-              <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
-              <p style="margin-top: 20px; color: #666; font-size: 16px;">Loading invoices from cloud...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  // Remove existing modal
-  const existing = document.getElementById('invoiceListModal');
-  if (existing) existing.remove();
-  
-  // Add modal
-  document.body.insertAdjacentHTML('beforeend', loadingModal);
-  
-  // Show modal
-  const modal = new bootstrap.Modal(document.getElementById('invoiceListModal'));
-  modal.show();
-  
-  // Load invoices from cloud + localStorage
-  try {
-    const invoices = await loadCustomerInvoices();
-    displayInvoiceList(invoices);
-  } catch (error) {
-    console.error('❌ Error loading invoices:', error);
-    document.getElementById('invoiceListContent').innerHTML = `
-      <div style="text-align: center; padding: 40px; color: #dc3545;">
-        <i class="bi bi-exclamation-triangle" style="font-size: 48px;"></i>
-        <p style="margin-top: 15px;">Failed to load invoices</p>
-        <p style="font-size: 14px; color: #666;">${error.message}</p>
-      </div>
-    `;
-  }
-  
-  // Cleanup on close
-  document.getElementById('invoiceListModal').addEventListener('hidden.bs.modal', function() {
-    this.remove();
-  });
-}
-
-/**
- * ✅ Display invoice list in modal
- */
-function displayInvoiceList(invoices) {
-  const container = document.getElementById('invoiceListContent');
-  
-  if (!invoices || invoices.length === 0) {
-    container.innerHTML = `
-      <div style="text-align: center; padding: 60px 20px; color: #999;">
-        <i class="bi bi-inbox" style="font-size: 64px;"></i>
-        <p style="margin-top: 20px; font-size: 18px;">No invoices found</p>
-        <p style="font-size: 14px;">Create your first invoice to get started</p>
-      </div>
-    `;
-    return;
-  }
-  
-  // Sort by date (newest first)
-  invoices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  
-  let html = '<div class="table-responsive"><table class="table table-hover table-bordered">';
-  html += '<thead style="background: #f8f9fa;"><tr>';
-  html += '<th>Invoice #</th>';
-  html += '<th>Customer</th>';
-  html += '<th>Date</th>';
-  html += '<th>Total</th>';
-  html += '<th style="width: 150px; text-align: center;">Actions</th>';
-  html += '</tr></thead><tbody>';
-  
-  invoices.forEach((invoice, index) => {
-    const invoiceDate = new Date(invoice.invoiceDate).toLocaleDateString('en-IN');
-    const total = parseFloat(invoice.total || 0).toFixed(2);
-    
-    html += '<tr>';
-    html += `<td><strong>${escapeHtml(invoice.invoiceNumber)}</strong></td>`;
-    html += `<td>${escapeHtml(invoice.customerName)}</td>`;
-    html += `<td>${invoiceDate}</td>`;
-    html += `<td><strong>₹${total}</strong></td>`;
-    html += `<td style="text-align: center;">
-      <button class="btn btn-sm btn-primary" onclick="previewSavedInvoice(${index})" title="View Invoice">
-        <i class="bi bi-eye"></i>
-      </button>
-      <button class="btn btn-sm btn-danger" onclick="deleteSavedInvoice(${index})" title="Delete Invoice">
-        <i class="bi bi-trash"></i>
-      </button>
-    </td>`;
-    html += '</tr>';
-  });
-  
-  html += '</tbody></table></div>';
-  html += `<div style="padding: 15px; background: #f8f9fa; border-top: 1px solid #dee2e6; margin-top: 20px;">
-    <p style="margin: 0; font-size: 14px; color: #666;">
-      <i class="bi bi-info-circle"></i> Total Invoices: <strong>${invoices.length}</strong>
-    </p>
-  </div>`;
-  
-  container.innerHTML = html;
-  console.log(`✅ Displayed ${invoices.length} invoices`);
-}
-
-
-/**
- * Initialize invoice list when View Invoices page loads
- */
-async function initInvoiceListPage() {
-  console.log('📄 Initializing invoice list page...');
-  
-  // Show loading
-  const invoiceListContainer = document.getElementById('invoiceListContainer');
-  if (invoiceListContainer) {
-    invoiceListContainer.innerHTML = `
-      <div style="text-align: center; padding: 40px;">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-        <p style="margin-top: 15px; color: #666;">Loading invoices...</p>
-      </div>
-    `;
-  }
-  
-  // Load invoices from cloud + localStorage
-  const invoices = await loadCustomerInvoices();
-  
-  // Display invoices
-  displayCustomerInvoiceList(invoices);
-}
-
-/**
- * Display customer invoice list
- */
-function displayCustomerInvoiceList(invoices) {
-  const container = document.getElementById('invoiceListContainer');
-  
-  if (!container) {
-    console.error('❌ Invoice list container not found');
-    return;
-  }
-  
-  if (!invoices || invoices.length === 0) {
-    container.innerHTML = `
-      <div style="text-align: center; padding: 40px; color: #999;">
-        <i class="bi bi-inbox" style="font-size: 48px;"></i>
-        <p style="margin-top: 15px;">No invoices found</p>
-      </div>
-    `;
-    return;
-  }
-  
-  // Sort by date (newest first)
-  invoices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  
-  let html = '<div class="table-responsive"><table class="table table-hover">';
-  html += '<thead><tr>';
-  html += '<th>Invoice #</th>';
-  html += '<th>Customer</th>';
-  html += '<th>Date</th>';
-  html += '<th>Total</th>';
-  html += '<th>Actions</th>';
-  html += '</tr></thead><tbody>';
-  
-  invoices.forEach(invoice => {
-    const invoiceDate = new Date(invoice.invoiceDate).toLocaleDateString('en-IN');
-    const total = parseFloat(invoice.total || 0).toFixed(2);
-    
-    html += '<tr>';
-    html += `<td><strong>${invoice.invoiceNumber}</strong></td>`;
-    html += `<td>${invoice.customerName}</td>`;
-    html += `<td>${invoiceDate}</td>`;
-    html += `<td>₹${total}</td>`;
-    html += `<td>
-      <button class="btn btn-sm btn-primary" onclick="viewInvoicePreview('${invoice.invoiceNumber}')">
-        <i class="bi bi-eye"></i> View
-      </button>
-      <button class="btn btn-sm btn-danger" onclick="deleteCustomerInvoice('${invoice.invoiceNumber}')">
-        <i class="bi bi-trash"></i>
-      </button>
-    </td>`;
-    html += '</tr>';
-  });
-  
-  html += '</tbody></table></div>';
-  container.innerHTML = html;
-  
-  console.log(`✅ Displayed ${invoices.length} invoices`);
-}
-
-
 function previewSavedInvoice(index) {
   console.log('👁️ Previewing invoice at index:', index);
   
@@ -9076,6 +8858,568 @@ async function loadCustomerInvoices() {
   
 
  
+
+
+/**
+ * ==========================================
+ * VIEW SAVED INVOICES 
+ * ==========================================
+ */
+
+/**
+ * ✅ UPDATED: View Invoices (with cloud sync)
+ */
+async function viewSavedInvoices() {
+  console.log('📄 Opening saved invoices...');
+  
+  // Show loading modal
+  const loadingModal = `
+    <div class="modal fade" id="invoiceListModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+      <div class="modal-dialog modal-fullscreen-md-down modal-xl">
+        <div class="modal-content">
+          <div class="modal-header" style="background: #007bff; color: white;">
+            <h5 class="modal-title">📄 Saved Invoices</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body" id="invoiceListContent" style="min-height: 400px;">
+            <div style="text-align: center; padding: 60px 20px;">
+              <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;"></div>
+              <p style="margin-top: 20px; color: #666; font-size: 16px;">Loading invoices from cloud...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Remove existing modal
+  const existing = document.getElementById('invoiceListModal');
+  if (existing) existing.remove();
+  
+  // Add modal
+  document.body.insertAdjacentHTML('beforeend', loadingModal);
+  
+  // Show modal
+  const modal = new bootstrap.Modal(document.getElementById('invoiceListModal'));
+  modal.show();
+  
+  // Load invoices from cloud + localStorage
+  try {
+    const invoices = await loadCustomerInvoices();
+    displayInvoiceList(invoices);
+  } catch (error) {
+    console.error('❌ Error loading invoices:', error);
+    document.getElementById('invoiceListContent').innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #dc3545;">
+        <i class="bi bi-exclamation-triangle" style="font-size: 48px;"></i>
+        <p style="margin-top: 15px;">Failed to load invoices</p>
+        <p style="font-size: 14px; color: #666;">${error.message}</p>
+      </div>
+    `;
+  }
+  
+  // Cleanup on close
+  document.getElementById('invoiceListModal').addEventListener('hidden.bs.modal', function() {
+    this.remove();
+  });
+}
+
+/**
+ * ✅ Display invoice list in modal
+ */
+function displayInvoiceList(invoices) {
+  const container = document.getElementById('invoiceListContent');
+  
+  if (!invoices || invoices.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 60px 20px; color: #999;">
+        <i class="bi bi-inbox" style="font-size: 64px;"></i>
+        <p style="margin-top: 20px; font-size: 18px;">No invoices found</p>
+        <p style="font-size: 14px;">Create your first invoice to get started</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Sort by date (newest first)
+  invoices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+  let html = '<div class="table-responsive"><table class="table table-hover table-bordered">';
+  html += '<thead style="background: #f8f9fa;"><tr>';
+  html += '<th>Invoice #</th>';
+  html += '<th>Customer</th>';
+  html += '<th>Date</th>';
+  html += '<th>Total</th>';
+  html += '<th style="width: 150px; text-align: center;">Actions</th>';
+  html += '</tr></thead><tbody>';
+  
+  invoices.forEach((invoice, index) => {
+    const invoiceDate = new Date(invoice.invoiceDate).toLocaleDateString('en-IN');
+    const total = parseFloat(invoice.total || 0).toFixed(2);
+    
+    html += '<tr>';
+    html += `<td><strong>${escapeHtml(invoice.invoiceNumber)}</strong></td>`;
+    html += `<td>${escapeHtml(invoice.customerName)}</td>`;
+    html += `<td>${invoiceDate}</td>`;
+    html += `<td><strong>₹${total}</strong></td>`;
+    html += `<td style="text-align: center;">
+      <button class="btn btn-sm btn-primary" onclick="previewSavedInvoice(${index})" title="View Invoice">
+        <i class="bi bi-eye"></i>
+      </button>
+      <button class="btn btn-sm btn-danger" onclick="deleteSavedInvoice(${index})" title="Delete Invoice">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>`;
+    html += '</tr>';
+  });
+  
+  html += '</tbody></table></div>';
+  html += `<div style="padding: 15px; background: #f8f9fa; border-top: 1px solid #dee2e6; margin-top: 20px;">
+    <p style="margin: 0; font-size: 14px; color: #666;">
+      <i class="bi bi-info-circle"></i> Total Invoices: <strong>${invoices.length}</strong>
+    </p>
+  </div>`;
+  
+  container.innerHTML = html;
+  console.log(`✅ Displayed ${invoices.length} invoices`);
+}
+
+
+/**
+ * Initialize invoice list when View Invoices page loads
+ */
+async function initInvoiceListPage() {
+  console.log('📄 Initializing invoice list page...');
+  
+  // Show loading
+  const invoiceListContainer = document.getElementById('invoiceListContainer');
+  if (invoiceListContainer) {
+    invoiceListContainer.innerHTML = `
+      <div style="text-align: center; padding: 40px;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p style="margin-top: 15px; color: #666;">Loading invoices...</p>
+      </div>
+    `;
+  }
+  
+  // Load invoices from cloud + localStorage
+  const invoices = await loadCustomerInvoices();
+  
+  // Display invoices
+  displayCustomerInvoiceList(invoices);
+}
+
+/**
+ * Display customer invoice list
+ */
+function displayCustomerInvoiceList(invoices) {
+  const container = document.getElementById('invoiceListContainer');
+  
+  if (!container) {
+    console.error('❌ Invoice list container not found');
+    return;
+  }
+  
+  if (!invoices || invoices.length === 0) {
+    container.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #999;">
+        <i class="bi bi-inbox" style="font-size: 48px;"></i>
+        <p style="margin-top: 15px;">No invoices found</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Sort by date (newest first)
+  invoices.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  
+  let html = '<div class="table-responsive"><table class="table table-hover">';
+  html += '<thead><tr>';
+  html += '<th>Invoice #</th>';
+  html += '<th>Customer</th>';
+  html += '<th>Date</th>';
+  html += '<th>Total</th>';
+  html += '<th>Actions</th>';
+  html += '</tr></thead><tbody>';
+  
+  invoices.forEach(invoice => {
+    const invoiceDate = new Date(invoice.invoiceDate).toLocaleDateString('en-IN');
+    const total = parseFloat(invoice.total || 0).toFixed(2);
+    
+    html += '<tr>';
+    html += `<td><strong>${invoice.invoiceNumber}</strong></td>`;
+    html += `<td>${invoice.customerName}</td>`;
+    html += `<td>${invoiceDate}</td>`;
+    html += `<td>₹${total}</td>`;
+    html += `<td>
+      <button class="btn btn-sm btn-primary" onclick="viewInvoicePreview('${invoice.invoiceNumber}')">
+        <i class="bi bi-eye"></i> View
+      </button>
+      <button class="btn btn-sm btn-danger" onclick="deleteCustomerInvoice('${invoice.invoiceNumber}')">
+        <i class="bi bi-trash"></i>
+      </button>
+    </td>`;
+    html += '</tr>';
+  });
+  
+  html += '</tbody></table></div>';
+  container.innerHTML = html;
+  
+  console.log(`✅ Displayed ${invoices.length} invoices`);
+}
+
+function previewInvoice() {
+  console.log('👁️ Opening invoice preview...');
+  
+  // Collect invoice data
+  const customerName = document.getElementById('invoiceCustomerName')?.value || 'Customer';
+  const invoiceNumber = document.getElementById('invoiceNumber')?.value || 'INV-0000';
+  const invoiceDate = document.getElementById('invoiceDate')?.value || new Date().toISOString().split('T')[0];
+  const dueDate = document.getElementById('invoiceDueDate')?.value || invoiceDate;
+  const paymentTerms = document.getElementById('paymentTerms')?.selectedOptions[0]?.text || 'Net 15';
+  
+  // ✅ FIX: Get invoice items from GRID LAYOUT (not table rows)
+  const container = document.getElementById('invoiceItemsBody');
+  let items = [];
+  let subtotal = 0;
+  
+  console.log('📋 Parsing invoice items from grid layout...');
+  
+  if (container) {
+    // ✅ Get all invoice-product-row divs (not tr elements)
+    const rows = container.querySelectorAll('.invoice-product-row');
+    console.log('✅ Found', rows.length, 'product rows');
+    
+    rows.forEach((row, idx) => {
+      const rowIndex = row.getAttribute('data-index');
+      
+      // Get inputs by ID (more reliable)
+      const nameInput = document.getElementById(`invoiceProduct-${rowIndex}`);
+      const qtyInput = document.getElementById(`invoiceQty-${rowIndex}`);
+      const rateInput = document.getElementById(`invoiceRate-${rowIndex}`);
+      
+      if (nameInput && qtyInput && rateInput) {
+        const name = nameInput.value.trim();
+        const qty = parseFloat(qtyInput.value) || 0;
+        const rate = parseFloat(rateInput.value) || 0;
+        const amount = qty * rate;
+        
+        console.log('  Row', idx, ':', name, 'x', qty, '@', rate, '=', amount);
+        
+       if (name && (qty > 0 || rate > 0)) { 
+          items.push({
+            name: name || 'Unnamed Item',
+            quantity: qty,
+            rate: rate,
+            amount: amount
+          });
+          subtotal += amount;
+        }
+      } else {
+        console.log('  ⏭️ Skipped empty row');
+      }
+    });
+  }
+  
+  console.log('✅ Total items parsed:', items.length, 'Subtotal:', subtotal);
+  
+  // Get discount
+  const discountInput = document.getElementById('invoiceDiscount');
+  const discountTypeSelect = document.getElementById('invoiceDiscountType');
+  let discountAmount = 0;
+  
+  if (discountInput && discountTypeSelect) {
+    const discountValue = parseFloat(discountInput.value) || 0;
+    const discountType = discountTypeSelect.value;
+    
+    if (discountType === 'percent') {
+      discountAmount = (subtotal * discountValue) / 100;
+    } else {
+      discountAmount = discountValue;
+    }
+  }
+  
+  // Get tax
+  const taxSelect = document.getElementById('invoiceTaxRate');
+  let taxRate = 0;
+  if (taxSelect) {
+    taxRate = parseFloat(taxSelect.value) || 0;
+  }
+  
+  const afterDiscount = subtotal - discountAmount;
+  const tax = (afterDiscount * taxRate) / 100;
+  const grandTotal = afterDiscount + tax;
+  
+  // Get notes and terms
+  const notes = document.getElementById('invoiceNotes')?.value || '';
+  const terms = document.getElementById('invoiceTerms')?.value || '';
+  
+  // Build items HTML
+  let itemsHTML = '';
+  if (items.length > 0) {
+    items.forEach((item, index) => {
+      itemsHTML += `
+        <tr>
+          <td style="text-align: center">${index + 1}</td>
+          <td>${escapeHtml(item.name)}</td>
+          <td style="text-align: center">${item.quantity}</td>
+          <td style="text-align: right">₹${item.rate.toFixed(2)}</td>
+          <td style="text-align: right">₹${item.amount.toFixed(2)}</td>
+        </tr>
+      `;
+    });
+  } else {
+    itemsHTML = `<tr><td colspan="5" style="text-align: center; color: #999; padding: 20px;">No items added to invoice</td></tr>`;
+  }
+  
+  // Generate HTML
+  const invoiceHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Invoice ${invoiceNumber}</title>
+      <style>
+        body { 
+          font-family: Arial, sans-serif; 
+          padding: 40px; 
+          background: #f5f5f5;
+          margin: 0;
+        }
+        .invoice-container {
+          background: white;
+          max-width: 900px;
+          margin: 0 auto;
+          padding: 30px;
+          border-radius: 8px;
+          box-shadow: 0 2 8px rgba(0,0,0,0.1);
+        }
+        .invoice-header { 
+          text-align: center; 
+          margin-bottom: 30px;
+          border-bottom: 2px solid #007bff;
+          padding-bottom: 20px;
+        }
+        .invoice-header h1 { margin: 0; color: #333; font-size: 32px; }
+        .invoice-header h3 { margin: 5px 0 0 0; color: #666; font-size: 16px; }
+        .invoice-details { 
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 30px;
+          margin-bottom: 30px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid #ddd;
+        }
+        .detail-group p {
+          margin: 8px 0;
+          font-size: 14px;
+          line-height: 1.6;
+        }
+        .detail-group strong {
+          color: #333;
+          font-weight: 600;
+        }
+        table { 
+          width: 100%; 
+          border-collapse: collapse; 
+          margin-bottom: 20px; 
+        }
+        th, td { 
+          border: 1px solid #ddd; 
+          padding: 12px; 
+          font-size: 14px;
+          text-align: left;
+        }
+        th { 
+          background-color: #007bff;
+          color: white;
+          font-weight: bold;
+        }
+        tbody tr:nth-child(even) { background-color: #f9f9f9; }
+        .totals-table {
+          width: 450px;
+          margin-left: auto;
+          margin-bottom: 30px;
+          border-collapse: collapse;
+        }
+        .totals-table td {
+          border: 1px solid #ddd;
+          padding: 12px;
+          font-size: 14px;
+        }
+        .totals-table .label {
+          font-weight: 600;
+          color: #333;
+          width: 70%;
+        }
+        .totals-table .amount {
+          text-align: right;
+          width: 30%;
+          font-weight: 600;
+          color: #333;
+        }
+        .totals-table .total-row {
+          background-color: #d4edda;
+          font-weight: bold;
+          font-size: 16px;
+        }
+        .notes-section {
+          margin-top: 30px;
+          padding: 15px;
+          border-top: 1px solid #ddd;
+          font-size: 13px;
+          color: #555;
+        }
+        .notes-section h4 {
+          margin: 0 0 10px 0;
+          color: #333;
+          font-size: 14px;
+          font-weight: 600;
+        }
+        .notes-section p {
+          margin: 0;
+          line-height: 1.5;
+        }
+        .terms-section {
+          margin-top: 20px;
+          font-size: 12px;
+          color: #666;
+          white-space: pre-wrap;
+          background: #f9f9f9;
+          padding: 15px;
+          border-radius: 4px;
+          border-left: 3px solid #007bff;
+        }
+        .terms-section strong {
+          color: #333;
+          display: block;
+          margin-bottom: 10px;
+          font-size: 13px;
+        }
+        .print-button {
+          margin-top: 30px;
+          text-align: center;
+          padding-top: 20px;
+          border-top: 1px solid #ddd;
+        }
+        .print-button button {
+          padding: 12px 30px;
+          font-size: 14px;
+          background: #28a745;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+          margin-right: 10px;
+          font-weight: 600;
+          transition: background 0.2s;
+        }
+        .print-button button:hover {
+          background: #218838;
+        }
+        .print-button button.close-btn {
+          background: #6c757d;
+        }
+        .print-button button.close-btn:hover {
+          background: #5a6268;
+        }
+        @media print {
+          body { background: white; padding: 0; }
+          .invoice-container { box-shadow: none; }
+          .print-button { display: none; }
+          .invoice-details { border-bottom: 1px solid #000; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="invoice-container">
+        <div class="invoice-header">
+          <h1>INVOICE</h1>
+          <h3>Tile & Sanitaryware Inventory</h3>
+        </div>
+        
+        <div class="invoice-details">
+          <div class="detail-group">
+            <p><strong>Invoice Number:</strong> ${invoiceNumber}</p>
+            <p><strong>Invoice Date:</strong> ${new Date(invoiceDate).toLocaleDateString('en-IN')}</p>
+            <p><strong>Payment Terms:</strong> ${paymentTerms}</p>
+          </div>
+          <div class="detail-group">
+            <p><strong>Customer Name:</strong> ${escapeHtml(customerName)}</p>
+            <p><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString('en-IN')}</p>
+          </div>
+        </div>
+        
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 50px; text-align: center">#</th>
+              <th>Item Description</th>
+              <th style="width: 100px; text-align: center">Quantity</th>
+              <th style="width: 120px; text-align: right">Rate</th>
+              <th style="width: 120px; text-align: right">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${itemsHTML}
+          </tbody>
+        </table>
+        
+        <table class="totals-table">
+          <tr>
+            <td class="label">Sub Total:</td>
+            <td class="amount">₹${subtotal.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td class="label">Discount:</td>
+            <td class="amount">-₹${discountAmount.toFixed(2)}</td>
+          </tr>
+          <tr>
+            <td class="label">Tax (${taxRate}%):</td>
+            <td class="amount">₹${tax.toFixed(2)}</td>
+          </tr>
+          <tr class="total-row">
+            <td class="label">Grand Total:</td>
+            <td class="amount">₹${grandTotal.toFixed(2)}</td>
+          </tr>
+        </table>
+        
+        ${notes ? `
+        <div class="notes-section">
+          <h4>Customer Notes</h4>
+          <p>${escapeHtml(notes)}</p>
+        </div>
+        ` : ''}
+        
+        ${terms ? `
+        <div class="terms-section">
+          <strong>Terms & Conditions:</strong>
+          ${escapeHtml(terms)}
+        </div>
+        ` : ''}
+        
+        <div class="print-button">
+          <button onclick="window.print()">🖨️ Print Invoice</button>
+          <button class="close-btn" onclick="window.close()">✕ Close</button>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  // Open preview
+  const previewWindow = window.open('', 'invoicePreview', 'width=950,height=1100');
+  if (previewWindow) {
+    previewWindow.document.write(invoiceHTML);
+    previewWindow.document.close();
+    console.log('✅ Preview opened with', items.length, 'items');
+  } else {
+    alert('❌ Preview window blocked. Please allow pop-ups.');
+  }
+}
+
+
 
 
 /**
@@ -13224,6 +13568,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
