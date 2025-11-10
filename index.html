@@ -1905,7 +1905,28 @@ let productPhotoBase64 = null;
 let productPhotoFileName = null;
 
 
+
+
+/**
+ * Validate and parse JSON response
+ */
+async function parseJSONResponse(response) {
+  const contentType = response.headers.get('content-type');
   
+  if (!contentType || !contentType.includes('application/json')) {
+    const text = await response.text();
+    console.error('❌ Received non-JSON response:', text.substring(0, 500));
+    throw new Error('Server returned non-JSON response. Check deployment.');
+  }
+  
+  return await response.json();
+}
+
+// Use it like this:
+// const result = await parseJSONResponse(response);
+
+
+    
     
 // ==========================================
 // BACKGROUND SAVE QUEUE
@@ -2344,23 +2365,17 @@ try {
  * ==========================================
  */
 
-/**
- * ==========================================
- * SYNC FROM GOOGLE SHEETS (CACHE-FIRST)
- * ==========================================
- */
-
 async function syncFromGoogleSheets() {
   if (!userEmail || !userHash) {
-    console.warn('Ã¢Å¡ Ã¯Â¸Â No credentials, checking localStorage...');
+    console.warn('⚠️ No credentials, checking localStorage...');
     const savedEmail = localStorage.getItem('userEmail');
     const savedHash = localStorage.getItem('userHash');
     if (savedEmail && savedHash) {
       userEmail = savedEmail;
       userHash = savedHash;
-      console.log('Ã¢Å“â€¦ Restored credentials from localStorage');
+      console.log('✅ Restored credentials from localStorage');
     } else {
-      console.log('Ã°Å¸â€˜Â¤ No credentials found');
+      console.log('🛑 No credentials found');
       showAuthScreen();
       return;
     }
@@ -2369,7 +2384,7 @@ async function syncFromGoogleSheets() {
   showSyncIndicator('Refreshing...');
   
   try {
-    // Ã¢Å“â€¦ Send email + hash for authentication
+    // ✅ Send email + hash for authentication
     const url = `${GOOGLE_SCRIPT_URL}?action=getAll&email=${encodeURIComponent(userEmail)}&hash=${encodeURIComponent(userHash)}&t=${Date.now()}`;
 
     const res = await fetch(url);
@@ -2378,12 +2393,20 @@ async function syncFromGoogleSheets() {
       throw new Error(`Network error: ${res.status}`);
     }
     
+    // ✅ Validate content type before parsing
+    const contentType = res.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await res.text();
+      console.error('❌ Non-JSON response:', text.substring(0, 200));
+      throw new Error('Server returned non-JSON response');
+    }
+    
     const data = await res.json();
     
     // Check for unauthorized response
     if (!data.success && data.error === 'unauthorized') {
-      // Ã¢Å“â€¦ ONLY clear auth on real unauthorized error
-      console.error('Ã¢ÂÅ’ Email not authorized');
+      // ✅ ONLY clear auth on real unauthorized error
+      console.error('❌ Email not authorized');
       clearAuth();
       alert('Access denied. Your email is not authorized. Please contact administrator.');
       showAuthScreen();
@@ -2401,7 +2424,7 @@ async function syncFromGoogleSheets() {
       
       // Filter out manually deleted sales
       cachedSales = allSales.filter(sale => !deletedSaleIds.includes(sale.id));
-      console.log(`Ã°Å¸â€œÅ  Loaded ${allSales.length} sales from server, showing ${cachedSales.length} (${allSales.length - cachedSales.length} deleted)`);
+      console.log(`📊 Loaded ${allSales.length} sales from server, showing ${cachedSales.length} (${allSales.length - cachedSales.length} deleted)`);
       
       // Sort sales by date (newest first)
       sortSalesByDateDescending();
@@ -2415,9 +2438,7 @@ async function syncFromGoogleSheets() {
       
       // Update dashboard metrics
       updateSummaryFromCache();
-        // ✅ NEW: Sync product groups and variants
-  // await syncProductGroups();
- // await syncAllVariants();
+      
       showSyncIndicator('Synced!', 900);
       
     } else {
@@ -2425,8 +2446,9 @@ async function syncFromGoogleSheets() {
     }
     
   } catch (err) {
-    console.error('Ã¢Å¡ Ã¯Â¸Â Sync error (non-critical):', err);
-    // Ã¢Å“â€¦ Don't show alert or clear auth on network errors
+    console.error('❌ Sync error (non-critical):', err.message);
+    // ✅ Don't show alert or clear auth on network errors
+    showSyncIndicator('Sync failed', 1500);
     hideSyncIndicator();
   }
 }
@@ -4106,7 +4128,20 @@ async function loadRecentPurchases() {
   `;
   
   try {
-    const response = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getPurchases`);
+    const response = await fetch(`${CONFIG.APPS_SCRIPT_URL}?action=getPurchases&t=${Date.now()}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    // ✅ Validate JSON before parsing
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('❌ Non-JSON response:', text.substring(0, 200));
+      throw new Error('Server returned invalid response format');
+    }
+    
     const result = await response.json();
     
     if (result.success) {
@@ -4116,16 +4151,18 @@ async function loadRecentPurchases() {
     }
     
   } catch (error) {
-    console.error('❌ Error loading purchases:', error);
+    console.error('❌ Error loading purchases:', error.message);
     tbody.innerHTML = `
       <tr>
         <td colspan="8" style="text-align: center; padding: 20px; color: #dc3545;">
-          <i class="bi bi-exclamation-triangle"></i> Failed to load purchases
+          <i class="bi bi-exclamation-triangle"></i> Failed to load purchases<br>
+          <small style="color: #666;">${error.message}</small>
         </td>
       </tr>
     `;
   }
 }
+
 
 /**
  * Display purchases in table
@@ -8670,19 +8707,26 @@ function previewInvoice() {
 /**
  * Load customer invoices from Google Sheets on app start
  */
+/**
+ * Load customer invoices from Google Sheets on app start
+ */
 async function loadCustomerInvoicesFromCloud() {
   console.log('☁️ Loading customer invoices from cloud...');
   
   try {
-    const response = await fetch(SCRIPT_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'loadCustomerInvoices'
-      })
-    });
+    const response = await fetch(`${SCRIPT_URL}?action=loadCustomerInvoices&t=${Date.now()}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    // ✅ Validate JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error('❌ Non-JSON response:', text.substring(0, 200));
+      throw new Error('Invalid response format');
+    }
     
     const result = await response.json();
     
@@ -8696,11 +8740,10 @@ async function loadCustomerInvoicesFromCloud() {
       return JSON.parse(localStorage.getItem('customerInvoices') || '[]');
     }
   } catch (error) {
-    console.error('❌ Error loading from cloud:', error);
+    console.error('❌ Error loading from cloud:', error.message);
     return JSON.parse(localStorage.getItem('customerInvoices') || '[]');
   }
 }
-
 
 /**
  * ==========================================
@@ -13233,6 +13276,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
