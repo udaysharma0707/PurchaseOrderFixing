@@ -783,37 +783,38 @@ onmouseout="this.style.background='#28a745'">
             </div>
           </div>
           
-                  <!-- Items Table -->
+                       <!-- Invoice Items (Purchase-Style Layout) -->
           <div class="mb-3">
-            <div class="d-flex justify-content-between align-items-center mb-2">
-              <h6 class="border-bottom pb-2 mb-0">Invoice Items</h6>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">
+                <i class="bi bi-list-check"></i> Invoice Items
+              </h6>
               <div>
                 <button type="button" class="btn btn-sm btn-outline-primary me-2" onclick="addInvoiceRow()">
                   <i class="bi bi-plus-circle"></i> Add Row
                 </button>
                 <button type="button" class="btn btn-sm btn-outline-success" onclick="openBulkAddModal()">
-                  <i class="bi bi-collection"></i> Add Products in Bulk
+                  <i class="bi bi-collection"></i> Add Items in Bulk
                 </button>
               </div>
             </div>
             
-            <div class="table-responsive">
-              <table class="table table-bordered table-sm table-hover">
-                <thead class="table-light">
-                  <tr>
-                    <th style="width: 40%">Product Name</th>
-                    <th style="width: 12%" class="text-center">Quantity</th>
-                    <th style="width: 18%" class="text-end">Rate (₹)</th>
-                    <th style="width: 20%" class="text-end">Amount (₹)</th>
-                    <th style="width: 10%" class="text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody id="invoiceItemsBody">
-                  <!-- Rows populated dynamically by JavaScript -->
-                </tbody>
-              </table>
+            <!-- Items Container (No Table, Pure Grid like Purchase) -->
+            <div id="invoiceItemsBody" style="
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+              padding: 10px;
+              background: #f8f9fa;
+              border-radius: 8px;
+              border: 1px solid #dee2e6;
+              max-height: 400px;
+              overflow-y: auto;
+            ">
+              <!-- Rows populated dynamically by JavaScript -->
             </div>
           </div>
+
 
 
           
@@ -7398,74 +7399,132 @@ function populateInvoiceItems() {
 /**
  * Create Invoice Row HTML (UPDATED - matches Purchase style)
  */
+/**
+ * Create Invoice Row HTML (GRID LAYOUT - MATCHES PURCHASE)
+ */
 function createInvoiceRow(item, index) {
   const itemName = item.size ? `${item.name} (${item.size})` : item.name;
   const amount = (item.quantity * item.rate).toFixed(2);
   
   return `
-    <tr data-index="${index}">
-      <td>
-        <input type="text" class="form-control form-control-sm" 
-               id="invoiceProduct-${index}"
-               value="${escapeHtml(itemName)}" 
-               placeholder="Enter product name"
-               style="padding: 8px; font-size: 0.9rem;">
-      </td>
-      <td>
-        <input type="number" class="form-control form-control-sm text-center" 
-               id="invoiceQty-${index}"
-               value="${item.quantity}" min="1" placeholder="1"
-               style="font-size: 0.9rem;"
-               oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();">
-      </td>
-      <td>
-        <input type="number" class="form-control form-control-sm text-end" 
-               id="invoiceRate-${index}"
-               value="${item.rate}" min="0" step="0.01" placeholder="0.00"
-               style="font-size: 0.9rem;"
-               oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();">
-      </td>
-      <td class="text-end fw-bold" id="invoiceRowTotal-${index}" style="font-size: 0.9rem; padding: 12px;">
-        ₹${amount}
-      </td>
-      <td class="text-center">
-        <button type="button" class="btn btn-sm btn-link text-danger" 
-                onclick="deleteInvoiceRow(${index})"
-                style="padding: 2px 6px; font-size: 18px;">
-          ✕
-        </button>
-      </td>
-    </tr>
+    <div class="invoice-product-row" id="invoiceRow${index}" data-index="${index}" style="
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1.2fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 8px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #dee2e6;
+    ">
+      <input type="text" class="form-control" placeholder="Product name"
+             id="invoiceProduct-${index}"
+             value="${escapeHtml(itemName)}" 
+             style="font-size: 0.9rem;">
+      
+      <input type="number" class="form-control" placeholder="Qty" min="1"
+             id="invoiceQty-${index}"
+             value="${item.quantity}"
+             oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();"
+             style="font-size: 0.9rem;">
+      
+      <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
+             id="invoiceRate-${index}"
+             value="${item.rate}"
+             oninput="updateInvoiceRowTotal(${index}); calculateInvoiceTotal();"
+             style="font-size: 0.9rem;">
+      
+      <input type="text" class="form-control" placeholder="Amount" readonly
+             id="invoiceRowTotal-${index}"
+             value="₹${amount}"
+             style="background: #e8f5e9; font-weight: 600; color: #2e7d32; font-size: 0.9rem;">
+      
+      <button type="button" class="btn btn-danger"
+              onclick="deleteInvoiceRow(${index})"
+              style="font-size: 22px; padding: 0; min-width: 36px; height: 36px;">
+        ×
+      </button>
+    </div>
   `;
 }
 
-
-/**
- * Update individual row total (FIXED - uses row traversal)
- */
 /**
  * Update individual row total (FIXED - direct TD update like Purchase)
+ */
+/**
+ * Add a new empty invoice row (GRID LAYOUT - MATCHES PURCHASE)
+ */
+function addInvoiceRow() {
+  const container = document.getElementById('invoiceItemsBody');
+  if (!container) {
+    console.error('❌ Invoice container not found');
+    return;
+  }
+  
+  // Get current number of rows
+  const rowIndex = container.querySelectorAll('.invoice-product-row').length;
+  
+  // Create new row div
+  const rowDiv = document.createElement('div');
+  rowDiv.className = 'invoice-product-row';
+  rowDiv.id = `invoiceRow${rowIndex}`;
+  rowDiv.setAttribute('data-index', rowIndex);
+  rowDiv.style.cssText = `
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1.2fr auto;
+    gap: 8px;
+    align-items: center;
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+  `;
+  
+  rowDiv.innerHTML = `
+    <input type="text" class="form-control" placeholder="Product name"
+           id="invoiceProduct-${rowIndex}"
+           style="font-size: 0.9rem;">
+    
+    <input type="number" class="form-control" placeholder="Qty" min="1"
+           id="invoiceQty-${rowIndex}"
+           value="1"
+           oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();"
+           style="font-size: 0.9rem;">
+    
+    <input type="number" class="form-control" placeholder="Rate" min="0" step="0.01"
+           id="invoiceRate-${rowIndex}"
+           value="0"
+           oninput="updateInvoiceRowTotal(${rowIndex}); calculateInvoiceTotal();"
+           style="font-size: 0.9rem;">
+    
+    <input type="text" class="form-control" placeholder="Amount" readonly
+           id="invoiceRowTotal-${rowIndex}"
+           value="₹0.00"
+           style="background: #e8f5e9; font-weight: 600; color: #2e7d32; font-size: 0.9rem;">
+    
+    <button type="button" class="btn btn-danger"
+            onclick="deleteInvoiceRow(${rowIndex})"
+            style="font-size: 22px; padding: 0; min-width: 36px; height: 36px;">
+      ×
+    </button>
+  `;
+  
+  container.appendChild(rowDiv);
+  
+  console.log('✅ Added new invoice row', rowIndex);
+}
+
+/**
+ * Update individual row total (GRID LAYOUT VERSION)
  */
 function updateInvoiceRowTotal(rowIndex) {
   console.log('🔄 Updating row', rowIndex, 'total...');
   
-  const tbody = document.getElementById('invoiceItemsBody');
-  if (!tbody) return;
+  const qtyInput = document.getElementById(`invoiceQty-${rowIndex}`);
+  const rateInput = document.getElementById(`invoiceRate-${rowIndex}`);
+  const totalInput = document.getElementById(`invoiceRowTotal-${rowIndex}`);
   
-  const rows = tbody.querySelectorAll('tr');
-  if (rowIndex >= rows.length) {
-    console.warn('⚠️ Row index out of bounds:', rowIndex);
-    return;
-  }
-  
-  const row = rows[rowIndex];
-  
-  // Find inputs within THIS specific row
-  const qtyInput = row.querySelector(`#invoiceQty-${rowIndex}`);
-  const rateInput = row.querySelector(`#invoiceRate-${rowIndex}`);
-  const totalCell = row.querySelector(`#invoiceRowTotal-${rowIndex}`);
-  
-  if (!qtyInput || !rateInput || !totalCell) {
+  if (!qtyInput || !rateInput || !totalInput) {
     console.warn('⚠️ Row', rowIndex, 'missing required elements');
     return;
   }
@@ -7474,42 +7533,32 @@ function updateInvoiceRowTotal(rowIndex) {
   const rate = parseFloat(rateInput.value) || 0;
   const total = qty * rate;
   
-  // ✅ Update the TD cell directly (no span, matches Purchase style)
-  totalCell.textContent = '₹' + total.toFixed(2);
+  totalInput.value = '₹' + total.toFixed(2);
   
   console.log('✅ Row', rowIndex, 'updated:', qty, 'x', rate, '=', total);
 }
 
 
+
+    
 /**
  * Delete invoice row and recalculate totals
  */
 /**
- * Delete invoice row and recalculate totals (FIXED)
- */
-/**
- * Delete invoice row and recalculate totals (FIXED - matches Purchase)
+ * Delete invoice row and recalculate totals (GRID VERSION)
  */
 function deleteInvoiceRow(rowIndex) {
   console.log('🗑️ Deleting row', rowIndex);
   
-  const tbody = document.getElementById('invoiceItemsBody');
-  if (!tbody) return;
-  
-  const rows = tbody.querySelectorAll('tr');
-  
-  // Find and remove the row with matching data-index
-  rows.forEach(row => {
-    if (parseInt(row.getAttribute('data-index')) === rowIndex) {
-      row.remove();
-      console.log('✅ Row', rowIndex, 'deleted');
-    }
-  });
+  const row = document.getElementById(`invoiceRow${rowIndex}`);
+  if (row) {
+    row.remove();
+    console.log('✅ Row', rowIndex, 'deleted');
+  }
   
   // Recalculate totals
   calculateInvoiceTotal();
 }
-
 
 
 /**
@@ -12914,6 +12963,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
