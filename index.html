@@ -8260,34 +8260,20 @@ async function saveInvoice() {
     console.log('✅ Saved to localStorage');
     
     // ✅ Save to Google Sheets (cloud backup)
-    // ✅ Save to Google Sheets (cloud backup)
-try {
-  // Make HTTP POST request to Apps Script
-  const response = await fetch(SCRIPT_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      action: 'saveCustomerInvoice',
-      invoice: invoiceData
-    })
-  });
-  
-  const result = await response.json();
-  
-  if (result.success) {
-    console.log('✅ Saved to Google Sheets (CustomerInvoices)');
-    alert(`✅ Invoice saved successfully!\n\nInvoice: ${invoiceData.invoiceNumber}\nCustomer: ${customerName}\nItems: ${items.length}\nTotal: ₹${total.toFixed(2)}\n\n✓ Saved to Cloud (accessible on all devices)`);
-  } else {
-    console.warn('⚠️ Sheet save failed:', result.message);
-    alert(`⚠️ Invoice saved locally, but cloud sync failed.\n\n${result.message}`);
-  }
-} catch (sheetError) {
-  console.error('❌ Google Sheets error:', sheetError);
-  alert(`⚠️ Invoice saved locally only.\n\nCloud sync failed: ${sheetError.message}\n\nYou can still access it on this device.`);
-}
-
+    try {
+      // Make HTTP POST request to Apps Script
+      const response = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'saveCustomerInvoice',
+          invoice: invoiceData
+        })
+      });
+      
+      const result = await response.json();
       
       if (result.success) {
         console.log('✅ Saved to Google Sheets (CustomerInvoices)');
@@ -8312,6 +8298,7 @@ try {
     alert('❌ Error: ' + error.message);
   }
 }
+
 
 
 /**
@@ -13235,6 +13222,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
