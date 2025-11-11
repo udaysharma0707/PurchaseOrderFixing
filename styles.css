@@ -2951,6 +2951,131 @@ textarea:focus {
     box-sizing: border-box !important;
   }
 }
+/* ==========================================
+   BULK EDIT STYLES
+   ========================================== */
+
+/* Selection Indicator Overlay */
+.selection-indicator {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 36px;
+  color: #28a745;
+  background: white;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+  animation: checkmarkPop 0.3s ease-out;
+}
+
+@keyframes checkmarkPop {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Product Row Selection State (for table) */
+tr.product-selected {
+  background: #d4edda !important;
+  border-left: 4px solid #28a745 !important;
+  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.2);
+}
+
+tr.product-selectable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+tr.product-selectable:hover {
+  background: #f8f9fa;
+  transform: translateX(2px);
+}
+
+/* Mobile Product Card Selection State */
+.mobile-item.product-selected {
+  background: #d4edda !important;
+  border-left: 5px solid #28a745 !important;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.25);
+  transform: scale(1.02);
+}
+
+.mobile-item.product-selectable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.mobile-item.product-selectable:hover {
+  background: #f0f0f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Bulk Edit Toolbar */
+#bulkEditToolbar {
+  border: 2px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+#bulkEditToolbar.active {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%) !important;
+  border-color: #28a745;
+}
+
+/* Button Animations */
+.btn-success, .btn-secondary {
+  transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+/* Selected Count Badge */
+#selectedCount {
+  display: inline-block;
+  background: white;
+  color: #28a745;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+
+/* Dropdown Menu Enhancements */
+.dropdown-menu {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.dropdown-item {
+  padding: 10px 16px;
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover:not(.disabled) {
+  background: #e7f3ff;
+  padding-left: 20px;
+}
+
+.dropdown-item i {
+  margin-right: 8px;
+  width: 20px;
+}
+
 
 
 
