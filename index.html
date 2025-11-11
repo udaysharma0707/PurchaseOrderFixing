@@ -485,11 +485,12 @@ onmouseout="this.style.background='#28a745'">
         </button>
       </li>
       <li>
-        <button type="button" class="dropdown-item disabled">
-          <i class="bi bi-rulers"></i> Update Size 
-          <small class="text-muted">(Coming Soon)</small>
-        </button>
-      </li>
+  <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showSizeBulkEdit();">
+    <span><i class="bi bi-rulers"></i> Update Size</span>
+    <i class="bi bi-chevron-right text-muted"></i>
+  </button>
+</li>
+
     </ul>
   </div>
 
@@ -524,6 +525,31 @@ onmouseout="this.style.background='#28a745'">
   (<span id="selectedCountSellingPrice" style="font-weight: 700;">0</span> selected)
 </button>
 
+<!-- ===== SIZE SECTION ===== -->
+
+<!-- Size Input Container (Hidden Initially) -->
+<div id="sizeInputContainer" style="display: none;">
+  <label style="font-size: 14px; font-weight: 600; color: #495057;">
+    Enter Size to Update
+  </label>
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <input 
+      type="text" 
+      id="sizeInput" 
+      class="form-control" 
+      placeholder="e.g., 2*2" 
+      style="max-width: 200px; font-weight: 600;">
+  </div>
+</div>
+
+<!-- Update Size Button (Hidden Initially) -->
+<button id="updateSizeBtn" 
+        class="btn btn-success" 
+        style="display: none; font-weight: 600; color: white;" 
+        onclick="applyBulkSizeUpdate()">
+  <i class="bi bi-rulers"></i> Update Size 
+  (<span id="selectedCountSize" style="font-weight: 700;">0</span> selected)
+</button>
 
 
 
@@ -2096,11 +2122,11 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWpiAXmNzUxgmdgxJUxJMOoeu3Bf8b69AZz8_UHMPHRkkZygWOll4N0q_704krx4Ww/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyWpiAXmNzUxgmdgxJUxJMOoeu3Bf8b69AZz8_UHMPHRkkZygWOll4N0q_704krx4Ww/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwst5nCKBwYX19zFgAjOWhYE2HT5vQVL9AN8YK5FDN5NJ7sXIIVO4j94w106mbkbbIk/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwst5nCKBwYX19zFgAjOWhYE2HT5vQVL9AN8YK5FDN5NJ7sXIIVO4j94w106mbkbbIk/exec';
 // ✅ API Configuration
 window.API_CONFIG = {
-  baseUrl: 'https://script.google.com/macros/s/AKfycbyWpiAXmNzUxgmdgxJUxJMOoeu3Bf8b69AZz8_UHMPHRkkZygWOll4N0q_704krx4Ww/exec', // ← Replace this
+  baseUrl: 'https://script.google.com/macros/s/AKfycbwst5nCKBwYX19zFgAjOWhYE2HT5vQVL9AN8YK5FDN5NJ7sXIIVO4j94w106mbkbbIk/exec', // ← Replace this
   secret: 'shopSecret2025'
 };
 
@@ -4005,7 +4031,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyWpiAXmNzUxgmdgxJUxJMOoeu3Bf8b69AZz8_UHMPHRkkZygWOll4N0q_704krx4Ww/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwst5nCKBwYX19zFgAjOWhYE2HT5vQVL9AN8YK5FDN5NJ7sXIIVO4j94w106mbkbbIk/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -13865,6 +13891,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
