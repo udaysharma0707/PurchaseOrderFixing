@@ -433,63 +433,124 @@ onmouseout="this.style.background='#28a745'">
 <div class="d-flex justify-content-between align-items-center mb-3">
   <input type="text" id="productSearch" class="form-control" placeholder="ðŸ”Ž Search products..." onkeyup="searchProducts()">
 
-
 <!-- ==========================================
-     BULK EDIT TOOLBAR
+     ✅ UPDATED BULK EDIT TOOLBAR (Auto-close dropdowns)
      ========================================== -->
 <div id="bulkEditToolbar" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
   
   <!-- Main Dropdown Button -->
   <div class="dropdown">
-    <button class="btn btn-primary dropdown-toggle" type="button" id="bulkEditDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600;">
+    <button class="btn btn-primary dropdown-toggle" 
+            type="button" 
+            id="bulkEditDropdown" 
+            data-bs-toggle="dropdown" 
+            data-bs-auto-close="true"
+            aria-expanded="false" 
+            style="font-weight: 600;">
       <i class="bi bi-pencil-square"></i> Edit Products in Bulk
     </button>
     <ul class="dropdown-menu shadow" aria-labelledby="bulkEditDropdown" style="min-width: 250px;">
       <li>
-        <a class="dropdown-item d-flex justify-content-between align-items-center" href="#" onclick="event.preventDefault(); showCategoryBulkEdit();">
+        <a class="dropdown-item d-flex justify-content-between align-items-center" 
+           href="#" 
+           onclick="showCategoryBulkEdit(); return false;">
           <span><i class="bi bi-tag"></i> Update Category</span>
           <i class="bi bi-chevron-right text-muted"></i>
         </a>
       </li>
       <li><hr class="dropdown-divider"></li>
-      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-box-seam"></i> Update Stock <small class="text-muted">(Coming Soon)</small></a></li>
-      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-card-text"></i> Update Unit Type <small class="text-muted">(Coming Soon)</small></a></li>
-      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-currency-rupee"></i> Update Selling Price <small class="text-muted">(Coming Soon)</small></a></li>
-      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-award"></i> Update Brand <small class="text-muted">(Coming Soon)</small></a></li>
-      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-rulers"></i> Update Size <small class="text-muted">(Coming Soon)</small></a></li>
+      <li>
+        <a class="dropdown-item disabled" href="#">
+          <i class="bi bi-box-seam"></i> Update Stock 
+          <small class="text-muted">(Coming Soon)</small>
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item disabled" href="#">
+          <i class="bi bi-card-text"></i> Update Unit Type 
+          <small class="text-muted">(Coming Soon)</small>
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item disabled" href="#">
+          <i class="bi bi-currency-rupee"></i> Update Selling Price 
+          <small class="text-muted">(Coming Soon)</small>
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item disabled" href="#">
+          <i class="bi bi-award"></i> Update Brand 
+          <small class="text-muted">(Coming Soon)</small>
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item disabled" href="#">
+          <i class="bi bi-rulers"></i> Update Size 
+          <small class="text-muted">(Coming Soon)</small>
+        </a>
+      </li>
     </ul>
   </div>
   
   <!-- Category Selection Dropdown (Hidden Initially) -->
   <div id="categorySelectionDropdown" class="dropdown" style="display: none;">
-    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="categoryDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600;">
+    <button class="btn btn-outline-primary dropdown-toggle" 
+            type="button" 
+            id="categoryDropdownBtn" 
+            data-bs-toggle="dropdown" 
+            data-bs-auto-close="true"
+            aria-expanded="false" 
+            style="font-weight: 600;">
       <i class="bi bi-funnel"></i> <span id="selectedCategoryText">Select Category</span>
     </button>
     <ul class="dropdown-menu shadow" aria-labelledby="categoryDropdownBtn">
-      <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); selectBulkCategory('Tiles');"><i class="bi bi-grid-3x3-gap"></i> Tiles</a></li>
-      <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); selectBulkCategory('Sanitaryware');"><i class="bi bi-droplet"></i> Sanitaryware</a></li>
-      <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); selectBulkCategory('Accessories');"><i class="bi bi-wrench"></i> Accessories</a></li>
+      <li>
+        <a class="dropdown-item" 
+           href="#" 
+           onclick="selectBulkCategory('Tiles'); return false;">
+          <i class="bi bi-grid-3x3-gap"></i> Tiles
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" 
+           href="#" 
+           onclick="selectBulkCategory('Sanitaryware'); return false;">
+          <i class="bi bi-droplet"></i> Sanitaryware
+        </a>
+      </li>
+      <li>
+        <a class="dropdown-item" 
+           href="#" 
+           onclick="selectBulkCategory('Accessories'); return false;">
+          <i class="bi bi-wrench"></i> Accessories
+        </a>
+      </li>
     </ul>
   </div>
   
   <!-- Update Button (Hidden Initially) -->
-  <button id="updateCategoryBtn" class="btn btn-success" style="display: none; font-weight: 600;" onclick="applyBulkCategoryUpdate()">
+  <button id="updateCategoryBtn" 
+          class="btn btn-success" 
+          style="display: none; font-weight: 600;" 
+          onclick="applyBulkCategoryUpdate()">
     <i class="bi bi-check-circle"></i> Update Category 
     (<span id="selectedCount" style="font-weight: 700;">0</span> selected)
   </button>
   
   <!-- Cancel Button (Hidden Initially) -->
-  <button id="cancelBulkEditBtn" class="btn btn-secondary" style="display: none;" onclick="cancelBulkEdit()">
+  <button id="cancelBulkEditBtn" 
+          class="btn btn-secondary" 
+          style="display: none;" 
+          onclick="cancelBulkEdit()">
     <i class="bi bi-x-circle"></i> Cancel
   </button>
   
   <!-- Info Text -->
-  <div id="bulkEditInfoText" style="display: none; margin-left: auto; color: #6c757d; font-size: 14px; font-weight: 500;">
+  <div id="bulkEditInfoText" 
+       style="display: none; margin-left: auto; color: #6c757d; font-size: 14px; font-weight: 500;">
     <i class="bi bi-info-circle"></i> Click on products to select them
   </div>
 </div>
-
-
 
 
 
@@ -14135,6 +14196,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
