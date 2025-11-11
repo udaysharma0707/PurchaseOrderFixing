@@ -775,6 +775,16 @@ onmouseout="this.style.background='#28a745'">
           onclick="cancelBulkEdit()">
     <i class="bi bi-x-circle"></i> Cancel
   </button>
+
+<!-- NEW: Update Button (for Stock Adjustment mode) -->
+<button id="updateStockChangesBtn" 
+        class="btn btn-primary" 
+        style="display: none; font-weight: 600;" 
+        onclick="updateStockChanges()">
+  <i class="bi bi-check-circle"></i> Update
+</button>
+
+
   
   <!-- Info Text -->
   <div id="bulkEditInfoText" 
@@ -14008,6 +14018,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
