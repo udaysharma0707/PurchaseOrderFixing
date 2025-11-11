@@ -3797,125 +3797,81 @@ let bulkEditMode = {
 /**
  * 🎯 FINAL SOLUTION: Show Category Bulk Edit (Trigger click to close)
  */
+/**
+ * 🎯 FIXED: Show Category Bulk Edit (Manual close without click)
+ */
 function showCategoryBulkEdit() {
   console.log('📝 Opening category bulk edit mode...');
   
-  // ✅ TRIGGER CLICK ON DROPDOWN BUTTON TO CLOSE IT
+  // ✅ MANUALLY CLOSE DROPDOWN (without triggering click)
+  const dropdownMenu = document.querySelector('#bulkEditDropdown + .dropdown-menu');
   const dropdownBtn = document.getElementById('bulkEditDropdown');
-  if (dropdownBtn) {
-    dropdownBtn.click(); // This will toggle the dropdown closed
-    console.log('✅ Triggered click on main dropdown button');
+  
+  if (dropdownMenu && dropdownBtn) {
+    // Remove show class from menu
+    dropdownMenu.classList.remove('show');
+    
+    // Update button attributes
+    dropdownBtn.classList.remove('show');
+    dropdownBtn.setAttribute('aria-expanded', 'false');
+    
+    console.log('✅ Dropdown closed manually');
   }
   
-  // ✅ Small delay to ensure dropdown closes before showing next UI
-  setTimeout(() => {
-    // Show category selection UI
-    document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
-    document.getElementById('bulkEditInfoText').style.display = 'block';
-    document.getElementById('bulkEditToolbar').classList.add('active');
-    
-    console.log('✅ Category bulk edit UI shown');
-  }, 100);
+  // ✅ Show category selection UI immediately (no delay needed)
+  document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  console.log('✅ Category bulk edit UI shown');
 }
 
 /**
- * 🎯 FINAL SOLUTION: Select Bulk Category (Trigger click to close)
+ * 🎯 FIXED: Select Bulk Category (Manual close without click)
  */
 function selectBulkCategory(category) {
   console.log('📦 Selected category:', category);
   
-  // ✅ TRIGGER CLICK ON CATEGORY DROPDOWN BUTTON TO CLOSE IT
+  // ✅ MANUALLY CLOSE DROPDOWN (without triggering click)
+  const categoryMenu = document.querySelector('#categoryDropdownBtn + .dropdown-menu');
   const categoryBtn = document.getElementById('categoryDropdownBtn');
-  if (categoryBtn) {
-    categoryBtn.click(); // This will toggle the dropdown closed
-    console.log('✅ Triggered click on category dropdown button');
+  
+  if (categoryMenu && categoryBtn) {
+    // Remove show class from menu
+    categoryMenu.classList.remove('show');
+    
+    // Update button attributes
+    categoryBtn.classList.remove('show');
+    categoryBtn.setAttribute('aria-expanded', 'false');
+    
+    console.log('✅ Category dropdown closed manually');
   }
   
-  // ✅ Small delay to ensure dropdown closes before activating bulk mode
-  setTimeout(() => {
-    // Set bulk edit mode
-    bulkEditMode = {
-      active: true,
-      field: 'category',
-      value: category,
-      selectedProducts: []
-    };
-    
-    // Update UI
-    document.getElementById('selectedCategoryText').textContent = category;
-    document.getElementById('updateCategoryBtn').style.display = 'inline-block';
-    document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
-    document.getElementById('selectedCount').textContent = '0';
-    
-    // Enable product selection mode
-    enableProductSelection();
-    
-    // Show success message
-    showToast(`✅ Bulk edit mode: Update Category to "${category}"`, 'Click on products to select them', 'success');
-    
-    console.log('✅ Bulk category mode activated');
-  }, 100);
-}
-
-
-/**
- * Enable Product Selection Mode
- */
-function enableProductSelection() {
-  console.log('🖱️ Product selection mode enabled');
+  // ✅ Set bulk edit mode immediately
+  bulkEditMode = {
+    active: true,
+    field: 'category',
+    value: category,
+    selectedProducts: []
+  };
   
-  // DESKTOP: Add click handlers to table rows
-  const tableRows = document.querySelectorAll('#productsTableBody tr');
-  tableRows.forEach((row, index) => {
-    // Skip if no data
-    if (!cachedProducts[index]) return;
-    
-    const productId = cachedProducts[index].id;
-    
-    // Add selection class
-    row.classList.add('product-selectable');
-    row.setAttribute('data-product-id', productId);
-    
-    // Add click event
-    row.addEventListener('click', function(event) {
-      // Don't trigger if clicking Edit/Delete buttons
-      if (event.target.closest('.btn')) return;
-      
-      toggleProductSelectionDesktop(productId, row);
-    });
-  });
+  // ✅ Update UI
+  document.getElementById('selectedCategoryText').textContent = category;
+  document.getElementById('updateCategoryBtn').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('selectedCount').textContent = '0';
   
-  // MOBILE: Add click handlers to mobile cards
-  const mobileCards = document.querySelectorAll('.mobile-item');
-  mobileCards.forEach((card, index) => {
-    if (!cachedProducts[index]) return;
-    
-    const productId = cachedProducts[index].id;
-    
-    card.classList.add('product-selectable');
-    card.setAttribute('data-product-id', productId);
-    
-    // Add selection indicator
-    if (!card.querySelector('.selection-indicator')) {
-      const indicator = document.createElement('div');
-      indicator.className = 'selection-indicator';
-      indicator.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
-      card.style.position = 'relative';
-      card.insertBefore(indicator, card.firstChild);
-    }
-    
-    card.addEventListener('click', function(event) {
-      if (event.target.closest('.btn')) return;
-      
-      toggleProductSelectionMobile(productId, card);
-    });
-  });
+  // ✅ Enable product selection mode
+  enableProductSelection();
   
-  console.log('✅ Product selection enabled for', tableRows.length, 'desktop +', mobileCards.length, 'mobile items');
+  // ✅ Show success message
+  showToast(`✅ Bulk edit mode: Update Category to "${category}"`, 'Click on products to select them', 'success');
+  
+  console.log('✅ Bulk category mode activated');
 }
 
 /**
- * Toggle Product Selection (Desktop)
+ * ✅ FIXED: Toggle Desktop Product Selection (Added event.stopPropagation)
  */
 function toggleProductSelectionDesktop(productId, row) {
   if (!bulkEditMode.active) return;
@@ -3923,56 +3879,71 @@ function toggleProductSelectionDesktop(productId, row) {
   const index = bulkEditMode.selectedProducts.indexOf(productId);
   
   if (index > -1) {
-    // Deselect
     bulkEditMode.selectedProducts.splice(index, 1);
     row.classList.remove('product-selected');
     console.log('❌ Deselected:', productId);
   } else {
-    // Select
     bulkEditMode.selectedProducts.push(productId);
     row.classList.add('product-selected');
     console.log('✅ Selected:', productId);
   }
   
-  // Update count
+  // ✅ Update count
   document.getElementById('selectedCount').textContent = bulkEditMode.selectedProducts.length;
-  
-  // Visual feedback
-  if (bulkEditMode.selectedProducts.length > 0) {
-    document.getElementById('updateCategoryBtn').style.animation = 'pulse 0.5s';
-    setTimeout(() => {
-      document.getElementById('updateCategoryBtn').style.animation = '';
-    }, 500);
-  }
 }
 
 /**
- * Toggle Product Selection (Mobile)
+ * ✅ FIXED: Enable Desktop Selection (Added event.stopPropagation)
  */
-function toggleProductSelectionMobile(productId, card) {
-  if (!bulkEditMode.active) return;
+function enableProductSelectionDesktop() {
+  const tableRows = document.querySelectorAll('#productsTableBody tr[data-product-id]');
   
-  const indicator = card.querySelector('.selection-indicator');
-  const index = bulkEditMode.selectedProducts.indexOf(productId);
+  tableRows.forEach(row => {
+    const productId = row.getAttribute('data-product-id');
+    row.classList.add('product-selectable');
+    row.onclick = null; // Remove old handler
+    
+    // ✅ ADD STOP PROPAGATION
+    row.onclick = function(event) {
+      // Don't trigger if clicking buttons
+      if (event.target.closest('.btn')) return;
+      
+      // ✅ STOP EVENT BUBBLING
+      event.stopPropagation();
+      event.preventDefault();
+      
+      toggleProductSelectionDesktop(productId, row);
+    };
+  });
   
-  if (index > -1) {
-    // Deselect
-    bulkEditMode.selectedProducts.splice(index, 1);
-    card.classList.remove('product-selected');
-    if (indicator) indicator.style.display = 'none';
-    console.log('❌ Deselected:', productId);
-  } else {
-    // Select
-    bulkEditMode.selectedProducts.push(productId);
-    card.classList.add('product-selected');
-    if (indicator) {
-      indicator.style.display = 'flex';
-    }
-    console.log('✅ Selected:', productId);
-  }
+  console.log('✅ Desktop selection enabled for', tableRows.length, 'rows');
+}
+
+/**
+ * ✅ FIXED: Enable Mobile Selection (Added event.stopPropagation)
+ */
+function enableProductSelectionMobile() {
+  const mobileCards = document.querySelectorAll('.mobile-item[data-product-id]');
   
-  // Update count
-  document.getElementById('selectedCount').textContent = bulkEditMode.selectedProducts.length;
+  mobileCards.forEach(card => {
+    const productId = card.getAttribute('data-product-id');
+    card.classList.add('product-selectable');
+    card.onclick = null; // Remove old handler
+    
+    // ✅ ADD STOP PROPAGATION
+    card.onclick = function(event) {
+      // Don't trigger if clicking buttons
+      if (event.target.closest('.btn')) return;
+      
+      // ✅ STOP EVENT BUBBLING
+      event.stopPropagation();
+      event.preventDefault();
+      
+      toggleProductSelectionMobile(productId, card);
+    };
+  });
+  
+  console.log('✅ Mobile selection enabled for', mobileCards.length, 'cards');
 }
 
 /**
@@ -14160,6 +14131,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
