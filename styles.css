@@ -2952,7 +2952,7 @@ textarea:focus {
   }
 }
 /* ==========================================
-   BULK EDIT STYLES
+   ✅ UPDATED BULK EDIT STYLES
    ========================================== */
 
 /* Selection Indicator Overlay */
@@ -3061,20 +3061,72 @@ tr.product-selectable:hover {
   border: 1px solid #dee2e6;
 }
 
+/* ✅ NEW: Dropdown Item Styles (for both <a> and <button> tags) */
 .dropdown-item {
+  display: block;
+  width: 100%;
   padding: 10px 16px;
+  clear: both;
+  font-weight: 400;
+  color: #212529;
+  text-align: inherit;
+  text-decoration: none;
+  white-space: nowrap;
+  background-color: transparent;
+  border: 0;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .dropdown-item:hover:not(.disabled) {
+  color: #1e2125;
   background: #e7f3ff;
   padding-left: 20px;
 }
 
+.dropdown-item:focus:not(.disabled) {
+  color: #1e2125;
+  background: #e7f3ff;
+  outline: none;
+}
+
+/* ✅ NEW: Disabled dropdown items */
+.dropdown-item.disabled {
+  color: #6c757d;
+  pointer-events: none;
+  background-color: transparent;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* ✅ NEW: Icon spacing inside dropdown items */
 .dropdown-item i {
   margin-right: 8px;
   width: 20px;
+  display: inline-block;
+  text-align: center;
 }
+
+/* ✅ NEW: Button-specific styles (remove default button styling) */
+button.dropdown-item {
+  font-family: inherit;
+  line-height: inherit;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+button.dropdown-item::-moz-focus-inner {
+  border: 0;
+  padding: 0;
+}
+
+/* ✅ NEW: Active state for dropdown items */
+.dropdown-item:active:not(.disabled) {
+  color: #fff;
+  background-color: #0d6efd;
+}
+
 
 
 
