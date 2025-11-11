@@ -1140,6 +1140,9 @@ function showStockAnimation(element, operation, amount) {
 /**
  * Update Stock Changes - Force sync webapp cache with Google Sheets
  */
+/**
+ * Update Stock Changes - Force sync webapp cache with Google Sheets (NO RELOAD)
+ */
 async function updateStockChanges() {
   console.log('🔄 Syncing changes...');
   
@@ -1153,12 +1156,25 @@ async function updateStockChanges() {
     localStorage.removeItem('inventory_products_cache');
     localStorage.removeItem('inventory_cache_timestamp');
     
-    // ✅ Force fresh fetch from Google Sheets
-    await fetchProductsFromBackend(true); // Force refresh
+    // ✅ Fetch fresh data from backend
+    const response = await fetch(API_CONFIG.baseUrl + '?action=getAll&t=' + Date.now());
+    const result = await response.json();
     
-    console.log('✅ Cache synced successfully');
+    if (result.success && result.products) {
+      // ✅ Update global cache
+      if (typeof cachedProducts !== 'undefined') {
+        cachedProducts.length = 0; // Clear array
+        cachedProducts.push(...result.products); // Add new data
+      }
+      
+      // ✅ Save to localStorage
+      localStorage.setItem('inventory_products_cache', JSON.stringify(result.products));
+      localStorage.setItem('inventory_cache_timestamp', Date.now().toString());
+      
+      console.log('✅ Synced', result.products.length, 'products');
+    }
     
-    // ✅ Cancel bulk edit mode (back to normal)
+    // ✅ Cancel bulk edit mode
     cancelBulkEdit();
     
     // ✅ Re-render products
@@ -1167,7 +1183,9 @@ async function updateStockChanges() {
     }
     
     // ✅ Show success message
-    showToast('✅ Updated', 'All changes synced successfully', 'success');
+    if (typeof showToast === 'function') {
+      showToast('✅ Updated', 'All changes synced successfully', 'success');
+    }
     
   } catch (error) {
     console.error('❌ Error syncing:', error);
@@ -1177,6 +1195,7 @@ async function updateStockChanges() {
     btn.innerHTML = originalText;
   }
 }
+
 
 
 
@@ -1246,6 +1265,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
 
 
