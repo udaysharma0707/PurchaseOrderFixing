@@ -129,7 +129,7 @@ async function applyBulkCategoryUpdate() {
       localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
     }
     
-    showToast('✅ Success!', `Updated ${result.updatedCount} product(s) to category "${category}"`, 'success');
+   
     cancelBulkEdit();
     
     if (typeof renderProducts === 'function') {
@@ -253,7 +253,7 @@ async function applyBulkUnitTypeUpdate() {
       localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
     }
     
-    showToast('✅ Success!', `Updated ${result.updatedCount} product(s) to unit type "${unitType}"`, 'success');
+    
     
     // ✅ FIXED: Cancel bulk edit mode
     cancelBulkEdit();
@@ -507,4 +507,5 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
