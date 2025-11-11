@@ -3993,7 +3993,7 @@ function toggleProductSelectionMobile(productId, card) {
 }
 
 /**
- * ✅ FIXED: Apply Bulk Category Update - USE EXISTING API PATTERN
+ * ✅ Apply Bulk Category Update - WITH BACKEND SYNC
  */
 async function applyBulkCategoryUpdate() {
   if (bulkEditMode.selectedProducts.length === 0) {
@@ -4018,50 +4018,20 @@ async function applyBulkCategoryUpdate() {
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
   
   try {
-    // ✅ USE YOUR EXISTING CONFIG
-    const config = window.API_CONFIG || {
-      baseUrl: 'YOUR_DEPLOYED_WEB_APP_URL_HERE',
-      secret: 'shopSecret2025'
-    };
-    
-    // ✅ Build URL with query parameters (like your existing code)
-    const url = `${config.baseUrl}?action=bulkUpdateCategory&secret=${config.secret}`;
-    
-    console.log('Calling backend URL:', url);
-    
-    // ✅ POST request body
-    const requestBody = {
-      action: 'bulkUpdateCategory',
-      productIds: bulkEditMode.selectedProducts,
-      category: category,
-      secret: config.secret
-    };
-    
-    console.log('Request body:', requestBody);
-    
-    // ✅ Make the request
-    const response = await fetch(url, {
+    // ✅ Call backend API (NO AUTH REQUIRED)
+    const response = await fetch(API_CONFIG.baseUrl, {
       method: 'POST',
-      mode: 'cors',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'text/plain'
       },
-      body: JSON.stringify(requestBody)
+      body: JSON.stringify({
+        action: 'bulkUpdateCategory',
+        productIds: bulkEditMode.selectedProducts,
+        category: category
+      })
     });
     
-    console.log('Response status:', response.status);
-    console.log('Response headers:', response.headers);
-    
-    // ✅ Check if response is OK
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Response error text:', errorText);
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    
-    // ✅ Parse JSON
     const result = await response.json();
-    console.log('Backend response:', result);
     
     if (!result.success) {
       throw new Error(result.error || 'Backend update failed');
@@ -4082,7 +4052,7 @@ async function applyBulkCategoryUpdate() {
       console.log('✅ LocalStorage updated');
     }
     
-    showToast('✅ Success!', `Updated ${result.updatedCount || count} product(s) to category "${category}"`, 'success');
+    showToast('✅ Success!', `Updated ${result.updatedCount} product(s) to category "${category}"`, 'success');
     
     // ✅ Cancel bulk edit and refresh
     cancelBulkEdit();
@@ -4093,9 +4063,9 @@ async function applyBulkCategoryUpdate() {
     }
     
   } catch (error) {
-    console.error('❌ Full error:', error);
-    console.error('❌ Error stack:', error.stack);
+    console.error('❌ Error:', error);
     alert('❌ Error updating products: ' + error.message);
+  } finally {
     btn.disabled = false;
     btn.innerHTML = originalText;
   }
@@ -14180,6 +14150,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
