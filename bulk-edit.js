@@ -30,7 +30,7 @@ let bulkEditMode = {
  */
 
 /**
- * Show Category Bulk Edit - HIDE MAIN BUTTON
+ * Show Category Bulk Edit - FIXED: Shows cancel button immediately
  */
 function showCategoryBulkEdit() {
   console.log('📝 Opening category bulk edit mode...');
@@ -41,8 +41,9 @@ function showCategoryBulkEdit() {
     mainDropdownContainer.style.display = 'none';
   }
   
-  // ✅ Show category selection UI
+  // ✅ Show category selection UI AND cancel button
   document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block'; // ← FIXED: Show immediately
   document.getElementById('bulkEditInfoText').style.display = 'block';
   document.getElementById('bulkEditToolbar').classList.add('active');
   
@@ -50,7 +51,7 @@ function showCategoryBulkEdit() {
 }
 
 /**
- * Select Bulk Category
+ * Select Bulk Category - FIXED: No toast message
  */
 function selectBulkCategory(category) {
   console.log('📦 Selected category:', category);
@@ -70,16 +71,15 @@ function selectBulkCategory(category) {
     // ✅ Update UI
     document.getElementById('selectedCategoryText').textContent = category;
     document.getElementById('updateCategoryBtn').style.display = 'inline-block';
-    document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+    // Cancel button already shown by showCategoryBulkEdit()
     document.getElementById('selectedCount').textContent = '0';
     
     // ✅ Enable product selection
     enableProductSelection();
     
-    showToast(`✅ Bulk edit mode: Update Category to "${category}"`, 'Click on products to select them', 'success');
+    // ❌ REMOVED: showToast() - No longer showing toast message
   }, 100);
 }
-
 /**
  * Apply Bulk Category Update
  */
@@ -151,8 +151,9 @@ async function applyBulkCategoryUpdate() {
  * ==========================================
  */
 
+
 /**
- * Show Unit Type Bulk Edit
+ * Show Unit Type Bulk Edit - FIXED: Shows cancel button immediately
  */
 function showUnitTypeBulkEdit() {
   console.log('📝 Opening unit type bulk edit mode...');
@@ -163,8 +164,9 @@ function showUnitTypeBulkEdit() {
     mainDropdownContainer.style.display = 'none';
   }
   
-  // ✅ Show unit type selection UI
+  // ✅ Show unit type selection UI AND cancel button
   document.getElementById('unitTypeSelectionDropdown').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block'; // ← FIXED: Show immediately
   document.getElementById('bulkEditInfoText').style.display = 'block';
   document.getElementById('bulkEditToolbar').classList.add('active');
   
@@ -172,7 +174,7 @@ function showUnitTypeBulkEdit() {
 }
 
 /**
- * Select Bulk Unit Type - FIXED: NOW SHOWS CANCEL BUTTON IMMEDIATELY
+ * Select Bulk Unit Type - FIXED: No toast message
  */
 function selectBulkUnitType(unitType) {
   console.log('📦 Selected unit type:', unitType);
@@ -189,16 +191,16 @@ function selectBulkUnitType(unitType) {
       selectedProducts: []
     };
     
-    // ✅ Update UI - SHOW CANCEL BUTTON HERE
+    // ✅ Update UI
     document.getElementById('selectedUnitTypeText').textContent = unitType;
     document.getElementById('updateUnitTypeBtn').style.display = 'inline-block';
-    document.getElementById('cancelBulkEditBtn').style.display = 'inline-block'; // ← FIXED
+    // Cancel button already shown by showUnitTypeBulkEdit()
     document.getElementById('selectedCountUnitType').textContent = '0';
     
     // ✅ Enable product selection
     enableProductSelection();
     
-    showToast(`✅ Bulk edit mode: Update Unit Type to "${unitType}"`, 'Click on products to select them', 'success');
+    // ❌ REMOVED: showToast() - No longer showing toast message
   }, 100);
 }
 
@@ -505,3 +507,4 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
