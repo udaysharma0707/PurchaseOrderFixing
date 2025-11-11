@@ -7,13 +7,7 @@
  * ==========================================
  */
 
-// ✅ Global state for bulk edit mode
-let bulkEditMode = {
-  active: false,
-  field: null, // 'category', 'unitType', 'stock', 'sellingPrice', 'brand', 'size'
-  value: null,
-  selectedProducts: []
-};
+
 
 /**
  * ==========================================
@@ -489,3 +483,4 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
