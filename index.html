@@ -2000,8 +2000,8 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5fhCD6faFcaKqMBVzCJDoVFKnwpNu8i2zZsQauvcc9nXDVmklRD3-5pYaqy6SStWg/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx5fhCD6faFcaKqMBVzCJDoVFKnwpNu8i2zZsQauvcc9nXDVmklRD3-5pYaqy6SStWg/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGk5HV9S9fXYdDGRxLpxzZK2psb6aV8NeBipDSmSEX4Z8HYezKf-8kyx8yQUtz4d7E/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGk5HV9S9fXYdDGRxLpxzZK2psb6aV8NeBipDSmSEX4Z8HYezKf-8kyx8yQUtz4d7E/exec';
 
     
   let cachedProducts = [];
@@ -4145,6 +4145,85 @@ function showToast(title, message, type = 'info') {
   }, 3000);
 }
 
+/**
+ * ✅ Apply Bulk Category Update - WITH BACKEND SYNC
+ */
+async function applyBulkCategoryUpdate() {
+  if (bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const category = bulkEditMode.value;
+  const count = bulkEditMode.selectedProducts.length;
+  
+  if (!confirm(`Update category to "${category}" for ${count} product(s)?`)) {
+    return;
+  }
+  
+  console.log('🔄 Updating categories for', count, 'products...');
+  
+  const btn = document.getElementById('updateCategoryBtn');
+  if (!btn) return;
+  
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    // ✅ UPDATE: Call backend API
+    const backendUrl = 'YOUR_APPS_SCRIPT_WEB_APP_URL'; // Replace with your deployed URL
+    
+    const response = await fetch(backendUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        action: 'bulkUpdateCategory',
+        productIds: bulkEditMode.selectedProducts,
+        category: category
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Backend update failed');
+    }
+    
+    console.log('✅ Backend update successful:', result);
+    
+    // ✅ Update local cache
+    if (typeof cachedProducts !== 'undefined') {
+      bulkEditMode.selectedProducts.forEach(productId => {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (product) {
+          product.category = category;
+        }
+      });
+      
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+      console.log('✅ LocalStorage updated');
+    }
+    
+    showToast('✅ Success!', `Updated ${result.updatedCount} product(s) to category "${category}"`, 'success');
+    
+    // ✅ Cancel bulk edit and refresh
+    cancelBulkEdit();
+    
+    // ✅ Re-render if function exists
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error updating products: ' + error.message);
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
 
 
 
@@ -4278,7 +4357,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx5fhCD6faFcaKqMBVzCJDoVFKnwpNu8i2zZsQauvcc9nXDVmklRD3-5pYaqy6SStWg/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwGk5HV9S9fXYdDGRxLpxzZK2psb6aV8NeBipDSmSEX4Z8HYezKf-8kyx8yQUtz4d7E/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -14138,6 +14217,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
