@@ -1141,60 +1141,75 @@ function showStockAnimation(element, operation, amount) {
  * Update Stock Changes - Force sync webapp cache with Google Sheets
  */
 /**
- * Update Stock Changes - Force sync webapp cache with Google Sheets (NO RELOAD)
+ * Update Stock Changes - Push webapp cache to Google Sheets
  */
 async function updateStockChanges() {
-  console.log('🔄 Syncing changes...');
+  console.log('🔄 Pushing webapp stock to Google Sheets...');
   
   const btn = document.getElementById('updateStockChangesBtn');
   const originalText = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Syncing...';
   
   try {
-    // ✅ Clear local cache
-    localStorage.removeItem('inventory_products_cache');
-    localStorage.removeItem('inventory_cache_timestamp');
+    // ✅ Get all products with NUMERIC stock from webapp cache
+    const productsToSync = [];
     
-    // ✅ Fetch fresh data from backend
-    const response = await fetch(API_CONFIG.baseUrl + '?action=getAll&t=' + Date.now());
+    if (typeof cachedProducts !== 'undefined') {
+      cachedProducts.forEach(product => {
+        if (typeof product.stock === 'number' && product.id) {
+          productsToSync.push({
+            id: product.id,
+            stock: product.stock
+          });
+        }
+      });
+    }
+    
+    if (productsToSync.length === 0) {
+      alert('⚠️ No products to sync');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      return;
+    }
+    
+    console.log('📤 Syncing', productsToSync.length, 'products to Google Sheets');
+    
+    // ✅ Send batch update to backend
+    const response = await fetch(API_CONFIG.baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'syncStockFromWebapp',
+        products: productsToSync
+      })
+    });
+    
     const result = await response.json();
     
-    if (result.success && result.products) {
-      // ✅ Update global cache
-      if (typeof cachedProducts !== 'undefined') {
-        cachedProducts.length = 0; // Clear array
-        cachedProducts.push(...result.products); // Add new data
-      }
-      
-      // ✅ Save to localStorage
-      localStorage.setItem('inventory_products_cache', JSON.stringify(result.products));
-      localStorage.setItem('inventory_cache_timestamp', Date.now().toString());
-      
-      console.log('✅ Synced', result.products.length, 'products');
+    if (!result.success) {
+      throw new Error(result.error || 'Sync failed');
+    }
+    
+    console.log('✅ Synced successfully:', result);
+    
+    // ✅ Show success message
+    if (typeof showToast === 'function') {
+      showToast('✅ Synced', `Updated ${result.updatedCount || productsToSync.length} products in Google Sheets`, 'success');
     }
     
     // ✅ Cancel bulk edit mode
     cancelBulkEdit();
     
-    // ✅ Re-render products
-    if (typeof renderProducts === 'function') {
-      renderProducts();
-    }
-    
-    // ✅ Show success message
-    if (typeof showToast === 'function') {
-      showToast('✅ Updated', 'All changes synced successfully', 'success');
-    }
-    
   } catch (error) {
     console.error('❌ Error syncing:', error);
-    alert('❌ Error syncing changes: ' + error.message);
+    alert('❌ Error syncing to Google Sheets: ' + error.message);
   } finally {
     btn.disabled = false;
     btn.innerHTML = originalText;
   }
 }
+
 
 
 
@@ -1265,6 +1280,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
 
 
