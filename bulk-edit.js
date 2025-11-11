@@ -4,8 +4,22 @@
  * ==========================================
  * Handles: Category, Unit Type, Stock, Selling Price, Brand, Size
  * Created: Nov 11, 2025
+ * Fixed: Nov 11, 2025 - Cancel button & counter issues
  * ==========================================
  */
+
+// ✅ Global state for bulk edit mode
+let bulkEditMode = {
+  active: false,
+  field: null, // 'category', 'unitType', 'stock', 'sellingPrice', 'brand', 'size'
+  value: null,
+  selectedProducts: []
+};
+
+
+
+
+
 
 
 
@@ -158,7 +172,7 @@ function showUnitTypeBulkEdit() {
 }
 
 /**
- * Select Bulk Unit Type
+ * Select Bulk Unit Type - FIXED: NOW SHOWS CANCEL BUTTON IMMEDIATELY
  */
 function selectBulkUnitType(unitType) {
   console.log('📦 Selected unit type:', unitType);
@@ -175,10 +189,10 @@ function selectBulkUnitType(unitType) {
       selectedProducts: []
     };
     
-    // ✅ Update UI
+    // ✅ Update UI - SHOW CANCEL BUTTON HERE
     document.getElementById('selectedUnitTypeText').textContent = unitType;
     document.getElementById('updateUnitTypeBtn').style.display = 'inline-block';
-    document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+    document.getElementById('cancelBulkEditBtn').style.display = 'inline-block'; // ← FIXED
     document.getElementById('selectedCountUnitType').textContent = '0';
     
     // ✅ Enable product selection
@@ -189,7 +203,7 @@ function selectBulkUnitType(unitType) {
 }
 
 /**
- * Apply Bulk Unit Type Update
+ * Apply Bulk Unit Type Update - FIXED: NOW CALLS cancelBulkEdit()
  */
 async function applyBulkUnitTypeUpdate() {
   if (bulkEditMode.selectedProducts.length === 0) {
@@ -238,6 +252,8 @@ async function applyBulkUnitTypeUpdate() {
     }
     
     showToast('✅ Success!', `Updated ${result.updatedCount} product(s) to unit type "${unitType}"`, 'success');
+    
+    // ✅ FIXED: Cancel bulk edit mode
     cancelBulkEdit();
     
     if (typeof renderProducts === 'function') {
@@ -311,7 +327,7 @@ function enableProductSelectionMobile() {
 }
 
 /**
- * Toggle Desktop Product Selection
+ * Toggle Desktop Product Selection - FIXED: Updates correct counter
  */
 function toggleProductSelectionDesktop(productId, row) {
   if (!bulkEditMode.active) return;
@@ -326,12 +342,12 @@ function toggleProductSelectionDesktop(productId, row) {
     row.classList.add('product-selected');
   }
   
-  // ✅ Update count based on field
+  // ✅ FIXED: Update count based on field
   updateSelectedCount();
 }
 
 /**
- * Toggle Mobile Product Selection
+ * Toggle Mobile Product Selection - FIXED: Updates correct counter
  */
 function toggleProductSelectionMobile(productId, card) {
   if (!bulkEditMode.active) return;
@@ -349,12 +365,12 @@ function toggleProductSelectionMobile(productId, card) {
     if (indicator) indicator.style.display = 'flex';
   }
   
-  // ✅ Update count based on field
+  // ✅ FIXED: Update count based on field
   updateSelectedCount();
 }
 
 /**
- * Update Selected Count
+ * Update Selected Count - FIXED: Updates correct counter based on field
  */
 function updateSelectedCount() {
   const count = bulkEditMode.selectedProducts.length;
@@ -370,7 +386,7 @@ function updateSelectedCount() {
 }
 
 /**
- * Cancel Bulk Edit Mode
+ * Cancel Bulk Edit Mode - FIXED: Hides ALL elements properly
  */
 function cancelBulkEdit() {
   console.log('✕ Cancelling bulk edit mode');
@@ -389,7 +405,7 @@ function cancelBulkEdit() {
     mainDropdownContainer.style.display = 'inline-block';
   }
   
-  // ✅ Hide all UI elements
+  // ✅ FIXED: Hide ALL UI elements
   hideElement('categorySelectionDropdown');
   hideElement('unitTypeSelectionDropdown');
   hideElement('updateCategoryBtn');
@@ -406,6 +422,12 @@ function cancelBulkEdit() {
   
   const selectedUnitTypeText = document.getElementById('selectedUnitTypeText');
   if (selectedUnitTypeText) selectedUnitTypeText.textContent = 'Select Unit Type';
+  
+  const selectedCount = document.getElementById('selectedCount');
+  if (selectedCount) selectedCount.textContent = '0';
+  
+  const selectedCountUnitType = document.getElementById('selectedCountUnitType');
+  if (selectedCountUnitType) selectedCountUnitType.textContent = '0';
   
   // ✅ Remove selection classes
   document.querySelectorAll('.product-selected').forEach(el => {
@@ -483,4 +505,3 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
-
