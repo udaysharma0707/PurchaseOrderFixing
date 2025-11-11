@@ -434,7 +434,7 @@ onmouseout="this.style.background='#28a745'">
   <input type="text" id="productSearch" class="form-control" placeholder="ðŸ”Ž Search products..." onkeyup="searchProducts()">
 
 <!-- ==========================================
-     ✅ UPDATED BULK EDIT TOOLBAR (Auto-close dropdowns)
+     🔥 FINAL SOLUTION: BUTTON-BASED BULK EDIT TOOLBAR
      ========================================== -->
 <div id="bulkEditToolbar" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
   
@@ -444,50 +444,48 @@ onmouseout="this.style.background='#28a745'">
             type="button" 
             id="bulkEditDropdown" 
             data-bs-toggle="dropdown" 
-            data-bs-auto-close="true"
             aria-expanded="false" 
             style="font-weight: 600;">
       <i class="bi bi-pencil-square"></i> Edit Products in Bulk
     </button>
     <ul class="dropdown-menu shadow" aria-labelledby="bulkEditDropdown" style="min-width: 250px;">
       <li>
-        <a class="dropdown-item d-flex justify-content-between align-items-center" 
-           href="#" 
-           onclick="showCategoryBulkEdit(); return false;">
+        <!-- ✅ Changed from <a> to <button> -->
+        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showCategoryBulkEdit();">
           <span><i class="bi bi-tag"></i> Update Category</span>
           <i class="bi bi-chevron-right text-muted"></i>
-        </a>
+        </button>
       </li>
       <li><hr class="dropdown-divider"></li>
       <li>
-        <a class="dropdown-item disabled" href="#">
+        <button type="button" class="dropdown-item disabled">
           <i class="bi bi-box-seam"></i> Update Stock 
           <small class="text-muted">(Coming Soon)</small>
-        </a>
+        </button>
       </li>
       <li>
-        <a class="dropdown-item disabled" href="#">
+        <button type="button" class="dropdown-item disabled">
           <i class="bi bi-card-text"></i> Update Unit Type 
           <small class="text-muted">(Coming Soon)</small>
-        </a>
+        </button>
       </li>
       <li>
-        <a class="dropdown-item disabled" href="#">
+        <button type="button" class="dropdown-item disabled">
           <i class="bi bi-currency-rupee"></i> Update Selling Price 
           <small class="text-muted">(Coming Soon)</small>
-        </a>
+        </button>
       </li>
       <li>
-        <a class="dropdown-item disabled" href="#">
+        <button type="button" class="dropdown-item disabled">
           <i class="bi bi-award"></i> Update Brand 
           <small class="text-muted">(Coming Soon)</small>
-        </a>
+        </button>
       </li>
       <li>
-        <a class="dropdown-item disabled" href="#">
+        <button type="button" class="dropdown-item disabled">
           <i class="bi bi-rulers"></i> Update Size 
           <small class="text-muted">(Coming Soon)</small>
-        </a>
+        </button>
       </li>
     </ul>
   </div>
@@ -498,32 +496,26 @@ onmouseout="this.style.background='#28a745'">
             type="button" 
             id="categoryDropdownBtn" 
             data-bs-toggle="dropdown" 
-            data-bs-auto-close="true"
             aria-expanded="false" 
             style="font-weight: 600;">
       <i class="bi bi-funnel"></i> <span id="selectedCategoryText">Select Category</span>
     </button>
     <ul class="dropdown-menu shadow" aria-labelledby="categoryDropdownBtn">
       <li>
-        <a class="dropdown-item" 
-           href="#" 
-           onclick="selectBulkCategory('Tiles'); return false;">
+        <!-- ✅ Changed from <a> to <button> -->
+        <button type="button" class="dropdown-item" onclick="selectBulkCategory('Tiles');">
           <i class="bi bi-grid-3x3-gap"></i> Tiles
-        </a>
+        </button>
       </li>
       <li>
-        <a class="dropdown-item" 
-           href="#" 
-           onclick="selectBulkCategory('Sanitaryware'); return false;">
+        <button type="button" class="dropdown-item" onclick="selectBulkCategory('Sanitaryware');">
           <i class="bi bi-droplet"></i> Sanitaryware
-        </a>
+        </button>
       </li>
       <li>
-        <a class="dropdown-item" 
-           href="#" 
-           onclick="selectBulkCategory('Accessories'); return false;">
+        <button type="button" class="dropdown-item" onclick="selectBulkCategory('Accessories');">
           <i class="bi bi-wrench"></i> Accessories
-        </a>
+        </button>
       </li>
     </ul>
   </div>
@@ -551,7 +543,6 @@ onmouseout="this.style.background='#28a745'">
     <i class="bi bi-info-circle"></i> Click on products to select them
   </div>
 </div>
-
 
 
 
@@ -3801,115 +3792,73 @@ let bulkEditMode = {
  * Show Category Bulk Edit Mode
  */
 /**
- * 🔥 BULLETPROOF: Show Category Bulk Edit (Force close dropdown)
+ * 🔥 FINAL: Show Category Bulk Edit (Direct close)
  */
 function showCategoryBulkEdit() {
   console.log('📝 Opening category bulk edit mode...');
   
-  // ✅ METHOD 1: Bootstrap API
-  try {
-    const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('bulkEditDropdown'));
-    if (dropdown) {
-      dropdown.hide();
-    }
-  } catch (e) {
-    console.log('Bootstrap hide failed:', e);
-  }
-  
-  // ✅ METHOD 2: Force remove classes
+  // ✅ DIRECT DOM MANIPULATION - Remove 'show' class
   const dropdownMenu = document.querySelector('#bulkEditDropdown + .dropdown-menu');
   if (dropdownMenu) {
     dropdownMenu.classList.remove('show');
   }
   
+  // ✅ Reset button state
   const dropdownBtn = document.getElementById('bulkEditDropdown');
   if (dropdownBtn) {
-    dropdownBtn.classList.remove('show');
     dropdownBtn.setAttribute('aria-expanded', 'false');
+    dropdownBtn.blur(); // Remove focus
   }
   
-  // ✅ METHOD 3: Remove backdrop if exists
-  const backdrop = document.querySelector('.dropdown-backdrop');
-  if (backdrop) {
-    backdrop.remove();
-  }
+  // ✅ Show category selection UI
+  document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
   
-  // ✅ METHOD 4: Click outside to trigger Bootstrap close
-  document.body.click();
-  
-  // Wait for dropdown to close, then show category selection
-  setTimeout(() => {
-    document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
-    document.getElementById('bulkEditInfoText').style.display = 'block';
-    document.getElementById('bulkEditToolbar').classList.add('active');
-    
-    console.log('✅ Category bulk edit UI shown');
-  }, 200);
+  console.log('✅ Category bulk edit UI shown');
 }
 
 /**
- * 🔥 BULLETPROOF: Select Bulk Category (Force close dropdown)
+ * 🔥 FINAL: Select Bulk Category (Direct close)
  */
 function selectBulkCategory(category) {
   console.log('📦 Selected category:', category);
   
-  // ✅ METHOD 1: Bootstrap API
-  try {
-    const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('categoryDropdownBtn'));
-    if (dropdown) {
-      dropdown.hide();
-    }
-  } catch (e) {
-    console.log('Bootstrap hide failed:', e);
-  }
-  
-  // ✅ METHOD 2: Force remove classes
+  // ✅ DIRECT DOM MANIPULATION - Remove 'show' class
   const categoryMenu = document.querySelector('#categoryDropdownBtn + .dropdown-menu');
   if (categoryMenu) {
     categoryMenu.classList.remove('show');
   }
   
+  // ✅ Reset button state
   const categoryBtn = document.getElementById('categoryDropdownBtn');
   if (categoryBtn) {
-    categoryBtn.classList.remove('show');
     categoryBtn.setAttribute('aria-expanded', 'false');
+    categoryBtn.blur(); // Remove focus
   }
   
-  // ✅ METHOD 3: Remove backdrop
-  const backdrop = document.querySelector('.dropdown-backdrop');
-  if (backdrop) {
-    backdrop.remove();
-  }
+  // ✅ Set bulk edit mode
+  bulkEditMode = {
+    active: true,
+    field: 'category',
+    value: category,
+    selectedProducts: []
+  };
   
-  // ✅ METHOD 4: Click outside
-  document.body.click();
+  // ✅ Update UI
+  document.getElementById('selectedCategoryText').textContent = category;
+  document.getElementById('updateCategoryBtn').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('selectedCount').textContent = '0';
   
-  // Wait for dropdown to close, then activate bulk mode
-  setTimeout(() => {
-    // Set bulk edit mode
-    bulkEditMode = {
-      active: true,
-      field: 'category',
-      value: category,
-      selectedProducts: []
-    };
-    
-    // Update UI
-    document.getElementById('selectedCategoryText').textContent = category;
-    document.getElementById('updateCategoryBtn').style.display = 'inline-block';
-    document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
-    document.getElementById('selectedCount').textContent = '0';
-    
-    // Enable product selection mode
-    enableProductSelection();
-    
-    // Show success message
-    showToast(`✅ Bulk edit mode: Update Category to "${category}"`, 'Click on products to select them', 'success');
-    
-    console.log('✅ Bulk category mode activated');
-  }, 200);
+  // ✅ Enable product selection mode
+  enableProductSelection();
+  
+  // ✅ Show success message
+  showToast(`✅ Bulk edit mode: Update Category to "${category}"`, 'Click on products to select them', 'success');
+  
+  console.log('✅ Bulk category mode activated');
 }
-
 
 
 /**
@@ -14214,6 +14163,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
