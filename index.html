@@ -36,6 +36,8 @@
 
  <script src="customers.js"></script>
   <script src="brand-manager.js"></script>
+<!-- ✅ Bulk Edit Module -->
+<script src="bulk-edit.js"></script>
 
   
 </head>
@@ -434,7 +436,7 @@ onmouseout="this.style.background='#28a745'">
   <input type="text" id="productSearch" class="form-control" placeholder="ðŸ”Ž Search products..." onkeyup="searchProducts()">
 
 <!-- ==========================================
-     🔥 FINAL SOLUTION: BUTTON-BASED BULK EDIT TOOLBAR
+     🔥 BULK EDIT TOOLBAR - WITH UNIT TYPE
      ========================================== -->
 <div id="bulkEditToolbar" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
   
@@ -450,9 +452,16 @@ onmouseout="this.style.background='#28a745'">
     </button>
     <ul class="dropdown-menu shadow" aria-labelledby="bulkEditDropdown" style="min-width: 250px;">
       <li>
-        <!-- ✅ Changed from <a> to <button> -->
         <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showCategoryBulkEdit();">
           <span><i class="bi bi-tag"></i> Update Category</span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </button>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <!-- ✅ UNIT TYPE - NOW ACTIVE -->
+      <li>
+        <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showUnitTypeBulkEdit();">
+          <span><i class="bi bi-card-text"></i> Update Unit Type</span>
           <i class="bi bi-chevron-right text-muted"></i>
         </button>
       </li>
@@ -460,12 +469,6 @@ onmouseout="this.style.background='#28a745'">
       <li>
         <button type="button" class="dropdown-item disabled">
           <i class="bi bi-box-seam"></i> Update Stock 
-          <small class="text-muted">(Coming Soon)</small>
-        </button>
-      </li>
-      <li>
-        <button type="button" class="dropdown-item disabled">
-          <i class="bi bi-card-text"></i> Update Unit Type 
           <small class="text-muted">(Coming Soon)</small>
         </button>
       </li>
@@ -490,6 +493,8 @@ onmouseout="this.style.background='#28a745'">
     </ul>
   </div>
   
+  <!-- ===== CATEGORY SECTION ===== -->
+  
   <!-- Category Selection Dropdown (Hidden Initially) -->
   <div id="categorySelectionDropdown" class="dropdown" style="display: none;">
     <button class="btn btn-outline-primary dropdown-toggle" 
@@ -502,7 +507,6 @@ onmouseout="this.style.background='#28a745'">
     </button>
     <ul class="dropdown-menu shadow" aria-labelledby="categoryDropdownBtn">
       <li>
-        <!-- ✅ Changed from <a> to <button> -->
         <button type="button" class="dropdown-item" onclick="selectBulkCategory('Tiles');">
           <i class="bi bi-grid-3x3-gap"></i> Tiles
         </button>
@@ -517,10 +521,15 @@ onmouseout="this.style.background='#28a745'">
           <i class="bi bi-wrench"></i> Accessories
         </button>
       </li>
+      <li>
+        <button type="button" class="dropdown-item" onclick="selectBulkCategory('Custom');">
+          <i class="bi bi-star"></i> Custom
+        </button>
+      </li>
     </ul>
   </div>
   
-  <!-- Update Button (Hidden Initially) -->
+  <!-- Update Category Button (Hidden Initially) -->
   <button id="updateCategoryBtn" 
           class="btn btn-success" 
           style="display: none; font-weight: 600;" 
@@ -528,6 +537,58 @@ onmouseout="this.style.background='#28a745'">
     <i class="bi bi-check-circle"></i> Update Category 
     (<span id="selectedCount" style="font-weight: 700;">0</span> selected)
   </button>
+  
+  <!-- ===== UNIT TYPE SECTION ===== -->
+  
+  <!-- Unit Type Selection Dropdown (Hidden Initially) -->
+  <div id="unitTypeSelectionDropdown" class="dropdown" style="display: none;">
+    <button class="btn btn-outline-info dropdown-toggle" 
+            type="button" 
+            id="unitTypeDropdownBtn" 
+            data-bs-toggle="dropdown" 
+            aria-expanded="false" 
+            style="font-weight: 600;">
+      <i class="bi bi-card-text"></i> <span id="selectedUnitTypeText">Select Unit Type</span>
+    </button>
+    <ul class="dropdown-menu shadow" aria-labelledby="unitTypeDropdownBtn">
+      <li>
+        <button type="button" class="dropdown-item" onclick="selectBulkUnitType('Box');">
+          <i class="bi bi-box"></i> Box
+        </button>
+      </li>
+      <li>
+        <button type="button" class="dropdown-item" onclick="selectBulkUnitType('Piece');">
+          <i class="bi bi-circle"></i> Piece
+        </button>
+      </li>
+      <li>
+        <button type="button" class="dropdown-item" onclick="selectBulkUnitType('Square Feet');">
+          <i class="bi bi-square"></i> Square Feet
+        </button>
+      </li>
+      <li>
+        <button type="button" class="dropdown-item" onclick="selectBulkUnitType('Meter');">
+          <i class="bi bi-rulers"></i> Meter
+        </button>
+      </li>
+      <li>
+        <button type="button" class="dropdown-item" onclick="selectBulkUnitType('Set');">
+          <i class="bi bi-collection"></i> Set
+        </button>
+      </li>
+    </ul>
+  </div>
+  
+  <!-- Update Unit Type Button (Hidden Initially) -->
+  <button id="updateUnitTypeBtn" 
+          class="btn btn-info" 
+          style="display: none; font-weight: 600; color: white;" 
+          onclick="applyBulkUnitTypeUpdate()">
+    <i class="bi bi-check-circle"></i> Update Unit Type 
+    (<span id="selectedCountUnitType" style="font-weight: 700;">0</span> selected)
+  </button>
+  
+  <!-- ===== COMMON BUTTONS ===== -->
   
   <!-- Cancel Button (Hidden Initially) -->
   <button id="cancelBulkEditBtn" 
@@ -2000,11 +2061,11 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-2T7vLJnaAW1gmM-VVPZv9H-l3fWq0YQX7zMGiHk7IzN6ZW4xLbYlhWhlWGsXH7dQ/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-2T7vLJnaAW1gmM-VVPZv9H-l3fWq0YQX7zMGiHk7IzN6ZW4xLbYlhWhlWGsXH7dQ/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwC8ICWR8akMsEqiv1iH6aWFC0GebP7U7mV3xru1FsfTKUV65jTr86vqVAtyNRieuax/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwC8ICWR8akMsEqiv1iH6aWFC0GebP7U7mV3xru1FsfTKUV65jTr86vqVAtyNRieuax/exec';
 // ✅ API Configuration
 window.API_CONFIG = {
-  baseUrl: 'https://script.google.com/macros/s/AKfycbx-2T7vLJnaAW1gmM-VVPZv9H-l3fWq0YQX7zMGiHk7IzN6ZW4xLbYlhWhlWGsXH7dQ/exec', // ← Replace this
+  baseUrl: 'https://script.google.com/macros/s/AKfycbwC8ICWR8akMsEqiv1iH6aWFC0GebP7U7mV3xru1FsfTKUV65jTr86vqVAtyNRieuax/exec', // ← Replace this
   secret: 'shopSecret2025'
 };
 
@@ -4290,7 +4351,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbx-2T7vLJnaAW1gmM-VVPZv9H-l3fWq0YQX7zMGiHk7IzN6ZW4xLbYlhWhlWGsXH7dQ/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwC8ICWR8akMsEqiv1iH6aWFC0GebP7U7mV3xru1FsfTKUV65jTr86vqVAtyNRieuax/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -14150,6 +14211,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
