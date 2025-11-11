@@ -401,6 +401,9 @@ function updateSelectedCount() {
 /**
  * Cancel Bulk Edit Mode - FIXED: Hides ALL elements properly
  */
+/**
+ * Cancel Bulk Edit Mode - FIXED: Hides ALL elements properly
+ */
 function cancelBulkEdit() {
   console.log('✕ Cancelling bulk edit mode');
   
@@ -423,12 +426,13 @@ function cancelBulkEdit() {
   hideElement('unitTypeSelectionDropdown');
   hideElement('sellingPriceInputContainer');
   hideElement('sizeInputContainer');
-  hideElement('brandInputContainer'); // ← NEW
+  hideElement('brandInputContainer');
+  hideElement('stockAdjustmentContainer'); // ← NEW
   hideElement('updateCategoryBtn');
   hideElement('updateUnitTypeBtn');
   hideElement('updateSellingPriceBtn');
   hideElement('updateSizeBtn');
-  hideElement('updateBrandBtn'); // ← NEW
+  hideElement('updateBrandBtn');
   hideElement('cancelBulkEditBtn');
   hideElement('bulkEditInfoText');
   
@@ -467,6 +471,9 @@ function cancelBulkEdit() {
   const brandInput = document.getElementById('brandInput');
   if (brandInput) brandInput.value = '';
   
+  const stockInput = document.getElementById('stockAdjustmentInput');
+  if (stockInput) stockInput.value = '10';
+  
   // ✅ Remove selection classes
   document.querySelectorAll('.product-selected').forEach(el => {
     el.classList.remove('product-selected');
@@ -478,6 +485,12 @@ function cancelBulkEdit() {
   
   document.querySelectorAll('.product-selectable').forEach(el => {
     el.classList.remove('product-selectable');
+    el.onclick = null;
+  });
+  
+  // ✅ Remove stock adjustable classes
+  document.querySelectorAll('.stock-adjustable').forEach(el => {
+    el.classList.remove('stock-adjustable');
     el.onclick = null;
   });
   
@@ -917,6 +930,204 @@ async function applyBulkBrandUpdate() {
   }
 }
 
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - STOCK ADJUSTMENT (INSTANT CLICK)
+ * ==========================================
+ */
+
+/**
+ * Show Stock Adjustment Mode
+ */
+function showStockAdjustmentEdit() {
+  console.log('📝 Opening stock adjustment mode...');
+  
+  // ✅ RESET STATE
+  bulkEditMode = {
+    active: true, // Active immediately
+    field: 'stockAdjustment',
+    value: null,
+    operation: 'reduce', // Default: reduce
+    amount: 10, // Default amount
+    selectedProducts: [] // Not used in this mode
+  };
+  
+  // ✅ HIDE THE MAIN DROPDOWN BUTTON
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // ✅ Show stock adjustment UI AND cancel button
+  document.getElementById('stockAdjustmentContainer').style.display = 'block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  // ✅ Set default operation
+  setStockOperation('reduce');
+  
+  // ✅ Listen for input changes
+  const stockInput = document.getElementById('stockAdjustmentInput');
+  stockInput.addEventListener('input', function() {
+    const amount = parseInt(stockInput.value);
+    if (!isNaN(amount) && amount > 0) {
+      bulkEditMode.amount = amount;
+      console.log('✅ Stock adjustment amount set to:', amount);
+    }
+  });
+  
+  // ✅ Enable stock adjustment mode
+  enableStockAdjustmentMode();
+  
+  console.log('✅ Stock adjustment mode active');
+}
+
+/**
+ * Set Stock Operation (Add or Reduce)
+ */
+function setStockOperation(operation) {
+  bulkEditMode.operation = operation;
+  
+  const btn = document.getElementById('stockOperationBtn');
+  if (operation === 'add') {
+    btn.innerHTML = '<i class="bi bi-plus-circle"></i> Add by';
+    btn.classList.remove('btn-outline-danger');
+    btn.classList.add('btn-outline-success');
+  } else {
+    btn.innerHTML = '<i class="bi bi-dash-circle"></i> Reduce by';
+    btn.classList.remove('btn-outline-success');
+    btn.classList.add('btn-outline-danger');
+  }
+  
+  console.log('✅ Stock operation set to:', operation);
+}
+
+/**
+ * Enable Stock Adjustment Mode - Click to adjust
+ */
+function enableStockAdjustmentMode() {
+  console.log('🖱️ Stock adjustment mode enabled');
+  
+  // Desktop
+  const tableRows = document.querySelectorAll('#productsTableBody tr[data-product-id]');
+  tableRows.forEach(row => {
+    const productId = row.getAttribute('data-product-id');
+    const product = cachedProducts.find(p => p.id === productId);
+    
+    // Only enable for products with NUMERIC stock
+    if (product && typeof product.stock === 'number') {
+      row.classList.add('stock-adjustable');
+      row.onclick = function(event) {
+        if (event.target.closest('.btn')) return;
+        event.stopPropagation();
+        event.preventDefault();
+        adjustProductStock(productId, row);
+      };
+    }
+  });
+  
+  // Mobile
+  const mobileCards = document.querySelectorAll('.mobile-item[data-product-id]');
+  mobileCards.forEach(card => {
+    const productId = card.getAttribute('data-product-id');
+    const product = cachedProducts.find(p => p.id === productId);
+    
+    // Only enable for products with NUMERIC stock
+    if (product && typeof product.stock === 'number') {
+      card.classList.add('stock-adjustable');
+      card.onclick = function(event) {
+        if (event.target.closest('.btn')) return;
+        event.stopPropagation();
+        event.preventDefault();
+        adjustProductStock(productId, card);
+      };
+    }
+  });
+  
+  console.log('✅ Stock adjustment enabled');
+}
+
+/**
+ * Adjust Product Stock - Instant update with animation
+ */
+async function adjustProductStock(productId, element) {
+  if (!bulkEditMode.active || bulkEditMode.field !== 'stockAdjustment') return;
+  
+  const operation = bulkEditMode.operation;
+  const amount = bulkEditMode.amount;
+  
+  if (!amount || amount <= 0) {
+    alert('⚠️ Please enter a valid amount');
+    return;
+  }
+  
+  // ✅ Show animation
+  showStockAnimation(element, operation, amount);
+  
+  try {
+    const response = await fetch(API_CONFIG.baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'adjustStock',
+        productId: productId,
+        operation: operation, // 'add' or 'reduce'
+        amount: amount
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Stock adjustment failed');
+    }
+    
+    console.log('✅ Stock adjusted:', result);
+    
+    // ✅ Update local cache
+    if (typeof cachedProducts !== 'undefined') {
+      const product = cachedProducts.find(p => p.id === productId);
+      if (product && typeof product.stock === 'number') {
+        if (operation === 'add') {
+          product.stock += amount;
+        } else {
+          product.stock = Math.max(0, product.stock - amount); // Don't go below 0
+        }
+      }
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    }
+    
+    // ✅ Re-render products
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+      // Re-enable stock adjustment mode after render
+      setTimeout(() => enableStockAdjustmentMode(), 100);
+    }
+    
+  } catch (error) {
+    console.error('❌ Error adjusting stock:', error);
+    alert('❌ Error: ' + error.message);
+  }
+}
+
+/**
+ * Show Stock Animation
+ */
+function showStockAnimation(element, operation, amount) {
+  const animationDiv = document.createElement('div');
+  animationDiv.className = 'stock-animation' + (operation === 'reduce' ? ' reduce' : '');
+  animationDiv.textContent = (operation === 'add' ? '+' : '-') + amount;
+  
+  // Position relative to element
+  element.style.position = 'relative';
+  element.appendChild(animationDiv);
+  
+  // Remove after animation
+  setTimeout(() => {
+    animationDiv.remove();
+  }, 1000);
+}
 
 
 
@@ -978,11 +1189,15 @@ document.addEventListener('DOMContentLoaded', function() {
   window.showSizeBulkEdit = showSizeBulkEdit;
   window.applyBulkSizeUpdate = applyBulkSizeUpdate;
   
-  window.showBrandBulkEdit = showBrandBulkEdit; // ← NEW
-  window.applyBulkBrandUpdate = applyBulkBrandUpdate; // ← NEW
+  window.showBrandBulkEdit = showBrandBulkEdit;
+  window.applyBulkBrandUpdate = applyBulkBrandUpdate;
+  
+  window.showStockAdjustmentEdit = showStockAdjustmentEdit; // ← NEW
+  window.setStockOperation = setStockOperation; // ← NEW
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
 
 
