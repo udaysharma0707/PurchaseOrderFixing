@@ -3775,25 +3775,38 @@ async function saveVariantData() {
 
 /**
  * ==========================================
- * 🔥 COMPLETE BULK EDIT FUNCTIONALITY
+ * 🔥 COMPLETE BULK EDIT - WITH PROPER INITIALIZATION
  * ==========================================
  */
 
-// Global state for bulk edit mode
+// ✅ Global state for bulk edit mode
 let bulkEditMode = {
   active: false,
-  field: null,         // 'category', 'stock', 'price', etc.
-  value: null,         // Selected category value
-  selectedProducts: [] // Array of selected product IDs
+  field: null,
+  value: null,
+  selectedProducts: []
 };
 
 /**
- * 🎯 Show Category Bulk Edit (Manual close without click)
+ * ✅ INITIALIZE ON DOM READY
+ */
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('✅ Bulk edit module initialized');
+  
+  // ✅ Make functions globally accessible
+  window.showCategoryBulkEdit = showCategoryBulkEdit;
+  window.selectBulkCategory = selectBulkCategory;
+  window.applyBulkCategoryUpdate = applyBulkCategoryUpdate;
+  window.cancelBulkEdit = cancelBulkEdit;
+});
+
+/**
+ * 🎯 Show Category Bulk Edit
  */
 function showCategoryBulkEdit() {
   console.log('📝 Opening category bulk edit mode...');
   
-  // ✅ MANUALLY CLOSE DROPDOWN (without triggering click)
+  // ✅ MANUALLY CLOSE DROPDOWN
   const dropdownMenu = document.querySelector('#bulkEditDropdown + .dropdown-menu');
   const dropdownBtn = document.getElementById('bulkEditDropdown');
   
@@ -3801,24 +3814,28 @@ function showCategoryBulkEdit() {
     dropdownMenu.classList.remove('show');
     dropdownBtn.classList.remove('show');
     dropdownBtn.setAttribute('aria-expanded', 'false');
-    console.log('✅ Dropdown closed manually');
+    console.log('✅ Dropdown closed');
   }
   
   // ✅ Show category selection UI
-  document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
-  document.getElementById('bulkEditInfoText').style.display = 'block';
-  document.getElementById('bulkEditToolbar').classList.add('active');
+  const categoryDropdown = document.getElementById('categorySelectionDropdown');
+  const bulkInfoText = document.getElementById('bulkEditInfoText');
+  const bulkToolbar = document.getElementById('bulkEditToolbar');
+  
+  if (categoryDropdown) categoryDropdown.style.display = 'inline-block';
+  if (bulkInfoText) bulkInfoText.style.display = 'block';
+  if (bulkToolbar) bulkToolbar.classList.add('active');
   
   console.log('✅ Category bulk edit UI shown');
 }
 
 /**
- * 🎯 Select Bulk Category (Manual close without click)
+ * 🎯 Select Bulk Category
  */
 function selectBulkCategory(category) {
   console.log('📦 Selected category:', category);
   
-  // ✅ MANUALLY CLOSE DROPDOWN (without triggering click)
+  // ✅ MANUALLY CLOSE DROPDOWN
   const categoryMenu = document.querySelector('#categoryDropdownBtn + .dropdown-menu');
   const categoryBtn = document.getElementById('categoryDropdownBtn');
   
@@ -3826,7 +3843,7 @@ function selectBulkCategory(category) {
     categoryMenu.classList.remove('show');
     categoryBtn.classList.remove('show');
     categoryBtn.setAttribute('aria-expanded', 'false');
-    console.log('✅ Category dropdown closed manually');
+    console.log('✅ Category dropdown closed');
   }
   
   // ✅ Set bulk edit mode
@@ -3838,10 +3855,15 @@ function selectBulkCategory(category) {
   };
   
   // ✅ Update UI
-  document.getElementById('selectedCategoryText').textContent = category;
-  document.getElementById('updateCategoryBtn').style.display = 'inline-block';
-  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
-  document.getElementById('selectedCount').textContent = '0';
+  const selectedCategoryText = document.getElementById('selectedCategoryText');
+  const updateBtn = document.getElementById('updateCategoryBtn');
+  const cancelBtn = document.getElementById('cancelBulkEditBtn');
+  const selectedCount = document.getElementById('selectedCount');
+  
+  if (selectedCategoryText) selectedCategoryText.textContent = category;
+  if (updateBtn) updateBtn.style.display = 'inline-block';
+  if (cancelBtn) cancelBtn.style.display = 'inline-block';
+  if (selectedCount) selectedCount.textContent = '0';
   
   // ✅ Enable product selection mode
   enableProductSelection();
@@ -3853,11 +3875,10 @@ function selectBulkCategory(category) {
 }
 
 /**
- * ✅ Enable Product Selection Mode (Main function)
+ * ✅ Enable Product Selection Mode
  */
 function enableProductSelection() {
   console.log('🖱️ Product selection mode enabled');
-  
   enableProductSelectionDesktop();
   enableProductSelectionMobile();
 }
@@ -3871,17 +3892,15 @@ function enableProductSelectionDesktop() {
   tableRows.forEach(row => {
     const productId = row.getAttribute('data-product-id');
     row.classList.add('product-selectable');
-    row.onclick = null; // Remove old handler
     
-    // ✅ ADD STOP PROPAGATION
+    // ✅ Remove old handler first
+    row.onclick = null;
+    
+    // ✅ Add new handler with stop propagation
     row.onclick = function(event) {
-      // Don't trigger if clicking buttons
       if (event.target.closest('.btn')) return;
-      
-      // ✅ STOP EVENT BUBBLING
       event.stopPropagation();
       event.preventDefault();
-      
       toggleProductSelectionDesktop(productId, row);
     };
   });
@@ -3898,17 +3917,15 @@ function enableProductSelectionMobile() {
   mobileCards.forEach(card => {
     const productId = card.getAttribute('data-product-id');
     card.classList.add('product-selectable');
-    card.onclick = null; // Remove old handler
     
-    // ✅ ADD STOP PROPAGATION
+    // ✅ Remove old handler first
+    card.onclick = null;
+    
+    // ✅ Add new handler with stop propagation
     card.onclick = function(event) {
-      // Don't trigger if clicking buttons
       if (event.target.closest('.btn')) return;
-      
-      // ✅ STOP EVENT BUBBLING
       event.stopPropagation();
       event.preventDefault();
-      
       toggleProductSelectionMobile(productId, card);
     };
   });
@@ -3920,43 +3937,48 @@ function enableProductSelectionMobile() {
  * ✅ Toggle Desktop Product Selection
  */
 function toggleProductSelectionDesktop(productId, row) {
-  if (!bulkEditMode.active) return;
+  if (!bulkEditMode.active) {
+    console.warn('⚠️ Bulk edit mode not active');
+    return;
+  }
   
   const index = bulkEditMode.selectedProducts.indexOf(productId);
   
   if (index > -1) {
-    // Deselect
     bulkEditMode.selectedProducts.splice(index, 1);
     row.classList.remove('product-selected');
     console.log('❌ Deselected:', productId);
   } else {
-    // Select
     bulkEditMode.selectedProducts.push(productId);
     row.classList.add('product-selected');
     console.log('✅ Selected:', productId);
   }
   
   // ✅ Update count
-  document.getElementById('selectedCount').textContent = bulkEditMode.selectedProducts.length;
+  const selectedCount = document.getElementById('selectedCount');
+  if (selectedCount) {
+    selectedCount.textContent = bulkEditMode.selectedProducts.length;
+  }
 }
 
 /**
  * ✅ Toggle Mobile Product Selection
  */
 function toggleProductSelectionMobile(productId, card) {
-  if (!bulkEditMode.active) return;
+  if (!bulkEditMode.active) {
+    console.warn('⚠️ Bulk edit mode not active');
+    return;
+  }
   
   const indicator = card.querySelector('.selection-indicator');
   const index = bulkEditMode.selectedProducts.indexOf(productId);
   
   if (index > -1) {
-    // Deselect
     bulkEditMode.selectedProducts.splice(index, 1);
     card.classList.remove('product-selected');
     if (indicator) indicator.style.display = 'none';
     console.log('❌ Deselected:', productId);
   } else {
-    // Select
     bulkEditMode.selectedProducts.push(productId);
     card.classList.add('product-selected');
     if (indicator) indicator.style.display = 'flex';
@@ -3964,7 +3986,10 @@ function toggleProductSelectionMobile(productId, card) {
   }
   
   // ✅ Update count
-  document.getElementById('selectedCount').textContent = bulkEditMode.selectedProducts.length;
+  const selectedCount = document.getElementById('selectedCount');
+  if (selectedCount) {
+    selectedCount.textContent = bulkEditMode.selectedProducts.length;
+  }
 }
 
 /**
@@ -3986,12 +4011,19 @@ async function applyBulkCategoryUpdate() {
   console.log('🔄 Updating categories for', count, 'products...');
   
   const btn = document.getElementById('updateCategoryBtn');
+  if (!btn) return;
+  
   const originalText = btn.innerHTML;
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
   
   try {
     let updatedProducts = [];
+    
+    // ✅ Check if cachedProducts exists
+    if (typeof cachedProducts === 'undefined') {
+      throw new Error('cachedProducts not found. Make sure inventory is loaded.');
+    }
     
     // ✅ Update products in cache
     bulkEditMode.selectedProducts.forEach(productId => {
@@ -4014,13 +4046,19 @@ async function applyBulkCategoryUpdate() {
     console.log('✅ LocalStorage updated');
     
     // ✅ TODO: Sync to Google Sheets
-    // await saveProductsToSheet(cachedProducts);
+    // if (typeof saveProductsToSheet === 'function') {
+    //   await saveProductsToSheet(cachedProducts);
+    // }
     
     showToast('✅ Success!', `Updated ${updatedProducts.length} product(s) to category "${category}"`, 'success');
     
     // ✅ Cancel bulk edit and refresh
     cancelBulkEdit();
-    renderProducts();
+    
+    // ✅ Re-render if function exists
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
     
   } catch (error) {
     console.error('❌ Error:', error);
@@ -4044,14 +4082,22 @@ function cancelBulkEdit() {
     selectedProducts: []
   };
   
-  // ✅ Hide UI elements
-  document.getElementById('categorySelectionDropdown').style.display = 'none';
-  document.getElementById('updateCategoryBtn').style.display = 'none';
-  document.getElementById('cancelBulkEditBtn').style.display = 'none';
-  document.getElementById('bulkEditInfoText').style.display = 'none';
-  document.getElementById('bulkEditToolbar').classList.remove('active');
-  document.getElementById('selectedCategoryText').textContent = 'Select Category';
-  document.getElementById('selectedCount').textContent = '0';
+  // ✅ Hide UI elements (with null checks)
+  const categoryDropdown = document.getElementById('categorySelectionDropdown');
+  const updateBtn = document.getElementById('updateCategoryBtn');
+  const cancelBtn = document.getElementById('cancelBulkEditBtn');
+  const bulkInfoText = document.getElementById('bulkEditInfoText');
+  const bulkToolbar = document.getElementById('bulkEditToolbar');
+  const selectedCategoryText = document.getElementById('selectedCategoryText');
+  const selectedCount = document.getElementById('selectedCount');
+  
+  if (categoryDropdown) categoryDropdown.style.display = 'none';
+  if (updateBtn) updateBtn.style.display = 'none';
+  if (cancelBtn) cancelBtn.style.display = 'none';
+  if (bulkInfoText) bulkInfoText.style.display = 'none';
+  if (bulkToolbar) bulkToolbar.classList.remove('active');
+  if (selectedCategoryText) selectedCategoryText.textContent = 'Select Category';
+  if (selectedCount) selectedCount.textContent = '0';
   
   // ✅ Remove selection classes
   document.querySelectorAll('.product-selected').forEach(el => {
@@ -4101,7 +4147,6 @@ function showToast(title, message, type = 'info') {
     if (toasts.length > 0) toasts[0].remove();
   }, 3000);
 }
-
 
 
 
@@ -14101,6 +14146,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
