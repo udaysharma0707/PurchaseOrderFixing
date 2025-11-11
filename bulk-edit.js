@@ -374,6 +374,9 @@ function toggleProductSelectionMobile(productId, card) {
 /**
  * Update Selected Count - FIXED: Updates correct counter based on field
  */
+/**
+ * Update Selected Count - FIXED: Updates correct counter based on field
+ */
 function updateSelectedCount() {
   const count = bulkEditMode.selectedProducts.length;
   
@@ -386,9 +389,13 @@ function updateSelectedCount() {
   } else if (bulkEditMode.field === 'sellingPrice') {
     const el = document.getElementById('selectedCountSellingPrice');
     if (el) el.textContent = count;
+  } else if (bulkEditMode.field === 'size') {
+    const el = document.getElementById('selectedCountSize');
+    if (el) el.textContent = count;
   }
   // Add more fields here as needed
 }
+
 
 /**
  * Cancel Bulk Edit Mode - FIXED: Hides ALL elements properly
@@ -416,10 +423,12 @@ function cancelBulkEdit() {
   // ✅ FIXED: Hide ALL UI elements
   hideElement('categorySelectionDropdown');
   hideElement('unitTypeSelectionDropdown');
-  hideElement('sellingPriceInputContainer'); // ← NEW
+  hideElement('sellingPriceInputContainer');
+  hideElement('sizeInputContainer'); // ← NEW
   hideElement('updateCategoryBtn');
   hideElement('updateUnitTypeBtn');
-  hideElement('updateSellingPriceBtn'); // ← NEW
+  hideElement('updateSellingPriceBtn');
+  hideElement('updateSizeBtn'); // ← NEW
   hideElement('cancelBulkEditBtn');
   hideElement('bulkEditInfoText');
   
@@ -442,9 +451,15 @@ function cancelBulkEdit() {
   const selectedCountSellingPrice = document.getElementById('selectedCountSellingPrice');
   if (selectedCountSellingPrice) selectedCountSellingPrice.textContent = '0';
   
-  // ✅ Clear selling price input
+  const selectedCountSize = document.getElementById('selectedCountSize');
+  if (selectedCountSize) selectedCountSize.textContent = '0';
+  
+  // ✅ Clear inputs
   const priceInput = document.getElementById('sellingPriceInput');
   if (priceInput) priceInput.value = '';
+  
+  const sizeInput = document.getElementById('sizeInput');
+  if (sizeInput) sizeInput.value = '';
   
   // ✅ Remove selection classes
   document.querySelectorAll('.product-selected').forEach(el => {
@@ -616,6 +631,145 @@ async function applyBulkSellingPriceUpdate() {
   }
 }
 
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - SIZE
+ * ==========================================
+ */
+
+/**
+ * Show Size Bulk Edit - FIXED: Resets state properly
+ */
+function showSizeBulkEdit() {
+  console.log('📝 Opening size bulk edit mode...');
+  
+  // ✅ RESET STATE FIRST (prevents ghost selections)
+  bulkEditMode = {
+    active: false, // Not active until user enters a size
+    field: null,
+    value: null,
+    selectedProducts: []
+  };
+  
+  // ✅ HIDE THE MAIN DROPDOWN BUTTON
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // ✅ Show size input AND cancel button
+  document.getElementById('sizeInputContainer').style.display = 'flex';
+  document.getElementById('updateSizeBtn').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  // ✅ Reset counter to 0
+  const countEl = document.getElementById('selectedCountSize');
+  if (countEl) countEl.textContent = '0';
+  
+  // ✅ Set up input listener
+  const sizeInput = document.getElementById('sizeInput');
+  sizeInput.value = ''; // Clear input
+  
+  // ✅ Listen for input change
+  sizeInput.addEventListener('input', function() {
+    const size = sizeInput.value.trim();
+    if (size && size.length > 0) {
+      // ✅ Set bulk edit mode
+      bulkEditMode = {
+        active: true,
+        field: 'size',
+        value: size,
+        selectedProducts: []
+      };
+      
+      // ✅ Enable product selection
+      enableProductSelection();
+      
+      console.log('✅ Size set to:', size);
+    }
+  });
+  
+  // ✅ Focus on input
+  setTimeout(() => sizeInput.focus(), 100);
+  
+  console.log('✅ Size input shown');
+}
+
+/**
+ * Apply Bulk Size Update
+ */
+async function applyBulkSizeUpdate() {
+  const sizeInput = document.getElementById('sizeInput');
+  const size = sizeInput.value.trim();
+  
+  // ✅ Validation
+  if (!size || size.length === 0) {
+    alert('⚠️ Please enter a size');
+    sizeInput.focus();
+    return;
+  }
+  
+  if (bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const count = bulkEditMode.selectedProducts.length;
+  
+  if (!confirm(`Update size to "${size}" for ${count} product(s)?`)) {
+    return;
+  }
+  
+  const btn = document.getElementById('updateSizeBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    const response = await fetch(API_CONFIG.baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'bulkUpdateSize',
+        productIds: bulkEditMode.selectedProducts,
+        size: size
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Backend update failed');
+    }
+    
+    console.log('✅ Backend update successful:', result);
+    
+    // ✅ Update local cache
+    if (typeof cachedProducts !== 'undefined') {
+      bulkEditMode.selectedProducts.forEach(productId => {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (product) product.size = size;
+      });
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    }
+    
+    // ✅ Cancel bulk edit mode (clears input automatically)
+    cancelBulkEdit();
+    
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error updating products: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
 
 
 
@@ -673,11 +827,15 @@ document.addEventListener('DOMContentLoaded', function() {
   window.selectBulkUnitType = selectBulkUnitType;
   window.applyBulkUnitTypeUpdate = applyBulkUnitTypeUpdate;
   
-  window.showSellingPriceBulkEdit = showSellingPriceBulkEdit; // ← NEW
-  window.applyBulkSellingPriceUpdate = applyBulkSellingPriceUpdate; // ← NEW
+  window.showSellingPriceBulkEdit = showSellingPriceBulkEdit;
+  window.applyBulkSellingPriceUpdate = applyBulkSellingPriceUpdate;
+  
+  window.showSizeBulkEdit = showSizeBulkEdit; // ← NEW
+  window.applyBulkSizeUpdate = applyBulkSizeUpdate; // ← NEW
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
 
 
