@@ -432,6 +432,69 @@ onmouseout="this.style.background='#28a745'">
         <!-- Search bar with view toggle -->
 <div class="d-flex justify-content-between align-items-center mb-3">
   <input type="text" id="productSearch" class="form-control" placeholder="ðŸ”Ž Search products..." onkeyup="searchProducts()">
+
+
+<!-- ==========================================
+     BULK EDIT TOOLBAR
+     ========================================== -->
+<div id="bulkEditToolbar" style="margin: 20px 0; padding: 15px; background: #f8f9fa; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center;">
+  
+  <!-- Main Dropdown Button -->
+  <div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" type="button" id="bulkEditDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600;">
+      <i class="bi bi-pencil-square"></i> Edit Products in Bulk
+    </button>
+    <ul class="dropdown-menu shadow" aria-labelledby="bulkEditDropdown" style="min-width: 250px;">
+      <li>
+        <a class="dropdown-item d-flex justify-content-between align-items-center" href="#" onclick="event.preventDefault(); showCategoryBulkEdit();">
+          <span><i class="bi bi-tag"></i> Update Category</span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </a>
+      </li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-box-seam"></i> Update Stock <small class="text-muted">(Coming Soon)</small></a></li>
+      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-card-text"></i> Update Unit Type <small class="text-muted">(Coming Soon)</small></a></li>
+      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-currency-rupee"></i> Update Selling Price <small class="text-muted">(Coming Soon)</small></a></li>
+      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-award"></i> Update Brand <small class="text-muted">(Coming Soon)</small></a></li>
+      <li><a class="dropdown-item disabled" href="#"><i class="bi bi-rulers"></i> Update Size <small class="text-muted">(Coming Soon)</small></a></li>
+    </ul>
+  </div>
+  
+  <!-- Category Selection Dropdown (Hidden Initially) -->
+  <div id="categorySelectionDropdown" class="dropdown" style="display: none;">
+    <button class="btn btn-outline-primary dropdown-toggle" type="button" id="categoryDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600;">
+      <i class="bi bi-funnel"></i> <span id="selectedCategoryText">Select Category</span>
+    </button>
+    <ul class="dropdown-menu shadow" aria-labelledby="categoryDropdownBtn">
+      <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); selectBulkCategory('Tiles');"><i class="bi bi-grid-3x3-gap"></i> Tiles</a></li>
+      <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); selectBulkCategory('Sanitaryware');"><i class="bi bi-droplet"></i> Sanitaryware</a></li>
+      <li><a class="dropdown-item" href="#" onclick="event.preventDefault(); selectBulkCategory('Accessories');"><i class="bi bi-wrench"></i> Accessories</a></li>
+    </ul>
+  </div>
+  
+  <!-- Update Button (Hidden Initially) -->
+  <button id="updateCategoryBtn" class="btn btn-success" style="display: none; font-weight: 600;" onclick="applyBulkCategoryUpdate()">
+    <i class="bi bi-check-circle"></i> Update Category 
+    (<span id="selectedCount" style="font-weight: 700;">0</span> selected)
+  </button>
+  
+  <!-- Cancel Button (Hidden Initially) -->
+  <button id="cancelBulkEditBtn" class="btn btn-secondary" style="display: none;" onclick="cancelBulkEdit()">
+    <i class="bi bi-x-circle"></i> Cancel
+  </button>
+  
+  <!-- Info Text -->
+  <div id="bulkEditInfoText" style="display: none; margin-left: auto; color: #6c757d; font-size: 14px; font-weight: 500;">
+    <i class="bi bi-info-circle"></i> Click on products to select them
+  </div>
+</div>
+
+
+
+
+
+
+  
   
   <!-- âœ… NEW: View Mode Toggle -->
   <div class="btn-group ms-3" role="group">
@@ -2519,15 +2582,24 @@ function stockBadgeHtml(stock, minStock){
   return `<span class="stock-badge bg-success text-white" style="padding: 6px 12px; border-radius: 20px; display: inline-block;">In Stock (${stock})</span>`;
 }
 
+/**
+ * ✅ UPDATED: Render Products with Bulk Edit Support
+ */
 function renderProducts(){
   const tbody = document.getElementById('productsTableBody');
+  
+  // ✅ LOADING STATE
   if(!hasInitialLoaded){
     tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4"><div class="spinner-border"></div><div class="mt-2 text-muted">Loading inventory…</div></td></tr>`;
-  } else if(!cachedProducts || cachedProducts.length===0){
+  } 
+  // ✅ EMPTY STATE
+  else if(!cachedProducts || cachedProducts.length===0){
     tbody.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-4">No products yet</td></tr>`;
-  } else {
+  } 
+  // ✅ RENDER PRODUCTS
+  else {
     let html = '';
-    cachedProducts.forEach(p => {
+    cachedProducts.forEach((p, index) => {
       const priceText = (p.price!==undefined && p.price!==null) ? `₹${parseFloat(p.price).toFixed(2)}/${p.unitType}` : '-';
       
       // ✅ Photo thumbnail HTML
@@ -2542,7 +2614,11 @@ function renderProducts(){
           <i class="bi bi-image" style="font-size:1.8rem; color:white;"></i>
          </div>`;
       
-      html += `<tr>
+      // ✅ CHECK IF PRODUCT IS SELECTED (for bulk edit)
+      const isSelected = bulkEditMode.active && bulkEditMode.selectedProducts.includes(p.id);
+      const rowClass = isSelected ? 'product-selected' : '';
+      
+      html += `<tr class="${rowClass}" data-product-id="${p.id}" data-product-index="${index}">
         <td style="text-align: center;">${photoHtml}</td>
         <td><strong>${escapeHtml(p.name)}</strong></td>
         <td>${escapeHtml(p.category||'')}</td>
@@ -2551,12 +2627,17 @@ function renderProducts(){
         <td>${stockBadgeHtml(p.stock,p.minStock)}</td>
         <td><strong>${priceText}</strong></td>
         <td>
-          <button class="btn btn-sm btn-primary btn-action-sm me-1" onclick="editProduct('${p.id}')"><i class="bi bi-pencil"></i> Edit</button>
-          <button class="btn btn-sm btn-danger btn-action-sm" onclick="deleteProduct('${p.id}')"><i class="bi bi-trash"></i> Delete</button>
+          <button class="btn btn-sm btn-primary btn-action-sm me-1" onclick="event.stopPropagation(); editProduct('${p.id}')"><i class="bi bi-pencil"></i> Edit</button>
+          <button class="btn btn-sm btn-danger btn-action-sm" onclick="event.stopPropagation(); deleteProduct('${p.id}')"><i class="bi bi-trash"></i> Delete</button>
         </td>
       </tr>`;
     });
     tbody.innerHTML = html;
+    
+    // ✅ RE-ENABLE SELECTION MODE IF ACTIVE
+    if (bulkEditMode.active) {
+      enableProductSelectionDesktop();
+    }
   }
   
   // ✅ MOBILE LIST
@@ -2569,7 +2650,7 @@ function renderProducts(){
   }
   else {
     let html = '';
-    cachedProducts.forEach(p => {
+    cachedProducts.forEach((p, index) => {
       // ✅ Mobile photo HTML
       const mobilePhoto = (p.imageUrl && p.imageUrl !== '' && p.imageUrl !== 'uploading...') ? 
         `<img src="${p.imageUrl}" 
@@ -2581,7 +2662,20 @@ function renderProducts(){
           <i class="bi bi-image" style="font-size:2.2rem; color:white;"></i>
          </div>`;
       
-      html += `<div class="mobile-item d-flex align-items-start justify-content-between" style="gap:1rem;">
+      // ✅ CHECK IF PRODUCT IS SELECTED (for bulk edit)
+      const isSelected = bulkEditMode.active && bulkEditMode.selectedProducts.includes(p.id);
+      const cardClass = isSelected ? 'product-selected' : '';
+      
+      html += `<div class="mobile-item ${cardClass} d-flex align-items-start justify-content-between" 
+                    data-product-id="${p.id}" 
+                    data-product-index="${index}" 
+                    style="gap:1rem; position:relative;">
+        
+        <!-- Selection Indicator (hidden by default) -->
+        <div class="selection-indicator" style="display: ${isSelected ? 'flex' : 'none'};">
+          <i class="bi bi-check-circle-fill"></i>
+        </div>
+        
         <div style="display:flex;gap:1rem;align-items:flex-start;flex:1;">
           <div style="flex-shrink:0;">${mobilePhoto}</div>
           <div style="flex:1;">
@@ -2594,18 +2688,24 @@ function renderProducts(){
         </div>
         <div style="text-align:right;flex-shrink:0;">
           <div style="display:flex;flex-direction:column;gap:8px;">
-            <button class="btn btn-sm btn-primary btn-action-sm" onclick="editProduct('${p.id}')" style="white-space:nowrap;"><i class="bi bi-pencil"></i> Edit</button>
-            <button class="btn btn-sm btn-danger btn-action-sm" onclick="deleteProduct('${p.id}')" style="white-space:nowrap;"><i class="bi bi-trash"></i> Delete</button>
+            <button class="btn btn-sm btn-primary btn-action-sm" onclick="event.stopPropagation(); editProduct('${p.id}')" style="white-space:nowrap;"><i class="bi bi-pencil"></i> Edit</button>
+            <button class="btn btn-sm btn-danger btn-action-sm" onclick="event.stopPropagation(); deleteProduct('${p.id}')" style="white-space:nowrap;"><i class="bi bi-trash"></i> Delete</button>
           </div>
         </div>
       </div>`;
     });
     container.innerHTML = html;
+    
+    // ✅ RE-ENABLE SELECTION MODE IF ACTIVE (Mobile)
+    if (bulkEditMode.active) {
+      enableProductSelectionMobile();
+    }
   }
   
   updateSummaryFromCache();
   loadProductsForSaleFromCache();
 }
+
 
   function renderSales(){
     const tbody = document.getElementById('salesList');
@@ -3618,6 +3718,391 @@ async function saveVariantData() {
   });
 }
 
+
+
+
+
+/**
+ * ==========================================
+ * BULK EDIT FUNCTIONALITY
+ * ==========================================
+ */
+
+// Global state for bulk edit mode
+let bulkEditMode = {
+  active: false,
+  field: null,         // 'category', 'stock', 'price', etc.
+  value: null,         // Selected category value
+  selectedProducts: [] // Array of selected product IDs
+};
+
+/**
+ * Show Category Bulk Edit Mode
+ */
+function showCategoryBulkEdit() {
+  console.log('📝 Opening category bulk edit mode...');
+  
+  // Show category dropdown
+  document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  
+  // Highlight toolbar
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  // Close main dropdown
+  const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('bulkEditDropdown'));
+  if (dropdown) dropdown.hide();
+  
+  console.log('✅ Category bulk edit UI shown');
+}
+
+/**
+ * Select Bulk Category
+ */
+function selectBulkCategory(category) {
+  console.log('📦 Selected category:', category);
+  
+  // Set bulk edit mode
+  bulkEditMode = {
+    active: true,
+    field: 'category',
+    value: category,
+    selectedProducts: []
+  };
+  
+  // Update UI
+  document.getElementById('selectedCategoryText').textContent = category;
+  document.getElementById('updateCategoryBtn').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('selectedCount').textContent = '0';
+  
+  // Enable product selection mode
+  enableProductSelection();
+  
+  // Close category dropdown
+  const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('categoryDropdownBtn'));
+  if (dropdown) dropdown.hide();
+  
+  // Show success message
+  showToast(`✅ Bulk edit mode: Update Category to "${category}"`, 'Click on products to select them', 'success');
+  
+  console.log('✅ Bulk category mode activated');
+}
+
+/**
+ * Enable Product Selection Mode
+ */
+function enableProductSelection() {
+  console.log('🖱️ Product selection mode enabled');
+  
+  // DESKTOP: Add click handlers to table rows
+  const tableRows = document.querySelectorAll('#productsTableBody tr');
+  tableRows.forEach((row, index) => {
+    // Skip if no data
+    if (!cachedProducts[index]) return;
+    
+    const productId = cachedProducts[index].id;
+    
+    // Add selection class
+    row.classList.add('product-selectable');
+    row.setAttribute('data-product-id', productId);
+    
+    // Add click event
+    row.addEventListener('click', function(event) {
+      // Don't trigger if clicking Edit/Delete buttons
+      if (event.target.closest('.btn')) return;
+      
+      toggleProductSelectionDesktop(productId, row);
+    });
+  });
+  
+  // MOBILE: Add click handlers to mobile cards
+  const mobileCards = document.querySelectorAll('.mobile-item');
+  mobileCards.forEach((card, index) => {
+    if (!cachedProducts[index]) return;
+    
+    const productId = cachedProducts[index].id;
+    
+    card.classList.add('product-selectable');
+    card.setAttribute('data-product-id', productId);
+    
+    // Add selection indicator
+    if (!card.querySelector('.selection-indicator')) {
+      const indicator = document.createElement('div');
+      indicator.className = 'selection-indicator';
+      indicator.innerHTML = '<i class="bi bi-check-circle-fill"></i>';
+      card.style.position = 'relative';
+      card.insertBefore(indicator, card.firstChild);
+    }
+    
+    card.addEventListener('click', function(event) {
+      if (event.target.closest('.btn')) return;
+      
+      toggleProductSelectionMobile(productId, card);
+    });
+  });
+  
+  console.log('✅ Product selection enabled for', tableRows.length, 'desktop +', mobileCards.length, 'mobile items');
+}
+
+/**
+ * Toggle Product Selection (Desktop)
+ */
+function toggleProductSelectionDesktop(productId, row) {
+  if (!bulkEditMode.active) return;
+  
+  const index = bulkEditMode.selectedProducts.indexOf(productId);
+  
+  if (index > -1) {
+    // Deselect
+    bulkEditMode.selectedProducts.splice(index, 1);
+    row.classList.remove('product-selected');
+    console.log('❌ Deselected:', productId);
+  } else {
+    // Select
+    bulkEditMode.selectedProducts.push(productId);
+    row.classList.add('product-selected');
+    console.log('✅ Selected:', productId);
+  }
+  
+  // Update count
+  document.getElementById('selectedCount').textContent = bulkEditMode.selectedProducts.length;
+  
+  // Visual feedback
+  if (bulkEditMode.selectedProducts.length > 0) {
+    document.getElementById('updateCategoryBtn').style.animation = 'pulse 0.5s';
+    setTimeout(() => {
+      document.getElementById('updateCategoryBtn').style.animation = '';
+    }, 500);
+  }
+}
+
+/**
+ * Toggle Product Selection (Mobile)
+ */
+function toggleProductSelectionMobile(productId, card) {
+  if (!bulkEditMode.active) return;
+  
+  const indicator = card.querySelector('.selection-indicator');
+  const index = bulkEditMode.selectedProducts.indexOf(productId);
+  
+  if (index > -1) {
+    // Deselect
+    bulkEditMode.selectedProducts.splice(index, 1);
+    card.classList.remove('product-selected');
+    if (indicator) indicator.style.display = 'none';
+    console.log('❌ Deselected:', productId);
+  } else {
+    // Select
+    bulkEditMode.selectedProducts.push(productId);
+    card.classList.add('product-selected');
+    if (indicator) {
+      indicator.style.display = 'flex';
+    }
+    console.log('✅ Selected:', productId);
+  }
+  
+  // Update count
+  document.getElementById('selectedCount').textContent = bulkEditMode.selectedProducts.length;
+}
+
+/**
+ * Apply Bulk Category Update
+ */
+async function applyBulkCategoryUpdate() {
+  if (bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const category = bulkEditMode.value;
+  const count = bulkEditMode.selectedProducts.length;
+  
+  if (!confirm(`Update category to "${category}" for ${count} product(s)?\n\nThis will update:\n• LocalStorage\n• Google Sheets\n• Edit modal dropdown`)) {
+    return;
+  }
+  
+  console.log('🔄 Updating categories for', count, 'products...');
+  
+  // Show loading
+  const btn = document.getElementById('updateCategoryBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    // Update products in cachedProducts array
+    let updatedProducts = [];
+    
+    bulkEditMode.selectedProducts.forEach(productId => {
+      const product = cachedProducts.find(p => p.id === productId);
+      if (product) {
+        const oldCategory = product.category;
+        product.category = category;
+        updatedProducts.push({
+          id: productId,
+          name: product.name,
+          oldCategory: oldCategory,
+          newCategory: category
+        });
+        console.log(`✅ Updated ${product.name}: ${oldCategory} → ${category}`);
+      }
+    });
+    
+    // Save to localStorage
+    localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    console.log('✅ LocalStorage updated');
+    
+    // Sync to Google Sheets (call your existing sync function)
+    await syncProductsToGoogleSheets(cachedProducts);
+    console.log('✅ Google Sheets synced');
+    
+    // Show success message
+    showToast('✅ Success!', `Updated ${updatedProducts.length} product(s) to category "${category}"`, 'success');
+    
+    // Reset and refresh
+    cancelBulkEdit();
+    renderProducts();
+    
+    // Log summary
+    console.log('📊 Update Summary:');
+    updatedProducts.forEach(p => {
+      console.log(`  • ${p.name}: ${p.oldCategory} → ${p.newCategory}`);
+    });
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error updating products: ' + error.message);
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+/**
+ * Cancel Bulk Edit Mode
+ */
+function cancelBulkEdit() {
+  console.log('✕ Cancelling bulk edit mode');
+  
+  // Reset mode
+  bulkEditMode = {
+    active: false,
+    field: null,
+    value: null,
+    selectedProducts: []
+  };
+  
+  // Hide UI elements
+  document.getElementById('categorySelectionDropdown').style.display = 'none';
+  document.getElementById('updateCategoryBtn').style.display = 'none';
+  document.getElementById('cancelBulkEditBtn').style.display = 'none';
+  document.getElementById('bulkEditInfoText').style.display = 'none';
+  
+  // Remove toolbar highlight
+  document.getElementById('bulkEditToolbar').classList.remove('active');
+  
+  // Reset dropdown text
+  document.getElementById('selectedCategoryText').textContent = 'Select Category';
+  document.getElementById('selectedCount').textContent = '0';
+  
+  // Remove selection indicators (desktop)
+  document.querySelectorAll('.product-selected').forEach(el => {
+    el.classList.remove('product-selected');
+  });
+  
+  // Remove selection indicators (mobile)
+  document.querySelectorAll('.selection-indicator').forEach(el => {
+    el.style.display = 'none';
+  });
+  
+  // Remove selectable class
+  document.querySelectorAll('.product-selectable').forEach(el => {
+    el.classList.remove('product-selectable');
+    el.style.cursor = 'default';
+  });
+  
+  console.log('✅ Bulk edit mode cancelled');
+}
+
+/**
+ * Toast Notification Helper
+ */
+function showToast(title, message, type = 'info') {
+  // Check if Bootstrap toast container exists
+  let toastContainer = document.getElementById('toastContainer');
+  if (!toastContainer) {
+    toastContainer = document.createElement('div');
+    toastContainer.id = 'toastContainer';
+    toastContainer.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+    document.body.appendChild(toastContainer);
+  }
+  
+  const bgColor = type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#0d6efd';
+  
+  const toastHTML = `
+    <div class="toast show" role="alert" style="min-width: 300px; margin-bottom: 10px;">
+      <div class="toast-header" style="background: ${bgColor}; color: white;">
+        <strong class="me-auto">${title}</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast"></button>
+      </div>
+      <div class="toast-body">
+        ${message}
+      </div>
+    </div>
+  `;
+  
+  toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+  
+  // Auto remove after 3 seconds
+  setTimeout(() => {
+    const toasts = toastContainer.querySelectorAll('.toast');
+    if (toasts.length > 0) {
+      toasts[0].remove();
+    }
+  }, 3000);
+}
+
+/**
+ * Sync Products to Google Sheets (Wrapper for existing function)
+ */
+async function syncProductsToGoogleSheets(products) {
+  // Call your existing sync function here
+  // This should match whatever function you use to save to sheets
+  
+  try {
+    // Example - replace with your actual sync function
+    const response = await fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'bulkUpdateProducts',
+        products: products
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.message || 'Sync failed');
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('❌ Sync error:', error);
+    throw error;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+    
 
 /**
  * ==========================================
@@ -13606,6 +14091,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
