@@ -3801,74 +3801,90 @@ let bulkEditMode = {
  * Show Category Bulk Edit Mode
  */
 /**
- * ✅ UPDATED: Show Category Bulk Edit Mode (Auto-close dropdown)
- */
-/**
- * ✅ ALTERNATIVE: Show Category Bulk Edit Mode (Force close dropdown)
+ * 🔥 BULLETPROOF: Show Category Bulk Edit (Force close dropdown)
  */
 function showCategoryBulkEdit() {
   console.log('📝 Opening category bulk edit mode...');
   
-  // ✅ FORCE CLOSE DROPDOWN (Multiple methods)
-  
-  // Method 1: Bootstrap API
-  const mainDropdown = bootstrap.Dropdown.getInstance(document.getElementById('bulkEditDropdown'));
-  if (mainDropdown) {
-    mainDropdown.hide();
+  // ✅ METHOD 1: Bootstrap API
+  try {
+    const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('bulkEditDropdown'));
+    if (dropdown) {
+      dropdown.hide();
+    }
+  } catch (e) {
+    console.log('Bootstrap hide failed:', e);
   }
   
-  // Method 2: Remove show class manually
+  // ✅ METHOD 2: Force remove classes
   const dropdownMenu = document.querySelector('#bulkEditDropdown + .dropdown-menu');
   if (dropdownMenu) {
     dropdownMenu.classList.remove('show');
   }
   
-  // Method 3: Close button click simulation
-  document.getElementById('bulkEditDropdown').setAttribute('aria-expanded', 'false');
+  const dropdownBtn = document.getElementById('bulkEditDropdown');
+  if (dropdownBtn) {
+    dropdownBtn.classList.remove('show');
+    dropdownBtn.setAttribute('aria-expanded', 'false');
+  }
   
-  // Small delay to ensure dropdown closes smoothly
+  // ✅ METHOD 3: Remove backdrop if exists
+  const backdrop = document.querySelector('.dropdown-backdrop');
+  if (backdrop) {
+    backdrop.remove();
+  }
+  
+  // ✅ METHOD 4: Click outside to trigger Bootstrap close
+  document.body.click();
+  
+  // Wait for dropdown to close, then show category selection
   setTimeout(() => {
-    // Show category dropdown
     document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
     document.getElementById('bulkEditInfoText').style.display = 'block';
-    
-    // Highlight toolbar
     document.getElementById('bulkEditToolbar').classList.add('active');
     
     console.log('✅ Category bulk edit UI shown');
-  }, 150);
+  }, 200);
 }
 
 /**
- * Select Bulk Category
- */
-/**
- * ✅ UPDATED: Select Bulk Category (Auto-close dropdown)
- */
-/**
- * ✅ ALTERNATIVE: Select Bulk Category (Force close dropdown)
+ * 🔥 BULLETPROOF: Select Bulk Category (Force close dropdown)
  */
 function selectBulkCategory(category) {
   console.log('📦 Selected category:', category);
   
-  // ✅ FORCE CLOSE DROPDOWN (Multiple methods)
-  
-  // Method 1: Bootstrap API
-  const categoryDropdown = bootstrap.Dropdown.getInstance(document.getElementById('categoryDropdownBtn'));
-  if (categoryDropdown) {
-    categoryDropdown.hide();
+  // ✅ METHOD 1: Bootstrap API
+  try {
+    const dropdown = bootstrap.Dropdown.getInstance(document.getElementById('categoryDropdownBtn'));
+    if (dropdown) {
+      dropdown.hide();
+    }
+  } catch (e) {
+    console.log('Bootstrap hide failed:', e);
   }
   
-  // Method 2: Remove show class manually
+  // ✅ METHOD 2: Force remove classes
   const categoryMenu = document.querySelector('#categoryDropdownBtn + .dropdown-menu');
   if (categoryMenu) {
     categoryMenu.classList.remove('show');
   }
   
-  // Method 3: Close button click simulation
-  document.getElementById('categoryDropdownBtn').setAttribute('aria-expanded', 'false');
+  const categoryBtn = document.getElementById('categoryDropdownBtn');
+  if (categoryBtn) {
+    categoryBtn.classList.remove('show');
+    categoryBtn.setAttribute('aria-expanded', 'false');
+  }
   
-  // Small delay to ensure smooth transition
+  // ✅ METHOD 3: Remove backdrop
+  const backdrop = document.querySelector('.dropdown-backdrop');
+  if (backdrop) {
+    backdrop.remove();
+  }
+  
+  // ✅ METHOD 4: Click outside
+  document.body.click();
+  
+  // Wait for dropdown to close, then activate bulk mode
   setTimeout(() => {
     // Set bulk edit mode
     bulkEditMode = {
@@ -3891,8 +3907,10 @@ function selectBulkCategory(category) {
     showToast(`✅ Bulk edit mode: Update Category to "${category}"`, 'Click on products to select them', 'success');
     
     console.log('✅ Bulk category mode activated');
-  }, 150);
+  }, 200);
 }
+
+
 
 /**
  * Enable Product Selection Mode
@@ -14196,6 +14214,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
