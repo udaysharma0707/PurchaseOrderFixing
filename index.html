@@ -3988,7 +3988,7 @@ function toggleProductSelectionMobile(productId, card) {
 }
 
 /**
- * ✅ Apply Bulk Category Update - SHOW MAIN BUTTON BACK
+ * ✅ FIXED: Apply Bulk Category Update - USE EXISTING API PATTERN
  */
 async function applyBulkCategoryUpdate() {
   if (bulkEditMode.selectedProducts.length === 0) {
@@ -4013,34 +4013,71 @@ async function applyBulkCategoryUpdate() {
   btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
   
   try {
-    let updatedProducts = [];
+    // ✅ USE YOUR EXISTING CONFIG
+    const config = window.API_CONFIG || {
+      baseUrl: 'YOUR_DEPLOYED_WEB_APP_URL_HERE',
+      secret: 'shopSecret2025'
+    };
     
-    // ✅ Check if cachedProducts exists
-    if (typeof cachedProducts === 'undefined') {
-      throw new Error('cachedProducts not found. Make sure inventory is loaded.');
-    }
+    // ✅ Build URL with query parameters (like your existing code)
+    const url = `${config.baseUrl}?action=bulkUpdateCategory&secret=${config.secret}`;
     
-    // ✅ Update products in cache
-    bulkEditMode.selectedProducts.forEach(productId => {
-      const product = cachedProducts.find(p => p.id === productId);
-      if (product) {
-        const oldCategory = product.category;
-        product.category = category;
-        updatedProducts.push({
-          id: productId,
-          name: product.name,
-          oldCategory: oldCategory,
-          newCategory: category
-        });
-        console.log(`✅ Updated ${product.name}: ${oldCategory} → ${category}`);
-      }
+    console.log('Calling backend URL:', url);
+    
+    // ✅ POST request body
+    const requestBody = {
+      action: 'bulkUpdateCategory',
+      productIds: bulkEditMode.selectedProducts,
+      category: category,
+      secret: config.secret
+    };
+    
+    console.log('Request body:', requestBody);
+    
+    // ✅ Make the request
+    const response = await fetch(url, {
+      method: 'POST',
+      mode: 'cors',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
     });
     
-    // ✅ Save to localStorage
-    localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-    console.log('✅ LocalStorage updated');
+    console.log('Response status:', response.status);
+    console.log('Response headers:', response.headers);
     
-    showToast('✅ Success!', `Updated ${updatedProducts.length} product(s) to category "${category}"`, 'success');
+    // ✅ Check if response is OK
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Response error text:', errorText);
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    // ✅ Parse JSON
+    const result = await response.json();
+    console.log('Backend response:', result);
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Backend update failed');
+    }
+    
+    console.log('✅ Backend update successful:', result);
+    
+    // ✅ Update local cache
+    if (typeof cachedProducts !== 'undefined') {
+      bulkEditMode.selectedProducts.forEach(productId => {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (product) {
+          product.category = category;
+        }
+      });
+      
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+      console.log('✅ LocalStorage updated');
+    }
+    
+    showToast('✅ Success!', `Updated ${result.updatedCount || count} product(s) to category "${category}"`, 'success');
     
     // ✅ Cancel bulk edit and refresh
     cancelBulkEdit();
@@ -4051,7 +4088,8 @@ async function applyBulkCategoryUpdate() {
     }
     
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.error('❌ Full error:', error);
+    console.error('❌ Error stack:', error.stack);
     alert('❌ Error updating products: ' + error.message);
     btn.disabled = false;
     btn.innerHTML = originalText;
@@ -4143,86 +4181,6 @@ function showToast(title, message, type = 'info') {
     const toasts = toastContainer.querySelectorAll('.toast');
     if (toasts.length > 0) toasts[0].remove();
   }, 3000);
-}
-
-/**
- * ✅ Apply Bulk Category Update - WITH BACKEND SYNC
- */
-async function applyBulkCategoryUpdate() {
-  if (bulkEditMode.selectedProducts.length === 0) {
-    alert('⚠️ Please select at least one product');
-    return;
-  }
-  
-  const category = bulkEditMode.value;
-  const count = bulkEditMode.selectedProducts.length;
-  
-  if (!confirm(`Update category to "${category}" for ${count} product(s)?`)) {
-    return;
-  }
-  
-  console.log('🔄 Updating categories for', count, 'products...');
-  
-  const btn = document.getElementById('updateCategoryBtn');
-  if (!btn) return;
-  
-  const originalText = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
-  
-  try {
-    // ✅ UPDATE: Call backend API
-    const backendUrl = 'YOUR_APPS_SCRIPT_WEB_APP_URL'; // Replace with your deployed URL
-    
-    const response = await fetch(backendUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        action: 'bulkUpdateCategory',
-        productIds: bulkEditMode.selectedProducts,
-        category: category
-      })
-    });
-    
-    const result = await response.json();
-    
-    if (!result.success) {
-      throw new Error(result.error || 'Backend update failed');
-    }
-    
-    console.log('✅ Backend update successful:', result);
-    
-    // ✅ Update local cache
-    if (typeof cachedProducts !== 'undefined') {
-      bulkEditMode.selectedProducts.forEach(productId => {
-        const product = cachedProducts.find(p => p.id === productId);
-        if (product) {
-          product.category = category;
-        }
-      });
-      
-      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
-      console.log('✅ LocalStorage updated');
-    }
-    
-    showToast('✅ Success!', `Updated ${result.updatedCount} product(s) to category "${category}"`, 'success');
-    
-    // ✅ Cancel bulk edit and refresh
-    cancelBulkEdit();
-    
-    // ✅ Re-render if function exists
-    if (typeof renderProducts === 'function') {
-      renderProducts();
-    }
-    
-  } catch (error) {
-    console.error('❌ Error:', error);
-    alert('❌ Error updating products: ' + error.message);
-    btn.disabled = false;
-    btn.innerHTML = originalText;
-  }
 }
 
 
@@ -14217,6 +14175,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
