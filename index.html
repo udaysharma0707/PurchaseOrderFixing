@@ -467,11 +467,12 @@ onmouseout="this.style.background='#28a745'">
       </li>
       <li><hr class="dropdown-divider"></li>
       <li>
-        <button type="button" class="dropdown-item disabled">
-          <i class="bi bi-box-seam"></i> Update Stock 
-          <small class="text-muted">(Coming Soon)</small>
-        </button>
-      </li>
+  <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showStockAdjustmentEdit();">
+    <span><i class="bi bi-boxes"></i> Update Stock</span>
+    <i class="bi bi-chevron-right text-muted"></i>
+  </button>
+</li>
+
      <li>
   <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showSellingPriceBulkEdit();">
     <span><i class="bi bi-currency-rupee"></i> Update Selling Price</span>
@@ -581,6 +582,92 @@ onmouseout="this.style.background='#28a745'">
   (<span id="selectedCountBrand" style="font-weight: 700;">0</span> selected)
 </button>
 
+<!-- ===== STOCK ADJUSTMENT SECTION ===== -->
+
+<!-- Stock Adjustment Container (Hidden Initially) -->
+<div id="stockAdjustmentContainer" style="display: none;">
+  <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+    <!-- Number Input -->
+    <div class="input-group" style="max-width: 150px;">
+      <input 
+        type="number" 
+        id="stockAdjustmentInput" 
+        class="form-control" 
+        placeholder="10" 
+        min="1" 
+        step="1"
+        value="10"
+        style="font-weight: 600;">
+    </div>
+    
+    <!-- Add/Reduce Toggle Dropdown -->
+    <div class="dropdown">
+      <button class="btn btn-outline-primary dropdown-toggle" type="button" id="stockOperationBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600;">
+        <i class="bi bi-dash-circle"></i> Reduce by
+      </button>
+      <ul class="dropdown-menu" aria-labelledby="stockOperationBtn">
+        <li><button class="dropdown-item" onclick="setStockOperation('add')">
+          <i class="bi bi-plus-circle text-success"></i> Add by
+        </button></li>
+        <li><button class="dropdown-item" onclick="setStockOperation('reduce')">
+          <i class="bi bi-dash-circle text-danger"></i> Reduce by
+        </button></li>
+      </ul>
+    </div>
+  </div>
+  
+  <small class="text-muted mt-2" style="display: block;">
+    <i class="bi bi-info-circle"></i> Click on any product with numeric stock to adjust
+  </small>
+</div>
+
+<!-- Stock Adjustment Animation Styles -->
+<style>
+.stock-animation {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 32px;
+  font-weight: 700;
+  color: #28a745;
+  z-index: 1000;
+  pointer-events: none;
+  animation: stockPulse 1s ease-out forwards;
+  text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.stock-animation.reduce {
+  color: #dc3545;
+}
+
+@keyframes stockPulse {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -100%) scale(1);
+  }
+}
+
+/* Product clickable indicator */
+.stock-adjustable {
+  cursor: pointer;
+  position: relative;
+}
+
+.stock-adjustable:hover {
+  background-color: #e7f5ff !important;
+  transform: scale(1.02);
+  transition: all 0.2s ease;
+}
+</style>
 
 
   
@@ -2152,11 +2239,11 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzL6dzQm-kBl--ypk91ksHXsVPqQF2WBLeRb5r3IGmb-YsgcjQq4NF3ND9YKP1gP_8Q/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzL6dzQm-kBl--ypk91ksHXsVPqQF2WBLeRb5r3IGmb-YsgcjQq4NF3ND9YKP1gP_8Q/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcMIwc5h6CKfcZR6iQOzE41EqswUlmX_PBDs7FulcqyFNcA8tQoGJ7EJct8aKaky3e/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzcMIwc5h6CKfcZR6iQOzE41EqswUlmX_PBDs7FulcqyFNcA8tQoGJ7EJct8aKaky3e/exec';
 // ✅ API Configuration
 window.API_CONFIG = {
-  baseUrl: 'https://script.google.com/macros/s/AKfycbzL6dzQm-kBl--ypk91ksHXsVPqQF2WBLeRb5r3IGmb-YsgcjQq4NF3ND9YKP1gP_8Q/exec', // ← Replace this
+  baseUrl: 'https://script.google.com/macros/s/AKfycbzcMIwc5h6CKfcZR6iQOzE41EqswUlmX_PBDs7FulcqyFNcA8tQoGJ7EJct8aKaky3e/exec', // ← Replace this
   secret: 'shopSecret2025'
 };
 
@@ -4061,7 +4148,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzL6dzQm-kBl--ypk91ksHXsVPqQF2WBLeRb5r3IGmb-YsgcjQq4NF3ND9YKP1gP_8Q/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzcMIwc5h6CKfcZR6iQOzE41EqswUlmX_PBDs7FulcqyFNcA8tQoGJ7EJct8aKaky3e/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -13921,6 +14008,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
