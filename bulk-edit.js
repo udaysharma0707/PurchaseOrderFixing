@@ -975,11 +975,15 @@ document.addEventListener('DOMContentLoaded', function() {
   window.showSellingPriceBulkEdit = showSellingPriceBulkEdit;
   window.applyBulkSellingPriceUpdate = applyBulkSellingPriceUpdate;
   
-  window.showSizeBulkEdit = showSizeBulkEdit; // ← NEW
-  window.applyBulkSizeUpdate = applyBulkSizeUpdate; // ← NEW
+  window.showSizeBulkEdit = showSizeBulkEdit;
+  window.applyBulkSizeUpdate = applyBulkSizeUpdate;
+  
+  window.showBrandBulkEdit = showBrandBulkEdit; // ← NEW
+  window.applyBulkBrandUpdate = applyBulkBrandUpdate; // ← NEW
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
 
 
