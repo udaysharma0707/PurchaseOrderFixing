@@ -496,7 +496,7 @@ onmouseout="this.style.background='#28a745'">
 <!-- ===== SELLING PRICE SECTION ===== -->
 
 <!-- Selling Price Input Container (Hidden Initially) -->
-<div id="sellingPriceInputContainer" style="display: none; display: flex; flex-direction: column; gap: 8px;">
+<div id="sellingPriceInputContainer" style="display: none;"> <!-- ✅ FIXED: Added display:none -->
   <label style="font-size: 14px; font-weight: 600; color: #495057;">
     Enter Selling Price to Update
   </label>
@@ -517,7 +517,7 @@ onmouseout="this.style.background='#28a745'">
 
 <!-- Update Selling Price Button (Hidden Initially) -->
 <button id="updateSellingPriceBtn" 
-        class="btn btn-warning" 
+        class="btn btn-success" 
         style="display: none; font-weight: 600; color: white;" 
         onclick="applyBulkSellingPriceUpdate()">
   <i class="bi bi-currency-rupee"></i> Update Selling Price 
@@ -13865,6 +13865,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
