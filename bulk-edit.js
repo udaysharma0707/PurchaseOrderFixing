@@ -404,6 +404,9 @@ function updateSelectedCount() {
 /**
  * Cancel Bulk Edit Mode - FIXED: Hides ALL elements properly
  */
+/**
+ * Cancel Bulk Edit Mode - FIXED: Hides ALL elements properly
+ */
 function cancelBulkEdit() {
   console.log('✕ Cancelling bulk edit mode');
   
@@ -427,13 +430,14 @@ function cancelBulkEdit() {
   hideElement('sellingPriceInputContainer');
   hideElement('sizeInputContainer');
   hideElement('brandInputContainer');
-  hideElement('stockAdjustmentContainer'); // ← NEW
+  hideElement('stockAdjustmentContainer');
   hideElement('updateCategoryBtn');
   hideElement('updateUnitTypeBtn');
   hideElement('updateSellingPriceBtn');
   hideElement('updateSizeBtn');
   hideElement('updateBrandBtn');
   hideElement('cancelBulkEditBtn');
+  hideElement('updateStockChangesBtn'); // ← NEW
   hideElement('bulkEditInfoText');
   
   const bulkToolbar = document.getElementById('bulkEditToolbar');
@@ -939,17 +943,20 @@ async function applyBulkBrandUpdate() {
 /**
  * Show Stock Adjustment Mode
  */
+/**
+ * Show Stock Adjustment Mode
+ */
 function showStockAdjustmentEdit() {
   console.log('📝 Opening stock adjustment mode...');
   
   // ✅ RESET STATE
   bulkEditMode = {
-    active: true, // Active immediately
+    active: true,
     field: 'stockAdjustment',
     value: null,
-    operation: 'reduce', // Default: reduce
-    amount: 10, // Default amount
-    selectedProducts: [] // Not used in this mode
+    operation: 'reduce',
+    amount: 10,
+    selectedProducts: []
   };
   
   // ✅ HIDE THE MAIN DROPDOWN BUTTON
@@ -958,9 +965,10 @@ function showStockAdjustmentEdit() {
     mainDropdownContainer.style.display = 'none';
   }
   
-  // ✅ Show stock adjustment UI AND cancel button
+  // ✅ Show stock adjustment UI AND both buttons
   document.getElementById('stockAdjustmentContainer').style.display = 'block';
   document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('updateStockChangesBtn').style.display = 'inline-block'; // ← NEW
   document.getElementById('bulkEditInfoText').style.display = 'block';
   document.getElementById('bulkEditToolbar').classList.add('active');
   
@@ -1129,6 +1137,46 @@ function showStockAnimation(element, operation, amount) {
   }, 1000);
 }
 
+/**
+ * Update Stock Changes - Force sync webapp cache with Google Sheets
+ */
+async function updateStockChanges() {
+  console.log('🔄 Syncing changes...');
+  
+  const btn = document.getElementById('updateStockChangesBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    // ✅ Clear local cache
+    localStorage.removeItem('inventory_products_cache');
+    localStorage.removeItem('inventory_cache_timestamp');
+    
+    // ✅ Force fresh fetch from Google Sheets
+    await fetchProductsFromBackend(true); // Force refresh
+    
+    console.log('✅ Cache synced successfully');
+    
+    // ✅ Cancel bulk edit mode (back to normal)
+    cancelBulkEdit();
+    
+    // ✅ Re-render products
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+    // ✅ Show success message
+    showToast('✅ Updated', 'All changes synced successfully', 'success');
+    
+  } catch (error) {
+    console.error('❌ Error syncing:', error);
+    alert('❌ Error syncing changes: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
 
 
 
@@ -1192,8 +1240,9 @@ document.addEventListener('DOMContentLoaded', function() {
   window.showBrandBulkEdit = showBrandBulkEdit;
   window.applyBulkBrandUpdate = applyBulkBrandUpdate;
   
-  window.showStockAdjustmentEdit = showStockAdjustmentEdit; // ← NEW
-  window.setStockOperation = setStockOperation; // ← NEW
+  window.showStockAdjustmentEdit = showStockAdjustmentEdit;
+  window.setStockOperation = setStockOperation;
+  window.updateStockChanges = updateStockChanges; // ← NEW
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
