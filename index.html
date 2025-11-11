@@ -2000,8 +2000,13 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGk5HV9S9fXYdDGRxLpxzZK2psb6aV8NeBipDSmSEX4Z8HYezKf-8kyx8yQUtz4d7E/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwGk5HV9S9fXYdDGRxLpxzZK2psb6aV8NeBipDSmSEX4Z8HYezKf-8kyx8yQUtz4d7E/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbylxXTlUDukub7OKwL1G7WuS9ji-lU1S_FzJlMQ7_ePrF42VzFm2RPC5ycXEf8F3l-B/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbylxXTlUDukub7OKwL1G7WuS9ji-lU1S_FzJlMQ7_ePrF42VzFm2RPC5ycXEf8F3l-B/exec';
+// ✅ API Configuration
+window.API_CONFIG = {
+  baseUrl: 'https://script.google.com/macros/s/AKfycbylxXTlUDukub7OKwL1G7WuS9ji-lU1S_FzJlMQ7_ePrF42VzFm2RPC5ycXEf8F3l-B/exec', // ← Replace this
+  secret: 'shopSecret2025'
+};
 
     
   let cachedProducts = [];
@@ -4315,7 +4320,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwGk5HV9S9fXYdDGRxLpxzZK2psb6aV8NeBipDSmSEX4Z8HYezKf-8kyx8yQUtz4d7E/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbylxXTlUDukub7OKwL1G7WuS9ji-lU1S_FzJlMQ7_ePrF42VzFm2RPC5ycXEf8F3l-B/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -14175,6 +14180,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
