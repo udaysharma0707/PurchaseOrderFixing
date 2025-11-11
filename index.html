@@ -3794,70 +3794,67 @@ let bulkEditMode = {
 /**
  * 🔥 FINAL: Show Category Bulk Edit (Direct close)
  */
+/**
+ * 🎯 FINAL SOLUTION: Show Category Bulk Edit (Trigger click to close)
+ */
 function showCategoryBulkEdit() {
   console.log('📝 Opening category bulk edit mode...');
   
-  // ✅ DIRECT DOM MANIPULATION - Remove 'show' class
-  const dropdownMenu = document.querySelector('#bulkEditDropdown + .dropdown-menu');
-  if (dropdownMenu) {
-    dropdownMenu.classList.remove('show');
-  }
-  
-  // ✅ Reset button state
+  // ✅ TRIGGER CLICK ON DROPDOWN BUTTON TO CLOSE IT
   const dropdownBtn = document.getElementById('bulkEditDropdown');
   if (dropdownBtn) {
-    dropdownBtn.setAttribute('aria-expanded', 'false');
-    dropdownBtn.blur(); // Remove focus
+    dropdownBtn.click(); // This will toggle the dropdown closed
+    console.log('✅ Triggered click on main dropdown button');
   }
   
-  // ✅ Show category selection UI
-  document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
-  document.getElementById('bulkEditInfoText').style.display = 'block';
-  document.getElementById('bulkEditToolbar').classList.add('active');
-  
-  console.log('✅ Category bulk edit UI shown');
+  // ✅ Small delay to ensure dropdown closes before showing next UI
+  setTimeout(() => {
+    // Show category selection UI
+    document.getElementById('categorySelectionDropdown').style.display = 'inline-block';
+    document.getElementById('bulkEditInfoText').style.display = 'block';
+    document.getElementById('bulkEditToolbar').classList.add('active');
+    
+    console.log('✅ Category bulk edit UI shown');
+  }, 100);
 }
 
 /**
- * 🔥 FINAL: Select Bulk Category (Direct close)
+ * 🎯 FINAL SOLUTION: Select Bulk Category (Trigger click to close)
  */
 function selectBulkCategory(category) {
   console.log('📦 Selected category:', category);
   
-  // ✅ DIRECT DOM MANIPULATION - Remove 'show' class
-  const categoryMenu = document.querySelector('#categoryDropdownBtn + .dropdown-menu');
-  if (categoryMenu) {
-    categoryMenu.classList.remove('show');
-  }
-  
-  // ✅ Reset button state
+  // ✅ TRIGGER CLICK ON CATEGORY DROPDOWN BUTTON TO CLOSE IT
   const categoryBtn = document.getElementById('categoryDropdownBtn');
   if (categoryBtn) {
-    categoryBtn.setAttribute('aria-expanded', 'false');
-    categoryBtn.blur(); // Remove focus
+    categoryBtn.click(); // This will toggle the dropdown closed
+    console.log('✅ Triggered click on category dropdown button');
   }
   
-  // ✅ Set bulk edit mode
-  bulkEditMode = {
-    active: true,
-    field: 'category',
-    value: category,
-    selectedProducts: []
-  };
-  
-  // ✅ Update UI
-  document.getElementById('selectedCategoryText').textContent = category;
-  document.getElementById('updateCategoryBtn').style.display = 'inline-block';
-  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
-  document.getElementById('selectedCount').textContent = '0';
-  
-  // ✅ Enable product selection mode
-  enableProductSelection();
-  
-  // ✅ Show success message
-  showToast(`✅ Bulk edit mode: Update Category to "${category}"`, 'Click on products to select them', 'success');
-  
-  console.log('✅ Bulk category mode activated');
+  // ✅ Small delay to ensure dropdown closes before activating bulk mode
+  setTimeout(() => {
+    // Set bulk edit mode
+    bulkEditMode = {
+      active: true,
+      field: 'category',
+      value: category,
+      selectedProducts: []
+    };
+    
+    // Update UI
+    document.getElementById('selectedCategoryText').textContent = category;
+    document.getElementById('updateCategoryBtn').style.display = 'inline-block';
+    document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+    document.getElementById('selectedCount').textContent = '0';
+    
+    // Enable product selection mode
+    enableProductSelection();
+    
+    // Show success message
+    showToast(`✅ Bulk edit mode: Update Category to "${category}"`, 'Click on products to select them', 'success');
+    
+    console.log('✅ Bulk category mode activated');
+  }, 100);
 }
 
 
@@ -14163,6 +14160,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
