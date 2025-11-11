@@ -481,8 +481,19 @@ function hideElement(id) {
 /**
  * Show Selling Price Bulk Edit
  */
+/**
+ * Show Selling Price Bulk Edit - FIXED: Resets state properly
+ */
 function showSellingPriceBulkEdit() {
   console.log('📝 Opening selling price bulk edit mode...');
+  
+  // ✅ RESET STATE FIRST (prevents ghost selections)
+  bulkEditMode = {
+    active: false, // Not active until user enters a price
+    field: null,
+    value: null,
+    selectedProducts: []
+  };
   
   // ✅ HIDE THE MAIN DROPDOWN BUTTON
   const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
@@ -496,6 +507,10 @@ function showSellingPriceBulkEdit() {
   document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
   document.getElementById('bulkEditInfoText').style.display = 'block';
   document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  // ✅ Reset counter to 0
+  const countEl = document.getElementById('selectedCountSellingPrice');
+  if (countEl) countEl.textContent = '0';
   
   // ✅ Set up input listener
   const priceInput = document.getElementById('sellingPriceInput');
@@ -525,6 +540,7 @@ function showSellingPriceBulkEdit() {
   
   console.log('✅ Selling price input shown');
 }
+
 
 /**
  * Apply Bulk Selling Price Update
@@ -662,6 +678,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
 
 
