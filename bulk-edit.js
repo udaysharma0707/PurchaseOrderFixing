@@ -374,6 +374,9 @@ function toggleProductSelectionMobile(productId, card) {
 /**
  * Update Selected Count - FIXED: Updates correct counter based on field
  */
+/**
+ * Update Selected Count - FIXED: Updates correct counter based on field
+ */
 function updateSelectedCount() {
   const count = bulkEditMode.selectedProducts.length;
   
@@ -392,9 +395,12 @@ function updateSelectedCount() {
   } else if (bulkEditMode.field === 'brand') {
     const el = document.getElementById('selectedCountBrand');
     if (el) el.textContent = count;
+  } else if (bulkEditMode.field === 'stockStatus') {
+    const el = document.getElementById('selectedCountStockStatus');
+    if (el) el.textContent = count;
   }
-  // Add more fields here as needed
 }
+
 
 
 
@@ -431,13 +437,15 @@ function cancelBulkEdit() {
   hideElement('sizeInputContainer');
   hideElement('brandInputContainer');
   hideElement('stockAdjustmentContainer');
+  hideElement('stockStatusSelectionDropdown'); // ← NEW
   hideElement('updateCategoryBtn');
   hideElement('updateUnitTypeBtn');
   hideElement('updateSellingPriceBtn');
   hideElement('updateSizeBtn');
   hideElement('updateBrandBtn');
+  hideElement('updateStockStatusBtn'); // ← NEW
   hideElement('cancelBulkEditBtn');
-  hideElement('updateStockChangesBtn'); // ← NEW
+  hideElement('updateStockChangesBtn');
   hideElement('bulkEditInfoText');
   
   const bulkToolbar = document.getElementById('bulkEditToolbar');
@@ -449,6 +457,9 @@ function cancelBulkEdit() {
   
   const selectedUnitTypeText = document.getElementById('selectedUnitTypeText');
   if (selectedUnitTypeText) selectedUnitTypeText.textContent = 'Select Unit Type';
+  
+  const selectedStockStatusText = document.getElementById('selectedStockStatusText');
+  if (selectedStockStatusText) selectedStockStatusText.textContent = 'Select Stock Status';
   
   const selectedCount = document.getElementById('selectedCount');
   if (selectedCount) selectedCount.textContent = '0';
@@ -464,6 +475,9 @@ function cancelBulkEdit() {
   
   const selectedCountBrand = document.getElementById('selectedCountBrand');
   if (selectedCountBrand) selectedCountBrand.textContent = '0';
+  
+  const selectedCountStockStatus = document.getElementById('selectedCountStockStatus');
+  if (selectedCountStockStatus) selectedCountStockStatus.textContent = '0';
   
   // ✅ Clear inputs
   const priceInput = document.getElementById('sellingPriceInput');
@@ -1249,6 +1263,188 @@ async function updateStockChanges() {
 }
 
 
+/**
+ * ==========================================
+ * 🎯 BULK EDIT - STOCK STATUS
+ * ==========================================
+ */
+
+/**
+ * Show Stock Status Bulk Edit
+ */
+function showStockStatusBulkEdit() {
+  console.log('📝 Opening stock status bulk edit mode...');
+  
+  // ✅ HIDE THE MAIN DROPDOWN BUTTON
+  const mainDropdownContainer = document.querySelector('#bulkEditDropdown').closest('.dropdown');
+  if (mainDropdownContainer) {
+    mainDropdownContainer.style.display = 'none';
+  }
+  
+  // ✅ Show stock status selection UI AND cancel button
+  document.getElementById('stockStatusSelectionDropdown').style.display = 'inline-block';
+  document.getElementById('cancelBulkEditBtn').style.display = 'inline-block';
+  document.getElementById('bulkEditInfoText').style.display = 'block';
+  document.getElementById('bulkEditToolbar').classList.add('active');
+  
+  console.log('✅ Stock status selection UI shown');
+}
+
+/**
+ * Select Bulk Stock Status
+ */
+function selectBulkStockStatus(status) {
+  console.log('📦 Selected stock status:', status);
+  
+  // ✅ Close stock status dropdown
+  document.getElementById('stockStatusDropdownBtn').click();
+  
+  setTimeout(() => {
+    // ✅ Set bulk edit mode
+    bulkEditMode = {
+      active: true,
+      field: 'stockStatus',
+      value: status,
+      selectedProducts: []
+    };
+    
+    // ✅ Update UI with emoji
+    const emoji = {
+      'GOOD': '🟢 Good',
+      'MEDIUM': '🟡 Medium',
+      'LOW': '🔴 Low',
+      'URGENT': '🔵 Urgent'
+    }[status] || status;
+    
+    document.getElementById('selectedStockStatusText').textContent = emoji;
+    document.getElementById('updateStockStatusBtn').style.display = 'inline-block';
+    document.getElementById('selectedCountStockStatus').textContent = '0';
+    
+    // ✅ Enable product selection (ONLY for products with TEXT stock status)
+    enableProductSelectionStockStatus();
+    
+  }, 100);
+}
+
+/**
+ * Enable Product Selection for Stock Status (ONLY TEXT stock status products)
+ */
+function enableProductSelectionStockStatus() {
+  console.log('🖱️ Stock status selection mode enabled');
+  
+  // Desktop
+  const tableRows = document.querySelectorAll('#productsTableBody tr[data-product-id]');
+  tableRows.forEach(row => {
+    const productId = row.getAttribute('data-product-id');
+    const product = cachedProducts.find(p => p.id === productId);
+    
+    // ✅ ONLY enable for products with TEXT stock status (not numeric)
+    if (product && typeof product.stock === 'string' && ['GOOD', 'MEDIUM', 'LOW', 'URGENT'].includes(product.stock.toUpperCase())) {
+      row.classList.add('product-selectable');
+      row.onclick = function(event) {
+        if (event.target.closest('.btn')) return;
+        event.stopPropagation();
+        event.preventDefault();
+        toggleProductSelectionDesktop(productId, row);
+      };
+    }
+  });
+  
+  // Mobile
+  const mobileCards = document.querySelectorAll('.mobile-item[data-product-id]');
+  mobileCards.forEach(card => {
+    const productId = card.getAttribute('data-product-id');
+    const product = cachedProducts.find(p => p.id === productId);
+    
+    // ✅ ONLY enable for products with TEXT stock status (not numeric)
+    if (product && typeof product.stock === 'string' && ['GOOD', 'MEDIUM', 'LOW', 'URGENT'].includes(product.stock.toUpperCase())) {
+      card.classList.add('product-selectable');
+      card.onclick = function(event) {
+        if (event.target.closest('.btn')) return;
+        event.stopPropagation();
+        event.preventDefault();
+        toggleProductSelectionMobile(productId, card);
+      };
+    }
+  });
+  
+  console.log('✅ Stock status selection enabled (TEXT status products only)');
+}
+
+/**
+ * Apply Bulk Stock Status Update
+ */
+async function applyBulkStockStatusUpdate() {
+  if (bulkEditMode.selectedProducts.length === 0) {
+    alert('⚠️ Please select at least one product');
+    return;
+  }
+  
+  const status = bulkEditMode.value;
+  const count = bulkEditMode.selectedProducts.length;
+  
+  const emoji = {
+    'GOOD': '🟢 Good',
+    'MEDIUM': '🟡 Medium',
+    'LOW': '🔴 Low',
+    'URGENT': '🔵 Urgent'
+  }[status] || status;
+  
+  if (!confirm(`Update stock status to "${emoji}" for ${count} product(s)?`)) {
+    return;
+  }
+  
+  const btn = document.getElementById('updateStockStatusBtn');
+  const originalText = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+  
+  try {
+    const response = await fetch(API_CONFIG.baseUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({
+        action: 'bulkUpdateStockStatus',
+        productIds: bulkEditMode.selectedProducts,
+        stockStatus: status
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Backend update failed');
+    }
+    
+    console.log('✅ Backend update successful:', result);
+    
+    // ✅ Update local cache
+    if (typeof cachedProducts !== 'undefined') {
+      bulkEditMode.selectedProducts.forEach(productId => {
+        const product = cachedProducts.find(p => p.id === productId);
+        if (product) {
+          product.stock = status;
+          product.stockStatus = status.toLowerCase();
+        }
+      });
+      localStorage.setItem('inventory_products_cache', JSON.stringify(cachedProducts));
+    }
+    
+    // ✅ Cancel bulk edit mode
+    cancelBulkEdit();
+    
+    if (typeof renderProducts === 'function') {
+      renderProducts();
+    }
+    
+  } catch (error) {
+    console.error('❌ Error:', error);
+    alert('❌ Error updating products: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
 
 
 
@@ -1314,7 +1510,11 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.showStockAdjustmentEdit = showStockAdjustmentEdit;
   window.setStockOperation = setStockOperation;
-  window.updateStockChanges = updateStockChanges; // ← NEW
+  window.updateStockChanges = updateStockChanges;
+  
+  window.showStockStatusBulkEdit = showStockStatusBulkEdit; // ← NEW
+  window.selectBulkStockStatus = selectBulkStockStatus; // ← NEW
+  window.applyBulkStockStatusUpdate = applyBulkStockStatusUpdate; // ← NEW
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
