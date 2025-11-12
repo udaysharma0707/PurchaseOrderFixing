@@ -480,6 +480,15 @@ onmouseout="this.style.background='#28a745'">
   </button>
 </li>
 
+<li>
+  <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showStockStatusBulkEdit();">
+    <span><i class="bi bi-circle-fill"></i> Update Stock Status</span>
+    <i class="bi bi-chevron-right text-muted"></i>
+  </button>
+</li>
+
+
+      
       <li>
   <button type="button" class="dropdown-item d-flex justify-content-between align-items-center" onclick="showBrandBulkEdit();">
     <span><i class="bi bi-award"></i> Update Brand</span>
@@ -670,6 +679,37 @@ onmouseout="this.style.background='#28a745'">
 </style>
 
 
+<!-- ===== STOCK STATUS SELECTION SECTION ===== -->
+
+<!-- Stock Status Selection Dropdown (Hidden Initially) -->
+<div class="dropdown" id="stockStatusSelectionDropdown" style="display: none;">
+  <button class="btn btn-outline-primary dropdown-toggle" type="button" id="stockStatusDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 600;">
+    <i class="bi bi-circle-fill"></i> <span id="selectedStockStatusText">Select Stock Status</span>
+  </button>
+  <ul class="dropdown-menu" aria-labelledby="stockStatusDropdownBtn">
+    <li><button class="dropdown-item" onclick="selectBulkStockStatus('GOOD')">
+      <span style="color: #28a745;">🟢</span> Good
+    </button></li>
+    <li><button class="dropdown-item" onclick="selectBulkStockStatus('MEDIUM')">
+      <span style="color: #ffc107;">🟡</span> Medium
+    </button></li>
+    <li><button class="dropdown-item" onclick="selectBulkStockStatus('LOW')">
+      <span style="color: #dc3545;">🔴</span> Low
+    </button></li>
+    <li><button class="dropdown-item" onclick="selectBulkStockStatus('URGENT')">
+      <span style="color: #6f42c1;">🔵</span> Urgent
+    </button></li>
+  </ul>
+</div>
+
+<!-- Update Stock Status Button (Hidden Initially) -->
+<button id="updateStockStatusBtn" class="btn btn-success" style="display: none; font-weight: 600;" onclick="applyBulkStockStatusUpdate()">
+  <i class="bi bi-check-circle"></i> Update Stock Status (<span id="selectedCountStockStatus">0</span> selected)
+</button>
+
+
+
+  
   
   <!-- ===== CATEGORY SECTION ===== -->
   
@@ -2249,11 +2289,11 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTtxUGg9h2ZXlHBBvy2zhDYxBFZ9L01mincPszW22cJbChQN--_dLx1Qg5bL31RgSZ/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxTtxUGg9h2ZXlHBBvy2zhDYxBFZ9L01mincPszW22cJbChQN--_dLx1Qg5bL31RgSZ/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwK2OqWtptHFIL8sjiv6NhF7heRZZd4r4iyRFUjw_xDr00hRfWPC6xxxiq7A6Tzn3CF/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwK2OqWtptHFIL8sjiv6NhF7heRZZd4r4iyRFUjw_xDr00hRfWPC6xxxiq7A6Tzn3CF/exec';
 // ✅ API Configuration
 window.API_CONFIG = {
-  baseUrl: 'https://script.google.com/macros/s/AKfycbxTtxUGg9h2ZXlHBBvy2zhDYxBFZ9L01mincPszW22cJbChQN--_dLx1Qg5bL31RgSZ/exec', // ← Replace this
+  baseUrl: 'https://script.google.com/macros/s/AKfycbwK2OqWtptHFIL8sjiv6NhF7heRZZd4r4iyRFUjw_xDr00hRfWPC6xxxiq7A6Tzn3CF/exec', // ← Replace this
   secret: 'shopSecret2025'
 };
 
@@ -4158,7 +4198,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxTtxUGg9h2ZXlHBBvy2zhDYxBFZ9L01mincPszW22cJbChQN--_dLx1Qg5bL31RgSZ/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwK2OqWtptHFIL8sjiv6NhF7heRZZd4r4iyRFUjw_xDr00hRfWPC6xxxiq7A6Tzn3CF/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -14018,6 +14058,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
