@@ -338,9 +338,7 @@
   <i class="bi bi-receipt"></i> Generate Invoice
 </button>
 
-  <button onclick="testGoogleConnection()" class="btn btn-info">
-  Test Cloud Connection
-</button>
+  
     
 
 <!-- ✅ NEW: Record Purchase Button -->
@@ -433,7 +431,7 @@ onmouseout="this.style.background='#28a745'">
       <div class="col-md-6 mx-auto">
         <!-- Search bar with view toggle -->
 <div class="d-flex justify-content-between align-items-center mb-3">
-  <input type="text" id="productSearch" class="form-control" placeholder="ðŸ”Ž Search products..." onkeyup="searchProducts()">
+  <input type="text" id="productSearch" class="form-control" placeholder="🔍 Search products..." onkeyup="searchProducts()">
 
 <!-- ==========================================
      🔥 BULK EDIT TOOLBAR - WITH UNIT TYPE
@@ -2289,11 +2287,11 @@ onmouseout="this.style.background='#28a745'">
   /***********************
    * CONFIG
    ***********************/
-  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0Fsm4BqWbRcf1svyzU_SB4bygnhlHYNq3fcn5Y8ZS7lDuuBfGDDrn5slQW6vWTN97lQ/exec'; // <-- replace with your deployed URL
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby0Fsm4BqWbRcf1svyzU_SB4bygnhlHYNq3fcn5Y8ZS7lDuuBfGDDrn5slQW6vWTN97lQ/exec';
+  const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVEcmPjZ2OH8p0nY7iLN04SPmSu2L2jaPuQXlXNAMaJliGOLqPwJAMKSdYA0E7_VCs/exec'; // <-- replace with your deployed URL
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwVEcmPjZ2OH8p0nY7iLN04SPmSu2L2jaPuQXlXNAMaJliGOLqPwJAMKSdYA0E7_VCs/exec';
 // ✅ API Configuration
 window.API_CONFIG = {
-  baseUrl: 'https://script.google.com/macros/s/AKfycby0Fsm4BqWbRcf1svyzU_SB4bygnhlHYNq3fcn5Y8ZS7lDuuBfGDDrn5slQW6vWTN97lQ/exec', // ← Replace this
+  baseUrl: 'https://script.google.com/macros/s/AKfycbwVEcmPjZ2OH8p0nY7iLN04SPmSu2L2jaPuQXlXNAMaJliGOLqPwJAMKSdYA0E7_VCs/exec', // ← Replace this
   secret: 'shopSecret2025'
 };
 
@@ -4198,7 +4196,7 @@ async function uploadProductPhotoToBackend(productId, photoBase64) {
  */
 
 const CONFIG = {
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycby0Fsm4BqWbRcf1svyzU_SB4bygnhlHYNq3fcn5Y8ZS7lDuuBfGDDrn5slQW6vWTN97lQ/exec'};
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwVEcmPjZ2OH8p0nY7iLN04SPmSu2L2jaPuQXlXNAMaJliGOLqPwJAMKSdYA0E7_VCs/exec'};
 
 // Global variables
 let purchasePhotoBase64 = null;
@@ -13187,46 +13185,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
     
-/**
- * Test Google Apps Script connection
- */
-async function testGoogleConnection() {
-  console.log('🧪 Testing Google Apps Script connection...');
-  
-  if (typeof google === 'undefined' || !google.script || !google.script.run) {
-    console.error('❌ Google Apps Script API not available');
-    alert('❌ Not connected to Google Apps Script\n\nMake sure you:\n1. Deployed as Web App\n2. Opened via Web App URL\n3. Granted permissions');
-    return false;
-  }
-  
-  try {
-    const result = await new Promise((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        reject(new Error('Connection timeout'));
-      }, 5000);
-      
-      google.script.run
-        .withSuccessHandler((res) => {
-          clearTimeout(timeout);
-          resolve(res);
-        })
-        .withFailureHandler((err) => {
-          clearTimeout(timeout);
-          reject(err);
-        })
-        .loadCustomerInvoicesFromSheet(); // Try loading invoices
-    });
-    
-    console.log('✅ Google Apps Script connection successful:', result);
-    alert('✅ Connected to Google Apps Script!\n\nCloud sync is working properly.');
-    return true;
-    
-  } catch (error) {
-    console.error('❌ Connection test failed:', error);
-    alert('❌ Connection test failed:\n\n' + error.message);
-    return false;
-  }
-}
+
 
     
   </script>
@@ -14058,6 +14017,7 @@ if ('serviceWorker' in navigator) {
 
 </body>
 </html>
+
 
 
 
