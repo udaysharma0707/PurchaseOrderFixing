@@ -1078,6 +1078,9 @@ function enableStockAdjustmentMode() {
 /**
  * Adjust Product Stock - Instant update with animation
  */
+/**
+ * Adjust Product Stock - Instant update with animation (NO SELECTION)
+ */
 async function adjustProductStock(productId, element) {
   if (!bulkEditMode.active || bulkEditMode.field !== 'stockAdjustment') return;
   
@@ -1088,6 +1091,15 @@ async function adjustProductStock(productId, element) {
     alert('⚠️ Please enter a valid amount');
     return;
   }
+  
+  // ✅ FIXED: Hide selection indicator if exists
+  const indicator = element.querySelector('.selection-indicator');
+  if (indicator) {
+    indicator.style.display = 'none';
+  }
+  
+  // ✅ FIXED: Remove selection classes
+  element.classList.remove('product-selected');
   
   // ✅ Show animation
   showStockAnimation(element, operation, amount);
@@ -1128,8 +1140,15 @@ async function adjustProductStock(productId, element) {
     // ✅ Re-render products
     if (typeof renderProducts === 'function') {
       renderProducts();
-      // Re-enable stock adjustment mode after render
-      setTimeout(() => enableStockAdjustmentMode(), 100);
+      // Re-enable stock adjustment mode after render (prevents selection)
+      setTimeout(() => {
+        enableStockAdjustmentMode();
+        
+        // ✅ FIXED: Force hide all selection indicators
+        document.querySelectorAll('.selection-indicator').forEach(ind => {
+          ind.style.display = 'none';
+        });
+      }, 100);
     }
     
   } catch (error) {
@@ -1299,6 +1318,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
 
 
