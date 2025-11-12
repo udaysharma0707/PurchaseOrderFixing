@@ -1014,6 +1014,9 @@ function setStockOperation(operation) {
 /**
  * Enable Stock Adjustment Mode - Click to adjust
  */
+/**
+ * Enable Stock Adjustment Mode - Click to adjust (NO SELECTION INDICATORS)
+ */
 function enableStockAdjustmentMode() {
   console.log('🖱️ Stock adjustment mode enabled');
   
@@ -1035,7 +1038,7 @@ function enableStockAdjustmentMode() {
     }
   });
   
-  // Mobile
+  // Mobile - FIXED: Prevent selection indicator from appearing
   const mobileCards = document.querySelectorAll('.mobile-item[data-product-id]');
   mobileCards.forEach(card => {
     const productId = card.getAttribute('data-product-id');
@@ -1044,16 +1047,32 @@ function enableStockAdjustmentMode() {
     // Only enable for products with NUMERIC stock
     if (product && typeof product.stock === 'number') {
       card.classList.add('stock-adjustable');
+      
+      // ✅ FIXED: Remove any existing selection indicator
+      const indicator = card.querySelector('.selection-indicator');
+      if (indicator) {
+        indicator.style.display = 'none';
+      }
+      
+      // ✅ FIXED: Prevent card from being selected
+      card.classList.remove('product-selectable');
+      card.classList.remove('product-selected');
+      
+      // ✅ Set click handler for stock adjustment (NO SELECTION)
       card.onclick = function(event) {
         if (event.target.closest('.btn')) return;
         event.stopPropagation();
         event.preventDefault();
+        
+        // ✅ FIXED: Ensure indicator stays hidden during adjustment
+        if (indicator) indicator.style.display = 'none';
+        
         adjustProductStock(productId, card);
       };
     }
   });
   
-  console.log('✅ Stock adjustment enabled');
+  console.log('✅ Stock adjustment enabled (selection disabled)');
 }
 
 /**
@@ -1280,6 +1299,7 @@ document.addEventListener('DOMContentLoaded', function() {
   
   window.cancelBulkEdit = cancelBulkEdit;
 });
+
 
 
 
