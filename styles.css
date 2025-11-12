@@ -3127,6 +3127,18 @@ button.dropdown-item::-moz-focus-inner {
   background-color: #0d6efd;
 }
 
+/* ✅ FIXED: Hide selection indicators during stock adjustment mode */
+.stock-adjustable .selection-indicator {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* ✅ Remove selection highlight during stock adjustment */
+.stock-adjustable.product-selected {
+  background-color: transparent !important;
+  border: none !important;
+}
+
 
 
 
